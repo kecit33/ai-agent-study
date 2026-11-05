@@ -466,9 +466,59 @@ python server.py
 
 ---
 
+## 十二、V1.2 追加：让「高等数学上册」自己长出一套复习资料，以及把文心 / Kimi 真正接进来
+
+前面十一章讲的是 V1.1。写完之后我又做了一次很具体的自测：**就给系统一个「数学 / 高等数学上册」，看它到底能不能生成题目、总结、相关文章与资料、思维导图**，而不是只回一句"已为你生成"。结论是能，而且内容不是占位符。
+
+### 10.1 为什么加一层学科知识库
+
+原来的「课件总结」是**先有课件才有输出**。但复习场景经常是：我只有一门课的名字，想先要一套自测题和知识框架。如果没配 API Key，纯规则化的演示模式只能回模板话术，这在答辩里是站不住的。
+
+所以 V1.2 加了 `services/subject_knowledge.py`：把同济《高等数学》上册的 7 章整理成结构化数据，每章包含知识点、公式/定理、高频易错点、4 道带**标准答案 + 分步解析 + 考点**的题，以及对应的教材/公开课/工具资料。比如第一章第一题：
+
+> 求极限 `lim(x→0) sin(3x) / tan(2x)`，答案 `3/2`，解析：sin(3x) ~ 3x、tan(2x) ~ 2x。
+
+配上真实模型之后，这层知识库不会丢，而是作为「接地上下文」送进模型，让 Kimi / 文心在指定章节范围内原创变式题，结果用 `origin` 字段标记来源。模型超时、鉴权失败、返回非预期 JSON 时静默回退知识库——**接口永远有可用输出**，这条比"接了大模型"更重要。
+
+![学习资源包：题目 / 总结 / 文章 / 资料 / 思维导图](https://raw.githubusercontent.com/kecit33/ai-agent-study/main/docs/blog/assets/ui-study-pack.png)
+
+### 10.2 一次请求生成五件套
+
+`POST /api/study/pack` 一次返回：自测题、复习总结、专题文章、资料清单、思维导图（树 JSON + SVG + Markdown 大纲 + Mermaid 源码）。实测数据：全册总结 7176 字、专题文章 7965 字 / 7 节、资料 8 项、导图 42 节点。前端新增「学习资源包」标签页，题目可折叠查看答案，思维导图 SVG 用 CSS 变量跟随深浅色与主题色；另有 Markdown 全套导出与 SVG 下载。答辩现场直接打开 `/?autopack=1#study`，页面加载完就自动生成好全套。
+
+![深色模式下的学习资源包](https://raw.githubusercontent.com/kecit33/ai-agent-study/main/docs/blog/assets/ui-study-dark.png)
+
+### 10.3 模型接入：不重启、不改代码
+
+之前四家厂商虽然都实现了，但密钥只能写在 `.env` 里，改一次要重启。答辩前一刻想换成文心一言，很尴尬。V1.2 把这件事做成了**运行时接口**：
+
+- `POST /api/agent/credentials` —— 填 Key / 模型名 / 接口地址，`activate:true` 立即切换；
+- `POST /api/agent/test` —— `validate` 只校验配置，`probe` 真实调用一次模型；
+- `POST /api/agent/complete` —— 通用透传，自建系统直接调用当前或指定模型；
+- `GET /api/agent/providers` —— 状态列表，**密钥只返回掩码**。
+
+文心一言做了双模式适配：千帆 v2 只需 API Key（`Authorization: Bearer`），旧版 WenxinWorkshop 则用 API Key + Secret Key 先换 `access_token`（内存缓存 30 天）。另外加了 `custom` 提供商，任何 OpenAI 兼容端点（自建网关、Ollama、其他国产模型）填个地址就能用。所有厂商调用改成 Python 标准库 `urllib`，本机和云端都不再依赖 `requests`。
+
+![模型接入表单与已接入状态](https://raw.githubusercontent.com/kecit33/ai-agent-study/main/docs/blog/assets/ui-model-settings.png)
+
+### 10.4 没有真实 Key，怎么证明链路是通的
+
+自测脚本 `docs/study_check.py` 会在本机临时起一个模拟服务，同时扮演「OpenAI 兼容端点」和「文心 OAuth + 聊天端点」，然后通过上面这些接口写密钥、发探测、调透传、让模型出题、再清除配置。36 项断言覆盖：鉴权头、token 换取、请求体、响应解析、模型原创题并入结果、思维导图增补、失败降级、掩码不泄漏。把模拟地址换成官方地址、假 Key 换成真 Key，就是真实调用。
+
+**这一点在答辩里要如实说**：本机和线上都没有真实厂商密钥，验证的是完整调用链与参数配置，不是"已经实测文心/Kimi 官方接口"。
+
+```bash
+python docs/study_check.py
+# ✅ 36/36 通过，输出 docs/自测报告_高等数学与模型接入.md
+```
+
+原有回归也复跑了一遍：`demo_check.py` 26/26 请求 + 30/30 断言、`feature_check.py` 19/19 断言，全部保持通过。
+
+---
+
 ## 附：配图清单与博客园发布说明
 
-本文共 10 张图，全部是**项目实拍或项目内矢量图导出**，源文件在仓库 `docs/blog/assets/`：
+本文共 13 张图，全部是**项目实拍或项目内矢量图导出**，源文件在仓库 `docs/blog/assets/`：
 
 | 文件 | 用途 |
 |---|---|
@@ -482,6 +532,9 @@ python server.py
 | `ui-plan.png` | 复习计划输出 |
 | `ui-wrong.png` | 错题本界面 |
 | `ui-settings.png` | 五个智能体提供商 |
+| `ui-study-pack.png` | 【V1.2】学习资源包：题目 / 总结 / 文章 / 资料 / 导图 |
+| `ui-study-dark.png` | 【V1.2】深色模式下的学习资源包 |
+| `ui-model-settings.png` | 【V1.2】模型接入表单与已接入状态 |
 
 文章中的图片用的是 GitHub 仓库外链。**如果博客园里外链加载不出来**（部分网络环境访问 `raw.githubusercontent.com` 不稳定），把 `docs/blog/assets/` 下这 10 张 PNG 上传到博客园图床，再把文中的链接前缀
 
@@ -489,8 +542,8 @@ python server.py
 https://raw.githubusercontent.com/kecit33/ai-agent-study/main/docs/blog/assets/
 ```
 
-批量替换成博客园返回的图片地址即可，文件名保持不变。配图由 `docs/blog/build_images.py` 用无头浏览器自动生成（4 张 SVG 栅格化 + 6 张真实界面截图），可重复执行。
+批量替换成博客园返回的图片地址即可，文件名保持不变。配图由 `docs/blog/build_images.py` 用无头浏览器自动生成（4 张 SVG 栅格化 + 6 张真实界面截图）；V1.2 新增的 3 张来自 `docs/ui_shots.py` 对真实页面的深浅色截图，源文件在 `docs/ui/`。
 
 ---
 
-*项目为 2026 年智能体开发课程作业，答辩时间 2026-11-09。本文所有数据来自 `docs/demo_results.json`（执行时间 2026-11-05 18:31:24），欢迎在评论区指出问题。*
+*项目为 2026 年智能体开发课程作业，答辩时间 2026-11-09。本文数据来自 `docs/demo_results.json`、`docs/feature_results.json` 与 `docs/study_results.json`（2026-11-05 实测），欢迎在评论区指出问题。*
