@@ -22,6 +22,7 @@ BROWSER = next((p for p in CANDIDATES if os.path.exists(p)), None)
 SHOTS = [
     ("dashboard-light", "light", "/#dashboard", 9000),
     ("dashboard-dark", "dark", "/#dashboard", 9000),
+    ("chat-light", "light", "/#chat", 9000),
     ("hardware-dark", "dark", "/#hardware", 9000),
     ("settings-dark", "dark", "/#settings", 9000),
     ("settings-model-light", "light", "/#settings", 9000),
