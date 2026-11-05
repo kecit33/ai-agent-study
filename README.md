@@ -4,7 +4,7 @@
 
 > 课程作业 · 智能体开发 · 2026
 >
-> **端到端验收结果（本地最新代码）：原有回归 26/26 个 HTTP 请求状态正确 + 30/30 项业务断言通过；新增功能 19/19 项断言通过**（详见 `docs/演示验收报告.md`、`docs/feature_results.json`）。
+> **端到端验收结果（2026-11-05，本地 + 线上双环境均通过）：原有回归 26/26 个 HTTP 请求状态正确 + 30/30 项业务断言通过；新增功能 19/19 项断言通过**（详见 `docs/演示验收报告.md`、`docs/feature_results.json`、`docs/自我检查报告.md`）。
 >
 > 需求符合性自检见 `docs/自我检查报告.md`，硬件交互点全清单见 `docs/硬件交互说明.md`。
 
@@ -141,7 +141,7 @@ ACTIVE_PROVIDER=openai     # demo / openai / qianfan / moonshot / claude
 
 浏览器直接打开（手机同样可访问），无需安装、无需密钥。链接中的 `sharecode` 为访问凭证，请**原样转发**给师生（去掉会返回 403）。
 
-> ⚠️ **版本提示（2026-11-05 自检发现）**：该链接当前仍是本轮增强前的旧版本，尚未包含深浅色主题、语音输入、文件上传、学习概览、番茄钟与新增硬件接口（`/api/overview`、`/api/hardware/status` 返回 404）。新功能已在本地 `localhost:5000` 全部验证通过；**重新发布后链接地址不变、内容即会更新**。若暂不发布，请用本地方式验收新功能。
+> ✅ **已于 2026-11-05 22:26 重新发布为 V1.1**，链接与 `sharecode` 均不变：现已包含深浅色主题与主题色、语音输入、课件上传/错题导出、学习概览、番茄钟、9 个模块与 6 个硬件交互点。发布后对线上复跑验收：首页含新控件，`/api/overview`、`/api/hardware/status`、`/api/focus/sessions` 均返回 200；**26/26 请求 + 30/30 断言 + 19/19 新增断言全部通过**（`docs/demo_results.json`、`docs/feature_results.json` 记录的是线上目标）。
 
 ---
 
@@ -280,7 +280,12 @@ python docs/ui_shots.py         # 可选：生成深浅色界面截图
 # 验证线上站点（sharecode 用于建立访问会话）
 BASE_URL=https://ai-campus-companion.app.workbuddy.host \
 SHARECODE=CEUN7FBTFJ python docs/demo_check.py
+
+BASE_URL=https://ai-campus-companion.app.workbuddy.host \
+SHARECODE=CEUN7FBTFJ python docs/feature_check.py
 ```
+
+> `feature_check.py` 同样支持 `BASE_URL` / `SHARECODE`；带 `sharecode` 会先建立访问会话 Cookie，之后 API 才不会返回 403。课程 ID 由 `/api/courses` 动态获取，不依赖固定值。
 
 `demo_check.py` 以真实 HTTP 请求覆盖：静态页面与资源、厂商切换、课程记忆绑定与隔离、课件总结、引导式辅导、复习计划、错题闭环、硬件联动、异常与边界（400/404），并把每个请求与响应写入 `docs/demo_results.json`，生成 `docs/演示验收报告.md`。
 
@@ -321,13 +326,14 @@ SHARECODE=CEUN7FBTFJ python docs/demo_check.py
 - `docs/ui/*.png` —— 深/浅色界面真实渲染截图
 
 > 注：PPT 与需求文档中的图表为 SVG 矢量图，请使用 PowerPoint 2016+ 或 WPS 打开以获得最佳效果。
-> 待办：文档与 PPT 尚未同步本轮新增功能；团队展示仍为「第 X 开发组」占位，需替换为真实成员信息。
+> **V1.1 已同步**：需求文档新增「六、功能描述（V1.1 增量）」章节（F9–F14、12 项新接口、A11–A16 验收标准、真实实测结果），正文约 7.4 千字；答辩 PPT 扩至 10 页，新增「V1.1 体验增强」「硬件双向联动 · 真实验收数据」两页。
+> 待办：团队展示仍为「第 X 开发组」占位，需替换为真实成员信息。
 
 ---
 
 ## 十、版本迭代与提交规范
 
-本地仓库按模块**逐步提交**（不是一次性打包），共 28 个 commit，其中前 16 个与需求文档的迭代记录表对应；远端 `main` 分支已按相同顺序重建。用 `git log --oneline` 可查看：
+本地仓库按模块**逐步提交**（不是一次性打包），共 30 个 commit，其中前 16 个与需求文档的迭代记录表对应；远端 `main` 分支已按相同顺序重建。用 `git log --oneline` 可查看：
 
 | # | 阶段 | 提交说明 |
 |---|---|---|
@@ -359,9 +365,11 @@ SHARECODE=CEUN7FBTFJ python docs/demo_check.py
 | 26 | 硬件 | `feat(hardware): ESP32 固件支持专注灯与上行状态轮询` |
 | 27 | 测试 | `test: 新增功能端到端验收与深浅色渲染截图` |
 | 28 | 文档 | `docs: 需求符合性自检、硬件交互说明与 README 同步` |
+| 29 | 文档 | `docs: SRS 与 PPT 同步 V1.1 增量功能` |
+| 30 | 测试 | `test: 重新发布线上站点并完成双环境验收` |
 
 - 分支：`main`；忽略：`data/`、`__pycache__/`、`.env`、`docs/.slidep/`、`docs/pptx/`（后两者为工具残留，非交付物）。
 - GitHub 仓库名不含空格，实际采用 `ai-agent-study`；本地 `origin` 已指向 `https://github.com/kecit33/ai-agent-study.git`。
-- 远端 `main` 已按本地顺序重建全部 28 个逐步提交（含中文提交说明与二进制文档）；网络允许时可直接 `git push -u origin main`。
+- 远端 `main` 已按本地顺序重建全部 30 个逐步提交（含中文提交说明与二进制文档）；网络允许时可直接 `git push -u origin main`。
 - 双击启动入口：`start.bat` → `launch.py` → `server.py`（自动探测端口、自动开浏览器）。
 - 博客园技术复盘文章：`docs/blog/AI校园学习陪伴助手_博客园文章.md`（10 张配图在 `docs/blog/assets/`，由 `docs/blog/build_images.py` 用无头浏览器生成）。
