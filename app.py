@@ -10,10 +10,12 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 import db
+from agents import credentials, factory
 from agents.factory import (
     get_provider, get_active_provider_name, set_active_provider, list_providers_status,
 )
 from services import course, tasks, wrong_questions, focus, files as filesvc
+from services import study
 from hardware import esp32
 
 db.init_db()
@@ -240,6 +242,151 @@ def api_focus_state():
 @app.route("/api/hardware/status")
 def api_hardware_status():
     return jsonify(esp32.hardware_status())
+
+
+# ---------------- 学习资源包：题目 / 总结 / 文章 / 资料 / 思维导图 ----------------
+def _study_args(body=None, query=None):
+    body, query = body or {}, query or {}
+
+    def val(key, default=""):
+        if key in body:
+            return body[key]
+        return query.get(key, default)
+
+    try:
+        count = int(val("count", 6))
+    except (TypeError, ValueError):
+        count = 6
+    return {
+        "subject": val("subject", "高等数学上册"),
+        "chapter": val("chapter", ""),
+        "count": count,
+        "difficulty": val("difficulty", ""),
+        "provider_name": val("provider", "") or None,
+    }
+
+
+@app.route("/api/study/catalog")
+def api_study_catalog():
+    return jsonify(study.catalog())
+
+
+@app.route("/api/study/quiz", methods=["POST"])
+def api_study_quiz():
+    a = _study_args(request.json)
+    return jsonify(study.quiz(a["subject"], a["chapter"], a["count"],
+                             a["difficulty"], a["provider_name"]))
+
+
+@app.route("/api/study/summary", methods=["POST"])
+def api_study_summary():
+    a = _study_args(request.json)
+    return jsonify(study.summary(a["subject"], a["chapter"], a["provider_name"]))
+
+
+@app.route("/api/study/article", methods=["POST"])
+def api_study_article():
+    a = _study_args(request.json)
+    return jsonify(study.article(a["subject"], a["chapter"], a["provider_name"]))
+
+
+@app.route("/api/study/resources", methods=["POST"])
+def api_study_resources():
+    a = _study_args(request.json)
+    return jsonify(study.resources(a["subject"], a["chapter"]))
+
+
+@app.route("/api/study/mindmap", methods=["POST"])
+def api_study_mindmap():
+    a = _study_args(request.json)
+    return jsonify(study.mindmap(a["subject"], a["chapter"], a["provider_name"]))
+
+
+@app.route("/api/study/mindmap.svg")
+def api_study_mindmap_svg():
+    a = _study_args(query=request.args)
+    svg = study.mindmap(a["subject"], a["chapter"], a["provider_name"])["svg"]
+    return Response(svg, mimetype="image/svg+xml")
+
+
+@app.route("/api/study/pack", methods=["POST"])
+def api_study_pack():
+    body = request.json or {}
+    a = _study_args(body)
+    return jsonify(study.pack(a["subject"], a["chapter"], a["count"], a["difficulty"],
+                             a["provider_name"], save_to_course=bool(body.get("save_to_course"))))
+
+
+@app.route("/api/study/pack/export")
+def api_study_export():
+    from flask import Response
+    a = _study_args(query=request.args)
+    md = study.export_markdown(a["subject"], a["chapter"], a["count"], a["provider_name"])
+    return Response(md, mimetype="text/markdown; charset=utf-8", headers={
+        "Content-Disposition": "attachment; filename=study-pack.md"})
+
+
+# ---------------- 模型接入：文心一言 / Kimi / 自定义端点，运行时可配置 ----------------
+@app.route("/api/agent/providers")
+def api_agent_providers():
+    return jsonify({"active_provider": get_active_provider_name(),
+                    "providers": list_providers_status(),
+                    "credentials": credentials.list_status()})
+
+
+@app.route("/api/agent/credentials", methods=["POST"])
+def api_agent_credentials():
+    body = request.json or {}
+    try:
+        return jsonify(factory.configure(
+            (body.get("provider") or "").strip().lower(),
+            body.get("config") or body, activate=bool(body.get("activate"))))
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+
+
+@app.route("/api/agent/credentials/clear", methods=["POST"])
+def api_agent_credentials_clear():
+    body = request.json or {}
+    try:
+        return jsonify(factory.clear((body.get("provider") or "").strip().lower()))
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+
+
+@app.route("/api/agent/test", methods=["POST"])
+def api_agent_test():
+    body = request.json or {}
+    name = (body.get("provider") or get_active_provider_name()).strip().lower()
+    if name == "demo":
+        return jsonify({"ok": True, "provider": "demo", "mode": body.get("mode", "probe"),
+                        "reply": "内置演示模式已就绪，无需外部模型"})
+    if name not in credentials.PROVIDER_FIELDS:
+        return jsonify({"ok": False, "error": "未知提供商：%s" % name}), 400
+    c = credentials.get(name)
+    ok, reason = credentials.validate(name, c)
+    if body.get("mode") == "validate":
+        return jsonify({"ok": ok, "provider": name, "mode": "validate", "reason": reason,
+                        "configured": ok, "model": c.get("model", ""),
+                        "base_url": c.get("base_url", ""),
+                        "masked": credentials.status(name)["masked"]})
+    if not ok:
+        return jsonify({"ok": False, "provider": name, "mode": "probe", "reason": reason,
+                        "configured": False, "error": "配置不完整：" + reason})
+    return jsonify(factory.probe(name))
+
+
+@app.route("/api/agent/complete", methods=["POST"])
+def api_agent_complete():
+    body = request.json or {}
+    msgs = body.get("messages")
+    if not isinstance(msgs, list) or not msgs:
+        msgs = [{"role": "user", "content": body.get("message", "你好")}]
+    msgs = [{"role": str(m.get("role", "user")), "content": str(m.get("content", ""))}
+            for m in msgs if isinstance(m, dict)]
+    return jsonify(factory.direct_complete(
+        str(body.get("system_prompt", "你是校园学习陪伴助手，请简洁、准确地回答。")),
+        msgs, body.get("provider") or None))
 
 
 # ---------------- 到点提醒后台调度（轻量） ----------------
