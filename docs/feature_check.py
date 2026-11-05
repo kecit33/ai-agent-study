@@ -10,9 +10,18 @@ import urllib.request
 import urllib.error
 import uuid
 import zipfile
+import http.cookiejar
 
 BASE = os.getenv("BASE_URL", "http://localhost:5000").rstrip("/")
+SHARECODE = os.getenv("SHARECODE", "").strip()
 RESULTS = []
+
+# 线上分享链接需先带 sharecode 建立会话 Cookie，否则 API 返回 403
+_OPENER = None
+if SHARECODE:
+    _OPENER = urllib.request.build_opener(
+        urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    _OPENER.open(BASE + "/?sharecode=" + SHARECODE, timeout=25).read()
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -33,7 +42,7 @@ def req(method, path, body=None, raw=False, headers=None, data=None):
         hdr.update(headers or {})
     r = urllib.request.Request(url, data=payload, method=method, headers=hdr)
     try:
-        with urllib.request.urlopen(r, timeout=20) as resp:
+        with (_OPENER.open if _OPENER else urllib.request.urlopen)(r, timeout=20) as resp:
             content = resp.read()
             if raw:
                 return resp.status, content, dict(resp.headers)
@@ -70,6 +79,8 @@ def make_docx(text):
 
 def main():
     print("目标：", BASE)
+    st, courses, _ = req("GET", "/api/courses")
+    cid = courses[0]["id"] if st == 200 and courses else 1
     st, page, _ = req("GET", "/", raw=True)
     html = page.decode("utf-8")
     check("首页可访问", st == 200, st)
@@ -101,24 +112,24 @@ def main():
     check("专注记录列表", st == 200 and len(d) >= 1, len(d))
 
     body, hdr = multipart("进程与线程.md", "进程是资源分配单位；线程是CPU调度单位。".encode("utf-8"))
-    st, d, _ = req("POST", "/api/courses/1/materials/upload", data=body, headers=hdr)
+    st, d, _ = req("POST", ("/api/courses/%d/materials/upload" % cid), data=body, headers=hdr)
     check("Markdown 上传", st == 200 and d.get("chars", 0) > 0, d.get("chars") or d)
 
     body, hdr = multipart("第三章.docx", make_docx("满二叉树与完全二叉树的区别。"))
-    st, d, _ = req("POST", "/api/courses/1/materials/upload", data=body, headers=hdr)
+    st, d, _ = req("POST", ("/api/courses/%d/materials/upload" % cid), data=body, headers=hdr)
     check("docx 上传并解析", st == 200 and "满二叉树" in (d.get("preview") or ""), d.get("preview") or d)
 
     body, hdr = multipart("hack.exe", b"MZ\x90\x00")
-    st, d, _ = req("POST", "/api/courses/1/materials/upload", data=body, headers=hdr)
+    st, d, _ = req("POST", ("/api/courses/%d/materials/upload" % cid), data=body, headers=hdr)
     check("非法类型被 400 拦截", st == 400 and "仅支持" in str(d), st)
 
-    st, content, hdrs = req("GET", "/api/wrong-questions/export?course_id=1", raw=True)
+    st, content, hdrs = req("GET", ("/api/wrong-questions/export?course_id=%d" % cid), raw=True)
     check("错题导出 Markdown 下载",
           st == 200 and content.decode("utf-8").startswith("# AI 错题本导出")
           and "attachment" in hdrs.get("Content-Disposition", ""),
           hdrs.get("Content-Disposition"))
 
-    st, d, _ = req("GET", "/api/courses/1/materials")
+    st, d, _ = req("GET", ("/api/courses/%d/materials" % cid))
     check("上传资料已进入课程记忆", st == 200 and any("第三章" in (m.get("title") or "") for m in d), len(d))
 
     passed = sum(1 for _, ok, _ in RESULTS if ok)
