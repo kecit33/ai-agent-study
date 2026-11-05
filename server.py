@@ -26,7 +26,7 @@ import db
 from agents.factory import (
     get_active_provider_name, set_active_provider, list_providers_status,
 )
-from services import course, tasks, wrong_questions
+from services import course, tasks, wrong_questions, focus, files as filesvc
 from hardware import esp32
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -101,6 +101,42 @@ def _review_task(body):
     return {"id": tid, "fired": fired}
 
 
+class Download:
+    """非 JSON 响应：以附件形式下载文本（如错题本 Markdown 导出）。"""
+
+    def __init__(self, filename, text, ctype="text/markdown; charset=utf-8"):
+        self.filename = filename
+        self.data = text.encode("utf-8")
+        self.ctype = ctype
+
+
+def _upload_material(cid, body):
+    """处理课程资料文件上传：提取文本后入库，返回提取摘要。"""
+    upload = (body.get("__files__") or [None])[0]
+    if not upload:
+        raise HttpError(400, "未收到文件，请使用 multipart/form-data 上传字段 file")
+    info = filesvc.extract_text(upload["filename"], upload["data"])
+    result = course.add_material(cid, info["title"], info["text"])
+    result.update({
+        "filename": upload["filename"], "chars": info["chars"],
+        "truncated": info["truncated"], "preview": info["text"][:200],
+    })
+    return result
+
+
+def _record_focus(body):
+    """番茄钟结束：记录专注时长，并联动 ESP32 声光提醒 + 熄灭专注灯。"""
+    result = focus.record_session(
+        body.get("minutes", 0), course_id=body.get("course_id"),
+        note=body.get("note", ""), started_at=body.get("started_at", ""),
+        ended_at=body.get("ended_at", ""),
+    )
+    esp32.set_focus_state(False)
+    result["reminder"] = esp32.notify_esp32(
+        "专注完成", message="本次专注 %s 分钟已完成，休息一下吧！" % result["minutes"])
+    return result
+
+
 # ---------------- 路由表 ----------------
 # (HTTP 方法, 路径正则, 处理函数)。处理函数签名：handler(match, body, query) -> dict
 ROUTES = [
@@ -145,6 +181,30 @@ ROUTES = [
     ("POST", r"^/api/hardware/test$",
      lambda m, b, q: esp32.notify_esp32(b.get("task_name", "测试提醒"),
                                         b.get("message", "硬件联动测试"))),
+
+    # ---- 文件上传 / 导出 ----
+    ("POST", r"^/api/courses/(\d+)/materials/upload$",
+     lambda m, b, q: _upload_material(int(m.group(1)), b)),
+    ("GET", r"^/api/wrong-questions/export$",
+     lambda m, b, q: Download(
+         "wrong-questions.md",
+         wrong_questions.export_markdown(
+             int(q["course_id"][0]) if q.get("course_id") else None))),
+
+    # ---- 学习概览 / 番茄钟 ----
+    ("GET", r"^/api/overview$",
+     lambda m, b, q: focus.overview()),
+    ("GET", r"^/api/focus/sessions$",
+     lambda m, b, q: focus.list_sessions(int(q.get("limit", [10])[0]))),
+    ("POST", r"^/api/focus/sessions$",
+     lambda m, b, q: _record_focus(b)),
+    ("POST", r"^/api/focus/state$",
+     lambda m, b, q: esp32.set_focus_state(
+         bool(b.get("active")), int(b.get("minutes", 0) or 0))),
+
+    # ---- 硬件状态看板（ESP32 轮询） ----
+    ("GET", r"^/api/hardware/status$",
+     lambda m, b, q: esp32.hardware_status()),
 ]
 
 
@@ -226,6 +286,54 @@ class Handler(BaseHTTPRequestHandler):
         except (ValueError, UnicodeDecodeError):
             raise HttpError(400, "请求体不是合法 JSON")
 
+    def _read_multipart(self):
+        """解析 multipart/form-data（Python 3.13 已移除 cgi，这里自行解析）。
+
+        仅用于课程资料上传；限制 4 MB，逐段提取字段与文件内容。
+        """
+        ctype = self.headers.get("Content-Type", "")
+        m = re.search(r'boundary="?([^";]+)"?', ctype)
+        if not m:
+            raise HttpError(400, "multipart 请求缺少 boundary")
+        try:
+            length = int(self.headers.get("Content-Length", "0") or "0")
+        except ValueError:
+            length = 0
+        if length <= 0:
+            raise HttpError(400, "上传内容为空")
+        if length > 4 * 1024 * 1024:
+            raise HttpError(413, "上传内容超过 4 MB 上限")
+        raw = self.rfile.read(length)
+        boundary = m.group(1).encode()
+        fields, upload_files = {}, []
+        for part in raw.split(b"--" + boundary):
+            part = part.strip(b"\r\n")
+            if not part or part == b"--" or b"\r\n\r\n" not in part:
+                continue
+            header_blob, content = part.split(b"\r\n\r\n", 1)
+            headers = header_blob.decode("utf-8", "replace")
+            disp = re.search(r'name="([^"]*)"(?:;\s*filename="([^"]*)")?', headers)
+            if not disp:
+                continue
+            name, filename = disp.group(1), disp.group(2)
+            if filename is not None:
+                upload_files.append({"field": name, "filename": filename, "data": content})
+            else:
+                fields[name] = content.decode("utf-8", "replace")
+        return {"__fields__": fields, "__files__": upload_files}
+
+    def _send_download(self, dl):
+        from urllib.parse import quote
+        self.send_response(200)
+        self.send_header("Content-Type", dl.ctype)
+        self.send_header("Content-Length", str(len(dl.data)))
+        self.send_header("Content-Disposition",
+                         "attachment; filename*=UTF-8''" + quote(dl.filename))
+        self.send_header("Cache-Control", "no-store")
+        self._cors()
+        self.end_headers()
+        self.wfile.write(dl.data)
+
     def _dispatch(self, method):
         parsed = urlparse(self.path)
         path = parsed.path
@@ -241,9 +349,16 @@ class Handler(BaseHTTPRequestHandler):
             m = re.match(pattern, path)
             if not m:
                 continue
-            body = self._read_body() if method == "POST" else {}
+            if method == "POST":
+                ctype = self.headers.get("Content-Type", "")
+                body = self._read_multipart() if ctype.startswith("multipart/form-data") else self._read_body()
+            else:
+                body = {}
             result = handler(m, body, query)
-            self._send_json(200, result)
+            if isinstance(result, Download):
+                self._send_download(result)
+            else:
+                self._send_json(200, result)
             return
 
         self._send_json(404, {"error": "接口不存在", "path": path})

@@ -13,7 +13,7 @@ import db
 from agents.factory import (
     get_provider, get_active_provider_name, set_active_provider, list_providers_status,
 )
-from services import course, tasks, wrong_questions
+from services import course, tasks, wrong_questions, focus, files as filesvc
 from hardware import esp32
 
 db.init_db()
@@ -177,6 +177,69 @@ def api_hardware_test():
     body = request.json or {}
     res = esp32.notify_esp32(body.get("task_name", "测试提醒"), body.get("message", "硬件联动测试"))
     return jsonify(res)
+
+
+# ---------------- 文件上传 / 错题导出 ----------------
+@app.route("/api/courses/<int:cid>/materials/upload", methods=["POST"])
+def api_upload_material(cid):
+    f = request.files.get("file")
+    if not f:
+        return jsonify({"error": "未收到文件，请使用 multipart 字段 file"}), 400
+    try:
+        info = filesvc.extract_text(f.filename, f.read())
+        result = course.add_material(cid, info["title"], info["text"])
+        result.update({"filename": f.filename, "chars": info["chars"],
+                       "truncated": info["truncated"], "preview": info["text"][:200]})
+        return jsonify(result)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/api/wrong-questions/export")
+def api_wq_export():
+    from flask import Response
+    cid = request.args.get("course_id", type=int)
+    md = wrong_questions.export_markdown(course_id=cid)
+    return Response(md, mimetype="text/markdown; charset=utf-8", headers={
+        "Content-Disposition": "attachment; filename=wrong-questions.md"})
+
+
+# ---------------- 学习概览 / 番茄钟 ----------------
+@app.route("/api/overview")
+def api_overview():
+    return jsonify(focus.overview())
+
+
+@app.route("/api/focus/sessions", methods=["GET"])
+def api_focus_sessions():
+    return jsonify(focus.list_sessions(request.args.get("limit", 10, type=int)))
+
+
+@app.route("/api/focus/sessions", methods=["POST"])
+def api_focus_record():
+    body = request.json or {}
+    try:
+        result = focus.record_session(
+            body.get("minutes", 0), course_id=body.get("course_id"),
+            note=body.get("note", ""), started_at=body.get("started_at", ""),
+            ended_at=body.get("ended_at", ""))
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    esp32.set_focus_state(False)
+    result["reminder"] = esp32.notify_esp32(
+        "专注完成", message="本次专注 %s 分钟已完成，休息一下吧！" % result["minutes"])
+    return jsonify(result)
+
+
+@app.route("/api/focus/state", methods=["POST"])
+def api_focus_state():
+    body = request.json or {}
+    return jsonify(esp32.set_focus_state(bool(body.get("active")), int(body.get("minutes", 0) or 0)))
+
+
+@app.route("/api/hardware/status")
+def api_hardware_status():
+    return jsonify(esp32.hardware_status())
 
 
 # ---------------- 到点提醒后台调度（轻量） ----------------
