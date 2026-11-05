@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 校园学习陪伴助手</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">📚</span>
+      <div>
+        <h1>AI 校园学习陪伴助手</h1>
+        <p class="sub">嵌入大模型智能体 · 课程记忆 · 错题闭环</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span id="providerBadge" class="badge">加载中…</span>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="chat">智能问答</button>
+    <button class="tab" data-tab="summarize">课件总结</button>
+    <button class="tab" data-tab="tutor">习题辅导</button>
+    <button class="tab" data-tab="plan">复习计划</button>
+    <button class="tab" data-tab="memory">课程记忆</button>
+    <button class="tab" data-tab="wrong">错题本</button>
+    <button class="tab" data-tab="hardware">硬件联动</button>
+    <button class="tab" data-tab="settings">设置</button>
+  </nav>
+
+  <main class="content">
+    <!-- 课程选择（问答/记忆/错题共用） -->
+    <section class="course-bar" id="courseBar">
+      <label>当前课程：</label>
+      <select id="courseSelect"></select>
+      <button id="refreshCourses" class="mini">刷新</button>
+      <button id="newCourseBtn" class="mini">+ 新建课程</button>
+    </section>
+
+    <!-- 智能问答 -->
+    <section class="panel active" id="panel-chat">
+      <div class="chat-box" id="chatBox"></div>
+      <div class="chat-input">
+        <textarea id="chatInput" placeholder="输入课程问题，智能体会基于本课程已上传资料作答…"></textarea>
+        <button id="sendChat">发送</button>
+      </div>
+    </section>
+
+    <!-- 课件总结 -->
+    <section class="panel" id="panel-summarize">
+      <p class="hint">粘贴课件 / 笔记文字，一键提炼知识点并生成复习考点提纲。</p>
+      <textarea id="sumText" class="big" placeholder="在此粘贴课件或笔记文字…"></textarea>
+      <button id="doSummarize">生成总结</button>
+      <pre id="sumOut" class="out"></pre>
+    </section>
+
+    <!-- 习题辅导 -->
+    <section class="panel" id="panel-tutor">
+      <p class="hint">贴入题目，采用「引导式讲解」：先给思路与分步推导，不直接甩答案。</p>
+      <textarea id="tutorText" class="big" placeholder="在此粘贴题目…"></textarea>
+      <button id="doTutor">辅导一下</button>
+      <pre id="tutorOut" class="out"></pre>
+    </section>
+
+    <!-- 复习计划 -->
+    <section class="panel" id="panel-plan">
+      <div class="form-row">
+        <input id="planSubject" placeholder="考试科目，如：数据结构" />
+        <input id="planDays" type="number" min="1" max="60" value="7" />
+        <span>天</span>
+        <button id="doPlan">生成计划</button>
+      </div>
+      <pre id="planOut" class="out"></pre>
+    </section>
+
+    <!-- 课程记忆 -->
+    <section class="panel" id="panel-memory">
+      <p class="hint">为当前课程上传学习资料，智能体将绑定该课程上下文；切换课程自动切换记忆。</p>
+      <input id="matTitle" placeholder="资料标题（可选）" />
+      <textarea id="matContent" class="big" placeholder="粘贴本课程课件、笔记、重点…"></textarea>
+      <button id="addMaterial">保存资料</button>
+      <h3>已上传资料</h3>
+      <ul id="matList" class="list"></ul>
+    </section>
+
+    <!-- 错题本 -->
+    <section class="panel" id="panel-wrong">
+      <p class="hint">录入错题 → 智能体分析错因 → 生成同类变式题，形成学习闭环。</p>
+      <div class="form-row">
+        <textarea id="wqQuestion" placeholder="错题题目"></textarea>
+      </div>
+      <div class="form-row">
+        <input id="wqUser" placeholder="我的答案（可选）" />
+        <input id="wqCorrect" placeholder="正确答案（可选）" />
+      </div>
+      <button id="addWq">加入错题本</button>
+      <h3>错题列表</h3>
+      <ul id="wqList" class="list"></ul>
+    </section>
+
+    <!-- 硬件联动 -->
+    <section class="panel" id="panel-hardware">
+      <p class="hint">可选加分项：设置复习任务，到点后向 ESP32 开发板下发提醒，点亮 LED + 蜂鸣器。</p>
+      <div class="form-row">
+        <input id="hwTask" placeholder="复习任务名，如：复习第3章" />
+        <input id="hwDue" type="datetime-local" />
+        <button id="addHwTask">创建任务</button>
+      </div>
+      <div class="form-row">
+        <button id="hwTest">立即下发测试提醒</button>
+        <span id="hwStatus" class="status"></span>
+      </div>
+      <p class="note">注：需将 ESP32_ENDPOINT 配置为开发板地址（见 README）。未配置时不影响主体功能。</p>
+    </section>
+
+    <!-- 设置 -->
+    <section class="panel" id="panel-settings">
+      <h3>智能体提供商（可插拔）</h3>
+      <p class="hint">未配置密钥的厂商会自动使用「内置演示模式」，保证无密钥也能完整体验。</p>
+      <div id="providerList" class="list"></div>
+      <h3>配置说明</h3>
+      <pre class="out">在项目根目录创建 .env 文件：
+OPENAI_API_KEY=sk-xxx
+QIANFAN_API_KEY=xxx
+QIANFAN_SECRET_KEY=xxx
+MOONSHOT_API_KEY=xxx
+CLAUDE_API_KEY=xxx
+ESP32_ENDPOINT=http://开发板IP/remind
+ACTIVE_PROVIDER=openai   # demo/openai/qianfan/moonshot/claude</pre>
+    </section>
+  </main>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
