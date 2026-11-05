@@ -145,6 +145,7 @@ def quiz(subject: str, chapter: str = "", count: int = 5,
         "count": len(selected), "requested_count": count,
         "available_in_scope": len(pool),
         "difficulty": difficulty or "混合",
+        "discipline": kb.DISCIPLINE if kb.is_builtin(name) else "自定义科目",
         "source": source, "provider": provider_name or get_active_provider_name(),
         "questions": selected,
     }
@@ -180,6 +181,7 @@ def summary(subject: str, chapter: str = "", provider_name: str = None) -> dict:
                 provider_name or get_active_provider_name(), text)
     return {
         "subject": name, "scope": chapter or "全部章节", "chapter_count": len(chapters),
+        "discipline": kb.DISCIPLINE if kb.is_builtin(name) else "自定义科目",
         "markdown": md, "source": "hybrid(knowledge_base + llm)" if ai_extra else "knowledge_base",
         "provider": provider_name or get_active_provider_name(),
     }
@@ -260,6 +262,7 @@ def article(subject: str, chapter: str = "", provider_name: str = None) -> dict:
                             (provider_name or get_active_provider_name(), text.replace("\n", " ")), 1)
     return {
         "subject": name, "scope": scope, "title": lines[0].lstrip("# "),
+        "discipline": kb.DISCIPLINE if kb.is_builtin(name) else "自定义科目",
         "markdown": md, "chars": len(md), "sections": 7,
         "source": "hybrid(knowledge_base + llm)" if ai_extra else "knowledge_base",
         "provider": provider_name or get_active_provider_name(),
