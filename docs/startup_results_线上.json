@@ -1,0 +1,141 @@
+{
+  "app": "AI校园学习陪伴助手",
+  "expected_version": "1.2.1",
+  "remote_version": "1.2.1",
+  "base_url": "https://ai-campus-companion.app.workbuddy.host",
+  "time": "2026-11-06T00:30:45",
+  "passed": 26,
+  "total": 26,
+  "checks": [
+    {
+      "name": "S1 服务可访问（/api/status 200）",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "S2 后端版本与磁盘版本一致",
+      "ok": true,
+      "detail": "远端 1.2.1 / 期望 1.2.1"
+    },
+    {
+      "name": "S3 智能体提供商列表正常",
+      "ok": true,
+      "detail": "6 项"
+    },
+    {
+      "name": "S4 首页可访问",
+      "ok": true,
+      "detail": "HTTP 200 / 17743 字节"
+    },
+    {
+      "name": "S5 首页含 V1.2 界面元素",
+      "ok": true,
+      "detail": "学习资源包 / 模型接入 / 一键生成"
+    },
+    {
+      "name": "S6 静态资源 /static/css/style.css",
+      "ok": true,
+      "detail": "HTTP 200 / 13131 字节"
+    },
+    {
+      "name": "S6 静态资源 /static/js/app.js",
+      "ok": true,
+      "detail": "HTTP 200 / 29998 字节"
+    },
+    {
+      "name": "S7 GET /api/providers",
+      "ok": true,
+      "detail": "HTTP 200 / 1953 字节"
+    },
+    {
+      "name": "S7 GET /api/agent/providers",
+      "ok": true,
+      "detail": "HTTP 200 / 4442 字节"
+    },
+    {
+      "name": "S7 GET /api/study/catalog",
+      "ok": true,
+      "detail": "HTTP 200 / 1816 字节"
+    },
+    {
+      "name": "S7 GET /api/overview",
+      "ok": true,
+      "detail": "HTTP 200 / 758 字节"
+    },
+    {
+      "name": "S7 GET /api/hardware/status",
+      "ok": true,
+      "detail": "HTTP 200 / 178 字节"
+    },
+    {
+      "name": "S7 GET /api/focus/sessions",
+      "ok": true,
+      "detail": "HTTP 200 / 507 字节"
+    },
+    {
+      "name": "S7 GET /api/courses",
+      "ok": true,
+      "detail": "HTTP 200 / 1342 字节"
+    },
+    {
+      "name": "S7 GET /api/courses/1/materials",
+      "ok": true,
+      "detail": "HTTP 200 / 1377 字节"
+    },
+    {
+      "name": "S7 GET /api/wrong-questions",
+      "ok": true,
+      "detail": "HTTP 200 / 7066 字节"
+    },
+    {
+      "name": "S7 GET /api/study/mindmap.svg?subject=math",
+      "ok": true,
+      "detail": "HTTP 200 / 2936 字节"
+    },
+    {
+      "name": "S7 GET /api/study/pack/export?subject=math&count=2",
+      "ok": true,
+      "detail": "HTTP 200 / 10253 字节"
+    },
+    {
+      "name": "S8 POST /api/study/quiz",
+      "ok": true,
+      "detail": "HTTP 200 / 1398 字节"
+    },
+    {
+      "name": "S8 POST /api/study/summary",
+      "ok": true,
+      "detail": "HTTP 200 / 2681 字节"
+    },
+    {
+      "name": "S8 POST /api/study/article",
+      "ok": true,
+      "detail": "HTTP 200 / 17425 字节"
+    },
+    {
+      "name": "S8 POST /api/study/resources",
+      "ok": true,
+      "detail": "HTTP 200 / 2297 字节"
+    },
+    {
+      "name": "S8 POST /api/study/mindmap",
+      "ok": true,
+      "detail": "HTTP 200 / 5153 字节"
+    },
+    {
+      "name": "S8 POST /api/study/pack",
+      "ok": true,
+      "detail": "HTTP 200 / 16165 字节"
+    },
+    {
+      "name": "S8 POST /api/agent/test",
+      "ok": true,
+      "detail": "HTTP 200 / 268 字节"
+    },
+    {
+      "name": "S8 POST /api/agent/complete",
+      "ok": true,
+      "detail": "HTTP 200 / 417 字节"
+    }
+  ]
+}

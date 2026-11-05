@@ -1,5 +1,5 @@
 {
-  "base_url": "http://127.0.0.1:5000",
+  "base_url": "https://ai-campus-companion.app.workbuddy.host",
   "total": 19,
   "passed": 19,
   "results": [
@@ -46,7 +46,7 @@
     {
       "name": "学习概览",
       "ok": true,
-      "detail": "课程12 掌握率83.3"
+      "detail": "课程16 掌握率87.5"
     },
     {
       "name": "专注状态开启",
@@ -71,7 +71,7 @@
     {
       "name": "专注记录列表",
       "ok": true,
-      "detail": "3"
+      "detail": "4"
     },
     {
       "name": "Markdown 上传",
@@ -96,7 +96,7 @@
     {
       "name": "上传资料已进入课程记忆",
       "ok": true,
-      "detail": "7"
+      "detail": "9"
     }
   ]
 }

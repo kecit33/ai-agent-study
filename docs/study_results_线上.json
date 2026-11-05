@@ -1,6 +1,6 @@
 {
   "base_url": "https://ai-campus-companion.app.workbuddy.host",
-  "generated_at": "2026-11-05T23:29:46",
+  "generated_at": "2026-11-06T00:31:06",
   "total": 25,
   "passed": 25,
   "failed": 0,
@@ -109,12 +109,12 @@
     {
       "name": "C1 学习概览接口",
       "ok": true,
-      "detail": "10"
+      "detail": "16"
     },
     {
       "name": "C2 课程列表接口",
       "ok": true,
-      "detail": "10"
+      "detail": "16"
     },
     {
       "name": "C3 课程问答接口",
