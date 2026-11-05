@@ -61,8 +61,19 @@
 
     <!-- 学习概览 + 番茄钟 -->
     <section class="panel active" id="panel-dashboard">
-      <p class="hint">一屏看清学习状态；用番茄钟保持专注，到点可联动 ESP32 声光提醒。</p>
+      <p class="hint">一屏看清学习状态（数字卡片可直接点击跳转到对应模块）；在下方直接添加「待复习任务」，
+        或用番茄钟保持专注，到点可联动 ESP32 声光提醒。</p>
       <div class="cards" id="statCards"></div>
+
+      <div class="quick-block">
+        <h3>📝 待复习任务 <span class="tag">可直接增删</span></h3>
+        <div class="form-row">
+          <input id="quickTask" placeholder="任务名，如：复习数据结构第 3 章" />
+          <input id="quickTaskDue" type="datetime-local" title="到点时间（可选）" />
+          <button id="quickTaskAdd">＋ 添加任务</button>
+        </div>
+        <ul id="quickTaskList" class="list"></ul>
+      </div>
 
       <div class="pomodoro">
         <h3 style="margin-top:0">🍅 番茄钟专注</h3>
@@ -89,6 +100,10 @@
 
     <!-- 智能问答 -->
     <section class="panel" id="panel-chat">
+      <div class="model-banner">
+        <span>⚡ 当前为内置演示模式（知识库可直接回答计算机/高数高频考点）；接入真实大模型可获得结合课件的精准解答。</span>
+        <a href="#settings" id="goModelSetup">接入文心一言 / Kimi →</a>
+      </div>
       <div class="chat-box" id="chatBox"></div>
       <div class="chat-input">
         <textarea id="chatInput" placeholder="输入课程问题，或点右侧 🎤 语音输入（Chrome / Edge）…"></textarea>
