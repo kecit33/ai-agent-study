@@ -228,3 +228,32 @@ SHARECODE=CEUN7FBTFJ python docs/demo_check.py
 - `docs/演示验收报告.md` —— 真实 HTTP 请求与响应数据摘录
 
 > 注：PPT 与需求文档中的图表为 SVG 矢量图，请使用 PowerPoint 2016+ 或 WPS 打开以获得最佳效果。
+
+---
+
+## 十、版本迭代与提交规范
+
+本地仓库按模块**逐步提交**（不是一次性打包），共 16 个 commit，与需求文档的迭代记录表对应。用 `git log --oneline` 可查看：
+
+| # | 阶段 | 提交说明 |
+|---|---|---|
+| 1 | 骨架 | `chore: 初始化项目骨架与工程配置` |
+| 2 | 数据 | `feat(db): SQLite 数据模型与连接管理` |
+| 3 | 智能体 | `feat(agents): 智能体抽象基类与内置演示模式` |
+| 4 | 智能体 | `feat(agents): 接入 GPT / Kimi / Claude / 文心一言 四家厂商` |
+| 5 | 智能体 | `feat(agents): 提供商工厂与不可用时自动回退演示模式` |
+| 6 | 服务 | `feat(services): 课程与课程记忆上下文` |
+| 7 | 服务 | `feat(services): 问答/总结/辅导/复习计划/错因分析任务封装` |
+| 8 | 服务 | `feat(services): AI 错题本与定向变式出题闭环` |
+| 9 | 硬件 | `feat(hardware): ESP32 Webhook 联动接口与固件` |
+| 10 | 后端 | `feat(api): Flask REST 后端与复习任务到点调度` |
+| 11 | 后端 | `feat(api): 零依赖标准库 Web 服务器` |
+| 12 | 前端 | `feat(frontend): 原生前端页面与八模块交互` |
+| 13 | 测试 | `test: 端到端 HTTP 验收脚本与线上数据结果` |
+| 14 | 文档 | `docs: 国标需求规格说明书与答辩 PPT（含生成脚本与矢量图）` |
+| 15 | 部署 | `deploy: Render Blueprint 与 PythonAnywhere WSGI 模板` |
+| 16 | 文档 | `docs: 本地运行、云端部署与验收说明` |
+
+- 分支：`main`；忽略：`data/`、`__pycache__/`、`.env`、`docs/.slidep/`、`docs/pptx/`（后两者为工具残留，非交付物）。
+- GitHub 仓库名不含空格，采用 `aiagent-study`；本地 `origin` 已指向 `https://github.com/kecit33/aiagent-study.git`。
+- 仓库可用后执行：`git push -u origin main`（一次推送即保留全部 16 个逐步提交历史）。
