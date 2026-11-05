@@ -9,6 +9,7 @@ import re
 from datetime import datetime, timedelta
 
 from .base import AgentProvider
+from . import demo_knowledge
 
 
 class DemoProvider(AgentProvider):
@@ -152,10 +153,23 @@ class DemoProvider(AgentProvider):
             course = cm.group(1).strip()
         text = (text or "").strip()
         if not text:
-            return f"（演示模式）已进入「{course}」上下文，有什么课程问题尽管问我～"
+            return (f"（演示模式）已进入「{course}」上下文，有什么课程问题尽管问我～\n"
+                    "例如：栈和队列有什么区别？时间复杂度是什么？极限的两个重要极限？")
+        # 优先用内置知识库给出真实、有内容的回答
+        known = demo_knowledge.answer(text)
+        if known:
+            return f"（演示模式 · 已绑定「{course}」）\n\n{known}"
+        # 未命中知识库：给出引导式框架，而不是空占位
         return (
             f"（演示模式 · 课程记忆已绑定「{course}」）\n\n"
             f"你问的是：{text}\n\n"
-            "基于已上传的课程资料，我的回答会限定在该课程范围内，避免超纲跑偏。"
-            "（配置真实大模型密钥后，这里会由 AI 结合你的课件内容给出精准解答。）"
+            "目前是**内置演示模式**（未配置真实大模型密钥），对于知识库未覆盖的问题，"
+            "我先给一个通用分析框架，你可以按此思路自己展开：\n"
+            "1. 这个概念属于哪门课、哪个章节？\n"
+            "2. 它的定义 / 核心思想 / 适用条件是什么？\n"
+            "3. 有哪些典型例题或应用场景？\n"
+            "4. 容易混淆的相近概念有哪些？\n\n"
+            "👉 建议在「设置 → 模型接入」填入文心一言或 Kimi 的 API Key，"
+            "即可让真实大模型结合你的课件给出精准解答。你也可以追问具体名词（如“栈”“时间复杂度”“极限”），"
+            "演示模式内置了计算机考研与高等数学的高频考点知识库，多数概念能直接回答。"
         )
