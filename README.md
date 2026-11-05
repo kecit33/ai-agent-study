@@ -1,18 +1,20 @@
 # AI 校园学习陪伴助手
 
-一款面向大学生课程学习场景、基于大模型智能体的 **Web 应用**（浏览器访问，B/S 架构）。智能体（GPT / 文心一言 / Kimi / Claude）以**可插拔**方式集成进自研系统，而非直接套用官方聊天页；具备「课程记忆智能体」「AI 错题本与定向出题」等杀手级功能，并预留 ESP32 硬件联动（加分项）。
+一款面向大学生课程学习场景、基于大模型智能体的 **Web 应用**（浏览器访问，B/S 架构）。智能体（GPT / 文心一言 / Kimi / Claude / 任意 OpenAI 兼容端点）以**可插拔**方式集成进自研系统，而非直接套用官方聊天页；具备「课程记忆智能体」「AI 错题本与定向出题」「学科学习资源包（题目 / 总结 / 文章 / 资料 / 思维导图）」等杀手级功能，并预留 ESP32 硬件联动（加分项）。
 
 > 课程作业 · 智能体开发 · 2026
 >
-> **端到端验收结果（2026-11-05，本地 + 线上双环境均通过）：原有回归 26/26 个 HTTP 请求状态正确 + 30/30 项业务断言通过；新增功能 19/19 项断言通过**（详见 `docs/演示验收报告.md`、`docs/feature_results.json`、`docs/自我检查报告.md`）。
+> **端到端验收结果（2026-11-05）：原有回归 26/26 个 HTTP 请求状态正确 + 30/30 项业务断言通过；V1.1 新增功能 19/19 项断言通过；V1.2「高等数学上册资源生成 + 文心/Kimi 模型接入」自测 36/36 项断言通过**（详见 `docs/演示验收报告.md`、`docs/自测报告_高等数学与模型接入.md`、`docs/study_results.json`）。
 >
-> 需求符合性自检见 `docs/自我检查报告.md`，硬件交互点全清单见 `docs/硬件交互说明.md`。
+> 需求符合性自检见 `docs/自我检查报告.md`，硬件交互点全清单见 `docs/硬件交互说明.md`，模型接入接口说明见 `docs/模型接入接口说明.md`。
 
 ---
 
 ## 一、特性对照（作业评估要点）
 
-- ✅ 智能体嵌入自研系统：统一 `AgentProvider` 接口，四家厂商 + 内置演示模式
+- ✅ 智能体嵌入自研系统：统一 `AgentProvider` 接口，四家厂商 + 自定义兼容端点 + 内置演示模式
+- ✅ **模型接入接口（V1.2）**：Web 设置页或 REST 接口运行时填入文心一言 / Kimi 的 API Key 即生效，无需改代码、无需重启；`/api/agent/complete` 供自建系统直接调用
+- ✅ **学科学习资源包（V1.2）**：输入「数学 / 高等数学上册」即可生成带标准答案与解析的自测题、复习总结、专题文章、资料清单与可视化思维导图，并可导出 Markdown / SVG
 - ✅ 真实调研需求：基于选题报告中的校内调研痛点，无虚构
 - ✅ 杀手级功能：课程记忆（按课程隔离上下文）+ 错题闭环（错因分析 → 定向变式题）
 - ✅ 无密钥可运行：未配置任何密钥时自动进入「内置演示模式」，保证师生可直接验收
@@ -35,21 +37,27 @@ ai-campus-companion/
 ├─ server.py              # 【默认入口】零依赖 Web 服务器（Python 标准库，推荐）
 ├─ app.py                 # Flask 版后端入口（需 pip install，生产可选）
 ├─ config.py              # 配置中心（密钥经环境变量读取）
-├─ db.py                  # SQLite 初始化与连接（7 张表，含 focus_sessions）
+├─ db.py                  # SQLite 初始化与连接（8 张表，含 focus_sessions、provider_credentials）
 ├─ agents/                # 可插拔智能体层
-│  ├─ base.py             # AgentProvider 抽象基类
+│  ├─ base.py             # AgentProvider 抽象基类（complete / probe / 自动降级）
+│  ├─ credentials.py      # 运行时密钥中心（环境变量 + SQLite 覆盖，输出掩码）
+│  ├─ http_client.py      # 标准库 urllib 厂商 HTTP 客户端（零第三方依赖）
 │  ├─ openai_provider.py  # GPT
-│  ├─ qianfan_provider.py # 文心一言
+│  ├─ qianfan_provider.py # 文心一言（千帆 v2 / 旧版 OAuth 双模式）
 │  ├─ moonshot_provider.py# Kimi
 │  ├─ claude_provider.py  # Claude
+│  ├─ custom_provider.py  # 任意 OpenAI 兼容端点
 │  ├─ demo_provider.py    # 内置演示模式（无密钥兜底）
-│  └─ factory.py          # 提供商工厂（按配置选择 + 自动回退）
+│  └─ factory.py          # 提供商工厂（选择 / 配置 / 探针 / 透传 / 回退）
 ├─ services/              # 业务服务层
 │  ├─ course.py           # 课程 / 资料 / 课程记忆上下文
 │  ├─ tasks.py            # 问答 / 总结 / 辅导 / 计划 / 错因 / 变式题
 │  ├─ wrong_questions.py  # 错题本 / 错因 / 定向出题 / Markdown 导出
 │  ├─ files.py            # 课件上传解析（txt/md/docx，白名单 + 大小限制）
-│  └─ focus.py            # 专注记录 / 学习概览统计
+│  ├─ focus.py            # 专注记录 / 学习概览统计
+│  ├─ subject_knowledge.py# 高等数学上册 7 章结构化知识库
+│  ├─ study.py            # 学习资源包生成（知识库 + 大模型双路径）
+│  └─ mindmap.py          # 思维导图树 / SVG / 大纲 / Mermaid
 ├─ hardware/
 │  ├─ esp32.py            # Webhook 下发 + 专注状态 + 学习状态看板
 │  └─ esp32_firmware.ino  # 固件：/remind、/focus、上行状态轮询
@@ -57,10 +65,14 @@ ai-campus-companion/
 ├─ docs/
 │  ├─ demo_check.py       # 原有端到端 HTTP 验收脚本
 │  ├─ demo_results.json   # 真实响应数据留存
-│  ├─ feature_check.py    # 新增功能端到端验收脚本（19 项）
-│  ├─ feature_results.json# 新增功能验收结果
+│  ├─ feature_check.py    # V1.1 新增功能端到端验收脚本（19 项）
+│  ├─ feature_results.json# V1.1 新增功能验收结果
+│  ├─ study_check.py      # 【V1.2】高等数学 + 模型接入自测（36 项，含本地模拟模型）
+│  ├─ study_results.json  # V1.2 自测结构化结果
+│  ├─ 自测报告_高等数学与模型接入.md  # V1.2 自测报告（含真实生成内容抽样）
+│  ├─ 模型接入接口说明.md  # 文心 / Kimi / 自定义端点的接入参数与故障排查
 │  ├─ ui_shots.py         # 无头浏览器深浅色渲染截图
-│  ├─ ui/                 # 深/浅色界面截图
+│  ├─ ui/                 # 深/浅色界面截图（含学习资源包、模型接入表单）
 │  ├─ 演示验收报告.md      # 可读验收报告
 │  ├─ 自我检查报告.md      # 逐条对照作业要求的符合性自检
 │  ├─ 硬件交互说明.md      # 6 个硬件交互点全清单
@@ -115,21 +127,44 @@ python app.py
 
 ---
 
-## 四、配置真实大模型密钥（可选）
+## 四、接入文心一言 / Kimi 等真实模型（可选，三种方式）
+
+### 方式 1（推荐）：Web 界面填写，立即生效、无需重启
+
+打开 **设置 → 模型接入**，选择提供商 → 填 API Key（文心旧版再填 Secret Key）→ 填模型名 →
+点「保存并启用」，随后点「连通性测试」验证。密钥保存在服务端本地 SQLite，列表只显示掩码。
+
+### 方式 2：REST 接口，供自建系统 / 脚本集成
 
 ```bash
-cp .env.example .env
-# 编辑 .env，填入你申请的密钥，例如：
-OPENAI_API_KEY=sk-xxx
-QIANFAN_API_KEY=xxx
-QIANFAN_SECRET_KEY=xxx
-MOONSHOT_API_KEY=xxx
-CLAUDE_API_KEY=xxx
-ACTIVE_PROVIDER=openai     # demo / openai / qianfan / moonshot / claude
+# Kimi
+curl -X POST http://localhost:5000/api/agent/credentials \
+  -H "Content-Type: application/json" \
+  -d '{"provider":"moonshot","api_key":"sk-你的密钥","model":"moonshot-v1-8k","activate":true}'
+
+# 文心一言（千帆 v2，只需 API Key）
+curl -X POST http://localhost:5000/api/agent/credentials \
+  -H "Content-Type: application/json" \
+  -d '{"provider":"qianfan","api_key":"你的APIKey","model":"ernie-4.5-8k","base_url":"https://qianfan.baidubce.com/v2/chat/completions","activate":true}'
+
+# 任意业务系统直接调用当前模型
+curl -X POST http://localhost:5000/api/agent/complete \
+  -H "Content-Type: application/json" \
+  -d '{"system_prompt":"你是数学助教","message":"讲解夹逼准则"}'
 ```
 
-也可直接用环境变量：`ACTIVE_PROVIDER=openai OPENAI_API_KEY=sk-xxx python server.py`。
-在页面「设置」页可随时切换与查看各厂商可用性。密钥只从环境变量读取，不写入代码或数据库。
+完整字段、旧版 WenxinWorkshop 参数、连通性测试与故障排查见 **`docs/模型接入接口说明.md`**。
+
+### 方式 3：.env 环境变量
+
+```bash
+cp .env.example .env   # 填入 QIANFAN_API_KEY / MOONSHOT_API_KEY / CUSTOM_BASE_URL 等
+ACTIVE_PROVIDER=moonshot MOONSHOT_API_KEY=sk-xxx python server.py
+```
+
+> 优先级：**运行时配置（方式 1/2） > 环境变量 > 内置演示模式**。任一厂商未配置或调用失败，
+> 系统自动回退演示模式，功能流程不中断。所有厂商调用改用 Python 标准库 `urllib`，
+> **零第三方依赖**，本机与云端均不需要 `requests`。
 
 ---
 
@@ -142,6 +177,8 @@ ACTIVE_PROVIDER=openai     # demo / openai / qianfan / moonshot / claude
 浏览器直接打开（手机同样可访问），无需安装、无需密钥。链接中的 `sharecode` 为访问凭证，请**原样转发**给师生（去掉会返回 403）。
 
 > ✅ **已于 2026-11-05 22:26 重新发布为 V1.1**，链接与 `sharecode` 均不变：现已包含深浅色主题与主题色、语音输入、课件上传/错题导出、学习概览、番茄钟、9 个模块与 6 个硬件交互点。发布后对线上复跑验收：首页含新控件，`/api/overview`、`/api/hardware/status`、`/api/focus/sessions` 均返回 200；**26/26 请求 + 30/30 断言 + 19/19 新增断言全部通过**（`docs/demo_results.json`、`docs/feature_results.json` 记录的是线上目标）。
+>
+> 🆕 **V1.2（本轮）已完成本地开发、36 项自测与 GitHub 逐步提交**：新增「学习资源包」与「模型运行时接入」。本节链接在重新发布前仍指向 V1.1；V1.2 的功能可先在本机 `python server.py` → `http://localhost:5000/?autopack=1#study` 完整验收，或查看 `docs/自测报告_高等数学与模型接入.md`。重新发布后链接与 `sharecode` 保持不变。
 
 ---
 
@@ -240,6 +277,35 @@ git push -u origin main
 
 > 以上接口在 `server.py` 与 `app.py` 双后端中均已实现，路径与返回结构一致。
 
+### V1.2 新增接口：学习资源包 + 模型接入
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/study/catalog` | 学科目录：数学 → 高等数学上册 → 7 章 |
+| POST | `/api/study/quiz` | 生成自测题（含标准答案、解析、考点；可指定章节/难度/题量） |
+| POST | `/api/study/summary` | 生成章节/全册复习总结（知识点、公式速查、易错点） |
+| POST | `/api/study/article` | 生成专题文章（7 节：脉络 / 方法 / 题型 / 易错 / 路线 / 资料） |
+| POST | `/api/study/resources` | 生成相关文章与资料清单（含链接） |
+| POST | `/api/study/mindmap` | 生成思维导图（树 JSON + SVG + 大纲 + Mermaid） |
+| GET | `/api/study/mindmap.svg` | 直接返回可视化 SVG 图片 |
+| POST | `/api/study/pack` | 一键生成全套；`save_to_course:true` 回写课程记忆 |
+| GET | `/api/study/pack/export` | 全套资源导出为 Markdown 文件下载 |
+| GET | `/api/agent/providers` | 列出可插拔模型、配置状态与掩码 |
+| POST | `/api/agent/credentials` | 运行时写入 API Key / 模型 / 接口地址，`activate:true` 立即切换 |
+| POST | `/api/agent/credentials/clear` | 清除运行时配置并回退演示模式 |
+| POST | `/api/agent/test` | `mode=validate` 校验配置；`mode=probe` 真实调用模型 |
+| POST | `/api/agent/complete` | 通用模型透传，自建系统直接调用指定/当前模型 |
+
+示例：「把高等数学上册给出去」：
+
+```bash
+curl -X POST http://localhost:5000/api/study/pack \
+  -H "Content-Type: application/json" \
+  -d '{"subject":"高等数学上册","chapter":"第一章 函数与极限","count":6}'
+```
+
+浏览器快捷演示：`http://localhost:5000/?autopack=1#study`（打开即自动生成全套资源）。
+
 ---
 
 ## 七、硬件联动（可选加分项）
@@ -274,7 +340,8 @@ python server.py
 
 # 另开终端执行（默认验证 http://localhost:5000）
 python docs/demo_check.py       # 原有 26 请求 / 30 断言
-python docs/feature_check.py    # 新增 19 项断言
+python docs/feature_check.py    # V1.1 新增 19 项断言
+python docs/study_check.py      # 【V1.2】高等数学资源 + 文心/Kimi 接入 36 项断言
 python docs/ui_shots.py         # 可选：生成深浅色界面截图
 
 # 验证线上站点（sharecode 用于建立访问会话）
@@ -293,7 +360,7 @@ SHARECODE=CEUN7FBTFJ python docs/feature_check.py
 
 ### 手动验收清单（浏览器逐项点一遍，约 7 分钟）
 
-页面顶部有 **9 个导航标签**，右上角是当前智能体徽标与主题切换按钮。支持 URL hash 直达模块（如 `http://localhost:5000/#hardware`）。
+页面顶部有 **10 个导航标签**，右上角是当前智能体徽标与主题切换按钮。支持 URL hash 直达模块（如 `http://localhost:5000/#study`）；`/?autopack=1#study` 打开即自动生成全套学习资源，适合答辩现场演示。
 
 | # | 标签 | 操作 | 预期结果 |
 |---|---|---|---|
@@ -304,10 +371,12 @@ SHARECODE=CEUN7FBTFJ python docs/feature_check.py
 | 5 | 习题辅导 | 粘贴一道题，点**辅导一下** | 给分步思路与提示，**不直接甩最终答案** |
 | 6 | 复习计划 | 科目填「数据结构」、天数填 10，点**生成计划** | 输出「第 1 天」到「第 10 天」的逐日安排 |
 | 7 | 错题本 | 填题干/我的答案/正确答案，点**加入错题本**；列表中点分析 → 变式 → 标记掌握 | 生成错因诊断 + 定向变式题，可标记掌握并按状态筛选 |
-| 8 | 设置 | 查看 5 个厂商卡片；切换「浅色/深色/跟随系统」与主题色 | 4 家真实厂商显示「未配置密钥」并自动回退；主题即时生效，刷新后保留 |
+| 8 | 设置 | 查看 6 个厂商卡片与模型接入表单；切换「浅色/深色/跟随系统」与主题色 | 未配置厂商显示「未配置」并自动回退；主题即时生效，刷新后保留 |
 | 9 | 硬件联动 | 创建任务，点**立即下发测试提醒**、**点亮专注灯**、**刷新状态** | 返回明确的未配置原因；看板显示待复习数/待掌握错题数/专注状态 |
 | 10 | 语音 / 上传 | 任一输入框点 🎤 说话；在课程记忆区上传一个 `.txt`/`.md`/`.docx` | 语音转文字填入输入框；上传解析成功并进入课程记忆，非法类型返回 400 |
 | 11 | 番茄钟 | 学习概览设置时长并点击开始，等待计时结束（或缩短时长） | 计时正常，结束时产生专注记录并可联动 ESP32 提醒 |
+| 12 | 学习资源包 | 教材填「数学」或「高等数学上册」，章节选「第一章」，点**一键生成全套** | 生成带答案解析的题目、总结、专题文章、资料清单与 SVG 思维导图；可导出 Markdown / SVG |
+| 13 | 模型接入 | 设置页选「Kimi」，填 API Key 与模型名，点**保存并启用** → **连通性测试** | 状态显示已配置与掩码；真实密钥时连通性测试返回模型回复，无密钥时给出明确原因 |
 
 数据文件：`data/companion.db`（SQLite，首次启动自动创建）。想恢复干净演示状态，停止服务后删除该文件再重启即可。初始预置 1 门示例课程、1 份课件、1 道待分析错题。
 
@@ -320,20 +389,22 @@ SHARECODE=CEUN7FBTFJ python docs/feature_check.py
 - `docs/软件需求规格说明书.docx` —— 符合 GB/T 9385-2008 / GB/T 8567-2006 的需求文档（含迭代记录表、项目标志、思维导图、类图、功能描述、验收标准、前后端详尽描述）
 - `docs/AI校园学习陪伴助手_答辩.pptx` —— 答辩材料（团队展示 / 选题报告 / 需求分析 / 核心功能 / 类图 / 创新点，图文并茂）
 - `docs/演示验收报告.md` —— 真实 HTTP 请求与响应数据摘录
+- `docs/自测报告_高等数学与模型接入.md` —— 【V1.2】36 项自测与真实生成内容抽样（题目/总结/文章/资料/导图）
+- `docs/模型接入接口说明.md` —— 【V1.2】文心一言 / Kimi / 自定义端点接入参数、示例与排查
 - `docs/自我检查报告.md` —— 逐条对照原始作业要求的符合性自检（✅/🟡/❌ + 证据 + 差距）
 - `docs/硬件交互说明.md` —— 6 个硬件交互点全清单与演示步骤
 - `docs/blog/AI校园学习陪伴助手_博客园文章.md` —— 技术复盘长文（10 张配图）
 - `docs/ui/*.png` —— 深/浅色界面真实渲染截图
 
 > 注：PPT 与需求文档中的图表为 SVG 矢量图，请使用 PowerPoint 2016+ 或 WPS 打开以获得最佳效果。
-> **V1.1 已同步**：需求文档新增「六、功能描述（V1.1 增量）」章节（F9–F14、12 项新接口、A11–A16 验收标准、真实实测结果），正文约 7.4 千字；答辩 PPT 扩至 10 页，新增「V1.1 体验增强」「硬件双向联动 · 真实验收数据」两页。
+> **V1.2 已同步**：SRS 版本升至 V1.2，迭代表新增 V1.2 行，新增「七、功能描述（V1.2 增量）」（F15–F22、14 项新接口、A17–A24 验收标准、36 项实测结果与诚实边界）；答辩 PPT 扩至 **11 页**，新增「V1.2 学科资源包 + 模型接入接口」页并更新验收数据。
 > 待办：团队展示仍为「第 X 开发组」占位，需替换为真实成员信息。
 
 ---
 
 ## 十、版本迭代与提交规范
 
-本地仓库按模块**逐步提交**（不是一次性打包），共 30 个 commit，其中前 16 个与需求文档的迭代记录表对应；远端 `main` 分支已按相同顺序重建。用 `git log --oneline` 可查看：
+本地仓库按模块**逐步提交**（不是一次性打包），共 36 个 commit，其中前 16 个与需求文档的迭代记录表对应；远端 `main` 分支已按相同顺序重建。用 `git log --oneline` 可查看：
 
 | # | 阶段 | 提交说明 |
 |---|---|---|
@@ -367,9 +438,15 @@ SHARECODE=CEUN7FBTFJ python docs/feature_check.py
 | 28 | 文档 | `docs: 需求符合性自检、硬件交互说明与 README 同步` |
 | 29 | 文档 | `docs: SRS 与 PPT 同步 V1.1 增量功能` |
 | 30 | 测试 | `test: 重新发布线上站点并完成双环境验收` |
+| 31 | 智能体 | `feat(agents): 运行时密钥中心、标准库 HTTP 客户端与多厂商统一适配` |
+| 32 | 服务 | `feat(services): 高等数学上册知识库、学习资源包与思维导图生成` |
+| 33 | 后端 | `feat(api): 双后端新增学习资源包与模型接入 14 项接口` |
+| 34 | 前端 | `feat(frontend): 学习资源包页面与模型接入表单` |
+| 35 | 测试 | `test: 高等数学与模型接入 36 项自测、深浅色截图与回归复跑` |
+| 36 | 文档 | `docs: 模型接入说明、SRS/PPT 同步 V1.2、博客与自检报告更新` |
 
 - 分支：`main`；忽略：`data/`、`__pycache__/`、`.env`、`docs/.slidep/`、`docs/pptx/`（后两者为工具残留，非交付物）。
 - GitHub 仓库名不含空格，实际采用 `ai-agent-study`；本地 `origin` 已指向 `https://github.com/kecit33/ai-agent-study.git`。
-- 远端 `main` 已按本地顺序重建全部 30 个逐步提交（含中文提交说明与二进制文档）；网络允许时可直接 `git push -u origin main`。
+- 远端 `main` 已按本地顺序逐步追加至全部 **36 个提交 / 82 个文件**（含中文提交说明与二进制文档）；因 `github.com:443` 直连不稳定，推送使用 `docs/push_to_github.py --start 30 --parent <远端HEAD>` 经 `api.github.com` Git Data API 完成，逐文件 blob 与本地一致。
 - 双击启动入口：`start.bat` → `launch.py` → `server.py`（自动探测端口、自动开浏览器）。
 - 博客园技术复盘文章：`docs/blog/AI校园学习陪伴助手_博客园文章.md`（10 张配图在 `docs/blog/assets/`，由 `docs/blog/build_images.py` 用无头浏览器生成）。
