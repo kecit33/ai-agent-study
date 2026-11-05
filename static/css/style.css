@@ -118,6 +118,15 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 }
 
 /* ============ 问答 ============ */
+.model-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  background: var(--panel);
+  border: 1px solid var(--primary); border-left: 4px solid var(--primary);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 10px;
+  font-size: 13px; color: var(--text);
+}
+.model-banner a { color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.model-banner a:hover { text-decoration: underline; }
 .chat-box {
   background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
   padding: 14px; min-height: 280px; max-height: 420px; overflow: auto; margin-bottom: 10px;
@@ -167,6 +176,17 @@ h3 { font-size: 15px; margin: 18px 0 8px; }
 .card .num { font-size: 26px; font-weight: 700; color: var(--primary); }
 .card .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
 .card .sub-num { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.card.clickable { cursor: pointer; transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease; }
+.card.clickable:hover { transform: translateY(-2px); border-color: var(--primary); box-shadow: 0 6px 16px rgba(0,0,0,.10); }
+.card.clickable:hover .num { opacity: .85; }
+
+/* 概览页「待复习任务」快捷面板 */
+.quick-block {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 16px; box-shadow: var(--shadow); margin-bottom: 16px;
+}
+.quick-block h3 { margin-top: 0; }
+.quick-block .form-row input[type="datetime-local"] { max-width: 220px; flex: 0 0 auto; }
 
 /* ============ 番茄钟 ============ */
 .pomodoro {

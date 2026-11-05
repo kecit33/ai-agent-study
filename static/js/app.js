@@ -1,10 +1,21 @@
 const $ = (id) => document.getElementById(id);
 const api = async (url, opts) => {
-  const res = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
-    ...opts,
-  });
-  return res.json();
+  let res;
+  try {
+    res = await fetch(url, {
+      headers: { "Content-Type": "application/json" },
+      ...opts,
+    });
+  } catch (e) {
+    console.warn("[api] 网络请求失败", url, e);
+    return { error: "网络请求失败，请确认服务已启动：" + e };
+  }
+  try {
+    return await res.json();
+  } catch (e) {
+    console.warn("[api] 响应不是 JSON", url, res.status);
+    return { error: "响应解析失败（HTTP " + res.status + "）" };
+  }
 };
 
 let currentCourseId = null;
@@ -216,14 +227,19 @@ async function pomoFinish() {
 async function loadOverview() {
   const d = await api("/api/overview");
   const cards = [
-    { num: d.courses, label: "课程", sub: `${d.materials} 份课程资料` },
-    { num: d.mastery_rate + "%", label: "错题掌握率", sub: `${d.wrong_mastered}/${d.wrong_total} 已掌握 · ${d.wrong_unmastered} 待攻克` },
-    { num: d.focus_today_minutes + " 分钟", label: "今日专注", sub: `累计 ${d.focus_total_minutes} 分钟 / ${d.focus_count} 次` },
-    { num: d.pending_tasks, label: "待复习任务", sub: "到点自动推送 ESP32 提醒" },
+    { num: d.courses, label: "课程", sub: `${d.materials} 份课程资料`, tab: "memory", hint: "点击管理课程与资料" },
+    { num: d.mastery_rate + "%", label: "错题掌握率", sub: `${d.wrong_mastered}/${d.wrong_total} 已掌握 · ${d.wrong_unmastered} 待攻克`, tab: "wrong", hint: "点击进入错题本" },
+    { num: d.focus_today_minutes + " 分钟", label: "今日专注", sub: `累计 ${d.focus_total_minutes} 分钟 / ${d.focus_count} 次`, tab: "", hint: "用下方番茄钟记录专注" },
+    { num: d.pending_tasks, label: "待复习任务", sub: "到点自动推送 ESP32 提醒", tab: "hardware", hint: "点击查看硬件联动" },
   ];
   $("statCards").innerHTML = cards.map((c) =>
-    `<div class="card"><div class="num">${c.num}</div><div class="label">${c.label}</div><div class="sub-num">${c.sub}</div></div>`
+    `<div class="card${c.tab ? " clickable" : ""}" data-tab="${c.tab}" title="${c.hint || c.sub}">
+      <div class="num">${c.num}</div><div class="label">${c.label}</div><div class="sub-num">${c.sub}</div>
+    </div>`
   ).join("");
+  $("statCards").querySelectorAll(".card.clickable").forEach((el) => {
+    el.onclick = () => activateTab(el.dataset.tab);
+  });
 
   const ul = $("focusList");
   ul.innerHTML = d.recent_sessions.length ? "" : "<li><div class='meta'>还没有专注记录，用上面的番茄钟开始第一段专注吧。</div></li>";
@@ -232,6 +248,31 @@ async function loadOverview() {
     li.innerHTML = `<h4>🍅 ${s.minutes} 分钟 ${s.course_name ? "· " + s.course_name : ""}</h4>
       <div class="meta">${s.created_at}${s.note ? " · " + s.note : ""}</div>`;
     ul.appendChild(li);
+  });
+  loadQuickTasks();
+}
+
+async function loadQuickTasks() {
+  const list = await api("/api/review-tasks");
+  const ul = $("quickTaskList");
+  ul.innerHTML = "";
+  const pending = (Array.isArray(list) ? list : []).filter((t) => !t.notified);
+  if (!pending.length) {
+    ul.innerHTML = "<li><div class='meta'>暂无待复习任务，用上方输入框添加一条吧。</div></li>";
+    return;
+  }
+  pending.forEach((t) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<h4>${esc(t.task_name)}${t.course_name ? " · " + esc(t.course_name) : ""}</h4>
+      <div class="meta">到点：${t.due_time || "未设置"}</div>
+      <div class="actions"><button data-done="${t.id}">✓ 标记完成</button></div>`;
+    ul.appendChild(li);
+  });
+  ul.querySelectorAll("button[data-done]").forEach((b) => {
+    b.onclick = async () => {
+      await api(`/api/review-tasks/${b.dataset.done}/done`, { method: "POST", body: JSON.stringify({}) });
+      loadQuickTasks(); loadOverview();
+    };
   });
 }
 
@@ -533,10 +574,27 @@ function bindEvents() {
     await loadCourses(); await loadOverview();
   };
 
+  $("quickTaskAdd").onclick = async () => {
+    const name = $("quickTask").value.trim();
+    if (!name) return alert("请先填写任务名");
+    const due = $("quickTaskDue").value;
+    await api("/api/review-tasks", {
+      method: "POST",
+      body: JSON.stringify({ course_id: currentCourseId, task_name: name, due_time: due || undefined, fire_now: !due }),
+    });
+    $("quickTask").value = ""; $("quickTaskDue").value = "";
+    loadQuickTasks(); loadOverview();
+  };
+
   $("sendChat").onclick = sendChat;
   $("chatInput").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) sendChat();
   });
+  $("goModelSetup").onclick = (e) => {
+    e.preventDefault();
+    activateTab("settings");
+    setTimeout(() => $("agentProvider").scrollIntoView({ behavior: "smooth", block: "center" }), 120);
+  };
 
   $("doSummarize").onclick = async () => {
     const r = await api("/api/summarize", { method: "POST", body: JSON.stringify({ text: $("sumText").value }) });
