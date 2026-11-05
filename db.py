@@ -66,6 +66,13 @@ CREATE TABLE IF NOT EXISTS focus_sessions (
     ended_at TEXT,
     created_at TEXT NOT NULL
 );
+
+-- 运行时模型接入凭据（Web 设置页 / REST 接口写入，优先于环境变量）
+CREATE TABLE IF NOT EXISTS provider_credentials (
+    provider TEXT PRIMARY KEY,
+    data TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
 
 
