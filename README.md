@@ -236,7 +236,7 @@ SHARECODE=CEUN7FBTFJ python docs/demo_check.py
 
 ## 十、版本迭代与提交规范
 
-本地仓库按模块**逐步提交**（不是一次性打包），共 19 个 commit，其中前 16 个与需求文档的迭代记录表对应；远端 `main` 分支已按相同顺序重建。用 `git log --oneline` 可查看：
+本地仓库按模块**逐步提交**（不是一次性打包），共 20 个 commit，其中前 16 个与需求文档的迭代记录表对应；远端 `main` 分支已按相同顺序重建。用 `git log --oneline` 可查看：
 
 | # | 阶段 | 提交说明 |
 |---|---|---|
@@ -259,7 +259,9 @@ SHARECODE=CEUN7FBTFJ python docs/demo_check.py
 | 17 | 文档 | `docs: 补充版本迭代记录与逐步提交规范` |
 | 18 | 工程 | `chore: 校正 GitHub 仓库地址并提供逐提交推送工具` |
 | 19 | 工程 | `fix: 处理 GitHub 空仓库引导提交并同步迭代记录` |
+| 20 | 文档 | `docs: 新增博客园技术复盘文章与 10 张配图` |
 
 - 分支：`main`；忽略：`data/`、`__pycache__/`、`.env`、`docs/.slidep/`、`docs/pptx/`（后两者为工具残留，非交付物）。
 - GitHub 仓库名不含空格，实际采用 `ai-agent-study`；本地 `origin` 已指向 `https://github.com/kecit33/ai-agent-study.git`。
-- 远端 `main` 已按本地顺序重建全部 19 个逐步提交（含中文提交说明与二进制文档）；网络允许时可直接 `git push -u origin main`。
+- 远端 `main` 已按本地顺序重建全部 20 个逐步提交（含中文提交说明与二进制文档）；网络允许时可直接 `git push -u origin main`。
+- 博客园技术复盘文章：`docs/blog/AI校园学习陪伴助手_博客园文章.md`（10 张配图在 `docs/blog/assets/`，由 `docs/blog/build_images.py` 用无头浏览器生成）。
