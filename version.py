@@ -8,4 +8,4 @@
 """
 
 APP_NAME = "AI校园学习陪伴助手"
-APP_VERSION = "1.3.0"
+APP_VERSION = "1.4.0"
