@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="460" viewBox="0 0 960 460" font-family="Arial, 'Microsoft YaHei', sans-serif">
+  <rect width="960" height="460" fill="#ffffff"/>
+
+  <!-- 浏览器 -->
+  <rect x="40" y="170" width="180" height="120" rx="12" fill="#eaf1ff" stroke="#2f6fed"/>
+  <text x="130" y="205" font-size="15" font-weight="700" fill="#1f2733" text-anchor="middle">浏览器 / 师生</text>
+  <text x="130" y="230" font-size="12" fill="#41506a" text-anchor="middle">原生 HTML/CSS/JS</text>
+  <text x="130" y="250" font-size="12" fill="#41506a" text-anchor="middle">8 个功能模块</text>
+  <text x="130" y="270" font-size="11" fill="#6b7686" text-anchor="middle">HTTP / REST</text>
+
+  <!-- Flask -->
+  <rect x="300" y="150" width="220" height="160" rx="12" fill="#f0ecff" stroke="#6b4fed"/>
+  <text x="410" y="185" font-size="15" font-weight="700" fill="#1f2733" text-anchor="middle">Flask 后端 (app.py)</text>
+  <text x="410" y="212" font-size="12" fill="#41506a" text-anchor="middle">路由 / CORS / 静态</text>
+  <text x="410" y="234" font-size="12" fill="#41506a" text-anchor="middle">REST 接口</text>
+  <text x="410" y="256" font-size="12" fill="#41506a" text-anchor="middle">复习任务调度(30s)</text>
+  <text x="410" y="285" font-size="11" fill="#6b7686" text-anchor="middle">→ 业务服务层</text>
+
+  <!-- 服务层 -->
+  <rect x="580" y="60" width="330" height="120" rx="12" fill="#eaf7ef" stroke="#1aa260"/>
+  <text x="745" y="88" font-size="14" font-weight="700" fill="#1f2733" text-anchor="middle">业务服务层 (services)</text>
+  <text x="600" y="112" font-size="11" fill="#41506a">CourseService · TaskService</text>
+  <text x="600" y="132" font-size="11" fill="#41506a">WrongQuestionService · HardwareService</text>
+  <text x="600" y="152" font-size="11" fill="#41506a">课程记忆上下文隔离 · 错题闭环</text>
+
+  <!-- ProviderFactory + providers -->
+  <rect x="580" y="210" width="330" height="190" rx="12" fill="#eaf1ff" stroke="#2f6fed"/>
+  <text x="745" y="238" font-size="14" font-weight="700" fill="#1f2733" text-anchor="middle">智能体可插拔层 (agents)</text>
+  <text x="600" y="262" font-size="11" fill="#41506a">ProviderFactory（按配置选择）</text>
+  <text x="600" y="284" font-size="11" fill="#2f6fed">OpenAI · 文心一言 · Kimi · Claude</text>
+  <text x="600" y="304" font-size="11" fill="#e08a00">DemoProvider（无密钥兜底）</text>
+  <text x="600" y="330" font-size="10.5" fill="#6b7686">任一真实厂商不可用 → 自动回退演示</text>
+  <text x="600" y="352" font-size="10.5" fill="#6b7686">API 异常 → 回退演示，系统永不断联</text>
+  <text x="600" y="378" font-size="10.5" fill="#6b7686">密钥经环境变量注入，无硬编码</text>
+
+  <!-- SQLite -->
+  <rect x="300" y="340" width="220" height="70" rx="12" fill="#fff3e0" stroke="#e08a00"/>
+  <text x="410" y="368" font-size="14" font-weight="700" fill="#1f2733" text-anchor="middle">SQLite 数据库</text>
+  <text x="410" y="392" font-size="11" fill="#41506a" text-anchor="middle">课程/资料/对话/错题/任务</text>
+
+  <!-- ESP32 -->
+  <rect x="40" y="340" width="180" height="70" rx="12" fill="#fff3e0" stroke="#e08a00"/>
+  <text x="130" y="368" font-size="14" font-weight="700" fill="#1f2733" text-anchor="middle">ESP32 开发板</text>
+  <text x="130" y="392" font-size="11" fill="#41506a" text-anchor="middle">LED + 蜂鸣器（可选）</text>
+
+  <!-- 连线 -->
+  <g stroke="#41506a" stroke-width="2" fill="none" marker-end="url(#a)">
+    <path d="M220 230 L298 230"/>
+    <path d="M410 310 L410 338"/>
+    <path d="M520 230 L578 120"/>
+    <path d="M520 250 L578 250"/>
+    <path d="M300 290 L130 345"/>
+  </g>
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="10" refX="5" refY="9" orient="auto">
+      <path d="M0 0 L10 0 L5 9 Z" fill="#41506a"/>
+    </marker>
+  </defs>
+  <text x="259" y="222" font-size="11" fill="#6b7686" text-anchor="middle">请求/响应</text>
+  <text x="305" y="328" font-size="11" fill="#6b7686" text-anchor="middle">持久化</text>
+  <text x="215" y="338" font-size="11" fill="#6b7686" text-anchor="middle">Webhook 提醒</text>
+</svg>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="620" viewBox="0 0 960 620" font-family="Arial, 'Microsoft YaHei', sans-serif">
+  <rect width="960" height="620" fill="#ffffff"/>
+  <!-- 连接线 -->
+  <g stroke="#9fb3d6" stroke-width="2" fill="none">
+    <path d="M360 310 C440 310 440 130 540 130"/>
+    <path d="M360 310 C440 310 440 250 540 250"/>
+    <path d="M360 310 C440 310 440 370 540 370"/>
+    <path d="M360 310 C440 310 440 490 540 490"/>
+    <path d="M360 310 C300 310 300 560 360 560"/>
+  </g>
+
+  <!-- 中心节点 -->
+  <rect x="200" y="265" width="160" height="90" rx="14" fill="#2f6fed"/>
+  <text x="280" y="300" font-size="17" font-weight="700" fill="#fff" text-anchor="middle">AI 校园</text>
+  <text x="280" y="324" font-size="17" font-weight="700" fill="#fff" text-anchor="middle">学习陪伴助手</text>
+
+  <!-- 分支1 基础功能 -->
+  <rect x="540" y="95" width="200" height="70" rx="10" fill="#eaf1ff" stroke="#2f6fed"/>
+  <text x="640" y="120" font-size="15" font-weight="700" fill="#1f2733" text-anchor="middle">基础功能</text>
+  <text x="640" y="142" font-size="12" fill="#41506a" text-anchor="middle">问答/总结/辅导/复习计划</text>
+
+  <!-- 分支2 杀手级功能 -->
+  <rect x="540" y="215" width="200" height="70" rx="10" fill="#eaf1ff" stroke="#2f6fed"/>
+  <text x="640" y="240" font-size="15" font-weight="700" fill="#1f2733" text-anchor="middle">杀手级功能</text>
+  <text x="640" y="262" font-size="12" fill="#41506a" text-anchor="middle">课程记忆 / 错题闭环</text>
+
+  <!-- 分支3 技术架构 -->
+  <rect x="540" y="335" width="200" height="70" rx="10" fill="#eaf1ff" stroke="#2f6fed"/>
+  <text x="640" y="360" font-size="15" font-weight="700" fill="#1f2733" text-anchor="middle">技术架构</text>
+  <text x="640" y="382" font-size="12" fill="#41506a" text-anchor="middle">Flask/前端/SQLite/可插拔</text>
+
+  <!-- 分支4 硬件联动 -->
+  <rect x="540" y="455" width="200" height="70" rx="10" fill="#fff3e0" stroke="#e08a00"/>
+  <text x="640" y="480" font-size="15" font-weight="700" fill="#1f2733" text-anchor="middle">硬件联动(加分)</text>
+  <text x="640" y="502" font-size="12" fill="#41506a" text-anchor="middle">ESP32 + LED + 蜂鸣器</text>
+
+  <!-- 分支5 创新价值 -->
+  <rect x="360" y="525" width="220" height="70" rx="10" fill="#eaf1ff" stroke="#2f6fed"/>
+  <text x="470" y="550" font-size="15" font-weight="700" fill="#1f2733" text-anchor="middle">创新与价值</text>
+  <text x="470" y="572" font-size="12" fill="#41506a" text-anchor="middle">垂直场景/长期记忆/闭环</text>
+
+  <!-- 叶子 -->
+  <g font-size="12" fill="#2f6fed">
+    <text x="770" y="120">• 智能问答(课程隔离)</text>
+    <text x="770" y="140">• 课件总结提纲</text>
+    <text x="770" y="160">• 引导式习题辅导</text>
+    <text x="770" y="180">• 复习计划生成</text>
+    <text x="770" y="240">• 课程记忆智能体</text>
+    <text x="770" y="260">• 错题本与定向出题</text>
+    <text x="770" y="360">• 四大厂商可插拔</text>
+    <text x="770" y="380">• 无密钥演示兜底</text>
+    <text x="770" y="480">• 到点实物提醒</text>
+  </g>
+  <g stroke="#cdd9ee" stroke-width="1.5" fill="none">
+    <path d="M740 130 L760 130"/><path d="M740 150 L760 150"/><path d="M740 170 L760 170"/>
+    <path d="M740 250 L760 250"/><path d="M740 270 L760 270"/>
+    <path d="M740 370 L760 370"/><path d="M740 390 L760 390"/>
+    <path d="M740 490 L760 490"/>
+  </g>
+</svg>
