@@ -25,6 +25,24 @@ API = "https://api.github.com"
 REPO_PATH = "/repos/%s/%s" % (OWNER, REPO)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# api.github.com 偶发 500/502 网关抖动：把已成功创建的 blob 落盘缓存，
+# 重跑时跳过，多轮即可收敛，不必每次重新上传全部文件。
+CACHE_PATH = os.path.join(ROOT, ".git", "push_blob_cache.json")
+try:
+    with open(CACHE_PATH, "r", encoding="utf-8") as _f:
+        blob_cache = json.load(_f)
+except Exception:
+    blob_cache = {}
+
+
+def save_blob_cache():
+    try:
+        with open(CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(blob_cache, f)
+    except Exception:
+        pass
+
+
 TOKEN = os.environ.get("GH_TOKEN", "").strip()
 if not TOKEN:
     sys.exit("缺少 GH_TOKEN 环境变量")
@@ -51,7 +69,7 @@ def api(method, path, payload=None):
     if data is not None:
         headers["Content-Type"] = "application/json"
     last_err = None
-    for attempt in range(3):
+    for attempt in range(8):
         req = urllib.request.Request(url, data=data, method=method, headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=60) as r:
@@ -146,6 +164,7 @@ def main():
                 "encoding": "base64",
             })
             blob_cache[key] = r["sha"]
+            save_blob_cache()  # 每个成功项立即落盘，失败重跑可续
         return blob_cache[key]
 
     for idx, sha in enumerate(shas):
