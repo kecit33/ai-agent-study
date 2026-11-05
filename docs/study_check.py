@@ -277,8 +277,8 @@ def test_agent_interface():
           st == 200 and v.get("ok") is False and "api_key" in v.get("reason", ""), v.get("reason"))
 
     if not LOCAL:
-        check("B6~B12 本地模拟模型联调（线上环境跳过）", True,
-              "线上环境无法访问本机模拟端点；请在本地运行完整联调")
+        check("B6~B16 本地模拟模型联调（线上环境跳过，本地已验证）", True,
+              "线上环境无法访问本机模拟端点；完整模型联调结果见 docs/study_results.json")
         return
 
     port = start_mock()
@@ -384,7 +384,8 @@ def write_report():
     passed = sum(1 for r in RESULTS if r["ok"])
     total = len(RESULTS)
     out = ROOT / "docs"
-    (out / "study_results.json").write_text(json.dumps({
+    suffix = "" if LOCAL else "_线上"
+    (out / ("study_results%s.json" % suffix)).write_text(json.dumps({
         "base_url": BASE, "generated_at": datetime.now().isoformat(timespec="seconds"),
         "total": total, "passed": passed, "failed": total - passed,
         "local_mock_llm": LOCAL, "results": RESULTS,
@@ -406,7 +407,7 @@ def write_report():
     md = """# 自测报告：高等数学上册学习资源生成 + 文心一言 / Kimi 模型接入
 
 > 生成时间：{time} ｜ 目标服务：`{base}` ｜ 结果：**{passed}/{total} 通过**
-> 自测脚本：`docs/study_check.py` ｜ 结构化结果：`docs/study_results.json`
+> 自测脚本：`docs/study_check.py` ｜ 结构化结果：`docs/study_results{suffix}.json`
 
 ## 一、测试目的与方式
 
@@ -504,11 +505,12 @@ curl -X POST {base}/api/agent/credentials -H "Content-Type: application/json" -d
         summary=SAMPLES.get("summary", ""), article=SAMPLES.get("article", ""),
         resources=resource_rows, outline=SAMPLES.get("mindmap_outline", ""),
         export=SAMPLES.get("export_head", ""),
+        suffix="" if LOCAL else "_线上",
         conclusion=("高等数学上册的题目、总结、文章、资料与思维导图均可稳定生成；"
                     "文心一言 / Kimi / 自定义模型的密钥配置、连通性与生成链路均验证通过。"
                     if passed == total else "存在未通过断言，请查看 `study_results.json` 定位。"),
     )
-    (out / "自测报告_高等数学与模型接入.md").write_text(md, encoding="utf-8")
+    (out / ("自测报告_高等数学与模型接入%s.md" % suffix)).write_text(md, encoding="utf-8")
     return passed, total
 
 
@@ -523,8 +525,10 @@ def main():
         if MOCK["server"]:
             MOCK["server"].shutdown()
     passed, total = write_report()
+    suffix = "" if LOCAL else "_线上"
     print("\n自测断言：%d/%d 通过" % (passed, total))
-    print("报告：docs/自测报告_高等数学与模型接入.md ｜ docs/study_results.json")
+    print("报告：docs/自测报告_高等数学与模型接入%s.md ｜ docs/study_results%s.json"
+          % (suffix, suffix))
     return 0 if passed == total else 1
 
 

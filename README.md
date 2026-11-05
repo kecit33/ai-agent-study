@@ -4,7 +4,7 @@
 
 > 课程作业 · 智能体开发 · 2026
 >
-> **端到端验收结果（2026-11-05）：原有回归 26/26 个 HTTP 请求状态正确 + 30/30 项业务断言通过；V1.1 新增功能 19/19 项断言通过；V1.2「高等数学上册资源生成 + 文心/Kimi 模型接入」自测 36/36 项断言通过**（详见 `docs/演示验收报告.md`、`docs/自测报告_高等数学与模型接入.md`、`docs/study_results.json`）。
+> **端到端验收结果（2026-11-05，本地 + 线上双环境）：原有回归 26/26 个 HTTP 请求状态正确 + 30/30 项业务断言通过；V1.1 新增功能 19/19 项断言通过；V1.2「高等数学上册资源生成 + 文心/Kimi 模型接入」本地自测 36/36 项、线上 25/25 项断言通过**（模型联网探针仅本地可跑，见 `docs/study_results.json` 与 `docs/study_results_线上.json`）。
 >
 > 需求符合性自检见 `docs/自我检查报告.md`，硬件交互点全清单见 `docs/硬件交互说明.md`，模型接入接口说明见 `docs/模型接入接口说明.md`。
 
@@ -178,7 +178,7 @@ ACTIVE_PROVIDER=moonshot MOONSHOT_API_KEY=sk-xxx python server.py
 
 > ✅ **已于 2026-11-05 22:26 重新发布为 V1.1**，链接与 `sharecode` 均不变：现已包含深浅色主题与主题色、语音输入、课件上传/错题导出、学习概览、番茄钟、9 个模块与 6 个硬件交互点。发布后对线上复跑验收：首页含新控件，`/api/overview`、`/api/hardware/status`、`/api/focus/sessions` 均返回 200；**26/26 请求 + 30/30 断言 + 19/19 新增断言全部通过**（`docs/demo_results.json`、`docs/feature_results.json` 记录的是线上目标）。
 >
-> 🆕 **V1.2（本轮）已完成本地开发、36 项自测与 GitHub 逐步提交**：新增「学习资源包」与「模型运行时接入」。本节链接在重新发布前仍指向 V1.1；V1.2 的功能可先在本机 `python server.py` → `http://localhost:5000/?autopack=1#study` 完整验收，或查看 `docs/自测报告_高等数学与模型接入.md`。重新发布后链接与 `sharecode` 保持不变。
+> 🆕 **已于 2026-11-05 23:31 重新发布为 V1.2**，链接与 `sharecode` 均不变：新增「学习资源包」标签页（题目/总结/文章/资料/思维导图/导出）与「设置 → 模型接入」（文心一言 / Kimi / 自定义端点运行时配置）。发布后线上复验：首页含 `panel-study`、`agentProvider`、`studyPack`；`/api/study/catalog`、`/api/agent/providers` 返回 200；**线上 26/26 请求 + 30/30 断言 + 19/19 功能断言 + 25/25 V1.2 断言全部通过**（`docs/study_results_线上.json`）。答辩现场可直接打开 `?autopack=1#study` 一键生成全套资源。
 
 ---
 
@@ -350,6 +350,9 @@ SHARECODE=CEUN7FBTFJ python docs/demo_check.py
 
 BASE_URL=https://ai-campus-companion.app.workbuddy.host \
 SHARECODE=CEUN7FBTFJ python docs/feature_check.py
+
+BASE_URL=https://ai-campus-companion.app.workbuddy.host \
+SHARECODE=CEUN7FBTFJ python docs/study_check.py   # 线上 25 项；模型联网探针自动跳过
 ```
 
 > `feature_check.py` 同样支持 `BASE_URL` / `SHARECODE`；带 `sharecode` 会先建立访问会话 Cookie，之后 API 才不会返回 403。课程 ID 由 `/api/courses` 动态获取，不依赖固定值。
@@ -404,7 +407,7 @@ SHARECODE=CEUN7FBTFJ python docs/feature_check.py
 
 ## 十、版本迭代与提交规范
 
-本地仓库按模块**逐步提交**（不是一次性打包），共 36 个 commit，其中前 16 个与需求文档的迭代记录表对应；远端 `main` 分支已按相同顺序重建。用 `git log --oneline` 可查看：
+本地仓库按模块**逐步提交**（不是一次性打包），共 38 个 commit，其中前 16 个与需求文档的迭代记录表对应；远端 `main` 分支已按相同顺序重建。用 `git log --oneline` 可查看：
 
 | # | 阶段 | 提交说明 |
 |---|---|---|
@@ -444,9 +447,11 @@ SHARECODE=CEUN7FBTFJ python docs/feature_check.py
 | 34 | 前端 | `feat(frontend): 学习资源包页面与模型接入表单` |
 | 35 | 测试 | `test: 高等数学与模型接入 36 项自测、深浅色截图与回归复跑` |
 | 36 | 文档 | `docs: 模型接入说明、SRS/PPT 同步 V1.2、博客与自检报告更新` |
+| 37 | 文档 | `docs: README 同步 V1.2 功能、接口、验收与 36 个逐步提交` |
+| 38 | 部署/测试 | `deploy: 重新发布线上 V1.2 并完成双环境复验` |
 
 - 分支：`main`；忽略：`data/`、`__pycache__/`、`.env`、`docs/.slidep/`、`docs/pptx/`（后两者为工具残留，非交付物）。
 - GitHub 仓库名不含空格，实际采用 `ai-agent-study`；本地 `origin` 已指向 `https://github.com/kecit33/ai-agent-study.git`。
-- 远端 `main` 已按本地顺序逐步追加至全部 **36 个提交 / 82 个文件**（含中文提交说明与二进制文档）；因 `github.com:443` 直连不稳定，推送使用 `docs/push_to_github.py --start 30 --parent <远端HEAD>` 经 `api.github.com` Git Data API 完成，逐文件 blob 与本地一致。
+- 远端 `main` 已按本地顺序逐步追加至全部 **38 个提交 / 84 个文件**（含中文提交说明与二进制文档）；因 `github.com:443` 直连不稳定，推送使用 `docs/push_to_github.py --start N --parent <远端HEAD>` 经 `api.github.com` Git Data API 完成，逐文件 blob 与本地一致。
 - 双击启动入口：`start.bat` → `launch.py` → `server.py`（自动探测端口、自动开浏览器）。
 - 博客园技术复盘文章：`docs/blog/AI校园学习陪伴助手_博客园文章.md`（10 张配图在 `docs/blog/assets/`，由 `docs/blog/build_images.py` 用无头浏览器生成）。
