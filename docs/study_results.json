@@ -1,6 +1,6 @@
 {
-  "base_url": "http://127.0.0.1:5099",
-  "generated_at": "2026-11-05T23:29:38",
+  "base_url": "http://127.0.0.1:5000",
+  "generated_at": "2026-11-05T23:55:52",
   "total": 36,
   "passed": 36,
   "failed": 0,
@@ -54,7 +54,7 @@
     {
       "name": "A10 生成知识思维导图（树 + SVG）",
       "ok": true,
-      "detail": "42 节点 / SVG 12638 字节"
+      "detail": "42 节点 / SVG 12640 字节"
     },
     {
       "name": "A11 SVG 图片接口可直接访问",
@@ -114,7 +114,7 @@
     {
       "name": "B8 Kimi 模型连通性测试成功",
       "ok": true,
-      "detail": "连接成功 / 11 ms"
+      "detail": "连接成功 / 81 ms"
     },
     {
       "name": "B9 通用透传接口调用 Kimi 模型得到回复",
@@ -164,12 +164,12 @@
     {
       "name": "C1 学习概览接口",
       "ok": true,
-      "detail": "10"
+      "detail": "12"
     },
     {
       "name": "C2 课程列表接口",
       "ok": true,
-      "detail": "10"
+      "detail": "12"
     },
     {
       "name": "C3 课程问答接口",

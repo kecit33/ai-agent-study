@@ -1,6 +1,6 @@
 {
-  "base_url": "https://ai-campus-companion.app.workbuddy.host",
-  "run_at": "2026-11-05T23:30:03",
+  "base_url": "http://127.0.0.1:5000",
+  "run_at": "2026-11-05T23:56:07",
   "http_requests_total": 26,
   "http_requests_ok": 26,
   "assertions_total": 30,
@@ -163,6 +163,8 @@
       "status": 200,
       "ok": true,
       "response": {
+        "app": "AI校园学习陪伴助手",
+        "version": "1.2.1",
         "active_provider": "demo",
         "providers": [
           {
@@ -445,13 +447,13 @@
       "method": "POST",
       "path": "/api/courses",
       "request": {
-        "name": "验收课程A_数据结构_1793892596"
+        "name": "验收课程A_数据结构_1793894167"
       },
       "status": 200,
       "ok": true,
       "response": {
-        "id": 28,
-        "name": "验收课程A_数据结构_1793892596"
+        "id": 33,
+        "name": "验收课程A_数据结构_1793894167"
       }
     },
     {
@@ -459,13 +461,13 @@
       "method": "POST",
       "path": "/api/courses",
       "request": {
-        "name": "验收课程B_操作系统_1793892596"
+        "name": "验收课程B_操作系统_1793894167"
       },
       "status": 200,
       "ok": true,
       "response": {
-        "id": 29,
-        "name": "验收课程B_操作系统_1793892596"
+        "id": 34,
+        "name": "验收课程B_操作系统_1793894167"
       }
     },
     {
@@ -527,21 +529,31 @@
           "created_at": "2026-11-05T23:02:01"
         },
         {
-          "id": 28,
-          "name": "验收课程A_数据结构_1793892596",
-          "created_at": "2026-11-05T23:29:57"
+          "id": 31,
+          "name": "验收课程A_数据结构_1793894149",
+          "created_at": "2026-11-05T23:55:49"
         },
         {
-          "id": 29,
-          "name": "验收课程B_操作系统_1793892596",
-          "created_at": "2026-11-05T23:29:58"
+          "id": 32,
+          "name": "验收课程B_操作系统_1793894149",
+          "created_at": "2026-11-05T23:55:49"
+        },
+        {
+          "id": 33,
+          "name": "验收课程A_数据结构_1793894167",
+          "created_at": "2026-11-05T23:56:07"
+        },
+        {
+          "id": 34,
+          "name": "验收课程B_操作系统_1793894167",
+          "created_at": "2026-11-05T23:56:07"
         }
       ]
     },
     {
       "name": "上传课程A资料",
       "method": "POST",
-      "path": "/api/courses/28/materials",
+      "path": "/api/courses/33/materials",
       "request": {
         "title": "第3章 树与二叉树",
         "content": "二叉树第 i 层最多有 2^(i-1) 个结点；深度为 k 的二叉树最多有 2^k-1 个结点。满二叉树与完全二叉树的区别在于最后一层的排列方式。"
@@ -549,24 +561,24 @@
       "status": 200,
       "ok": true,
       "response": {
-        "id": 26,
-        "course_id": 28
+        "id": 31,
+        "course_id": 33
       }
     },
     {
       "name": "读取课程A资料",
       "method": "GET",
-      "path": "/api/courses/28/materials",
+      "path": "/api/courses/33/materials",
       "request": null,
       "status": 200,
       "ok": true,
       "response": [
         {
-          "id": 26,
-          "course_id": 28,
+          "id": 31,
+          "course_id": 33,
           "title": "第3章 树与二叉树",
           "content": "二叉树第 i 层最多有 2^(i-1) 个结点；深度为 k 的二叉树最多有 2^k-1 个结点。满二叉树与完全二叉树的区别在于最后一层的排列方式。",
-          "created_at": "2026-11-05T23:29:58"
+          "created_at": "2026-11-05T23:56:07"
         }
       ]
     },
@@ -575,13 +587,13 @@
       "method": "POST",
       "path": "/api/chat",
       "request": {
-        "course_id": 28,
+        "course_id": 33,
         "message": "完全二叉树有什么特点？"
       },
       "status": 200,
       "ok": true,
       "response": {
-        "reply": "（演示模式 · 课程记忆已绑定「验收课程A_数据结构_1793892596」）\n\n你问的是：完全二叉树有什么特点？\n\n基于已上传的课程资料，我的回答会限定在该课程范围内，避免超纲跑偏。（配置真实大模型密钥后，这里会由 AI 结合你的课件内容给出精准解答。）"
+        "reply": "（演示模式 · 课程记忆已绑定「验收课程A_数据结构_1793894167」）\n\n你问的是：完全二叉树有什么特点？\n\n基于已上传的课程资料，我的回答会限定在该课程范围内，避免超纲跑偏。（配置真实大模型密钥后，这里会由 AI 结合你的课件内容给出精准解答。）"
       }
     },
     {
@@ -589,13 +601,13 @@
       "method": "POST",
       "path": "/api/chat",
       "request": {
-        "course_id": 29,
+        "course_id": 34,
         "message": "进程和线程的区别？"
       },
       "status": 200,
       "ok": true,
       "response": {
-        "reply": "（演示模式 · 课程记忆已绑定「验收课程B_操作系统_1793892596」）\n\n你问的是：进程和线程的区别？\n\n基于已上传的课程资料，我的回答会限定在该课程范围内，避免超纲跑偏。（配置真实大模型密钥后，这里会由 AI 结合你的课件内容给出精准解答。）"
+        "reply": "（演示模式 · 课程记忆已绑定「验收课程B_操作系统_1793894167」）\n\n你问的是：进程和线程的区别？\n\n基于已上传的课程资料，我的回答会限定在该课程范围内，避免超纲跑偏。（配置真实大模型密钥后，这里会由 AI 结合你的课件内容给出精准解答。）"
       }
     },
     {
@@ -643,7 +655,7 @@
       "method": "POST",
       "path": "/api/wrong-questions",
       "request": {
-        "course_id": 28,
+        "course_id": 33,
         "question": "求斐波那契数列第 n 项，n=40",
         "user_answer": "直接递归 f(n)=f(n-1)+f(n-2)",
         "correct_answer": "使用记忆化或递推，时间复杂度 O(n)"
@@ -651,39 +663,39 @@
       "status": 200,
       "ok": true,
       "response": {
-        "id": 12,
-        "course_id": 28
+        "id": 13,
+        "course_id": 33
       }
     },
     {
       "name": "按课程查询错题",
       "method": "GET",
-      "path": "/api/wrong-questions?course_id=28",
+      "path": "/api/wrong-questions?course_id=33",
       "request": null,
       "status": 200,
       "ok": true,
       "response": [
         {
-          "id": 12,
-          "course_id": 28,
+          "id": 13,
+          "course_id": 33,
           "question": "求斐波那契数列第 n 项，n=40",
           "user_answer": "直接递归 f(n)=f(n-1)+f(n-2)",
           "correct_answer": "使用记忆化或递推，时间复杂度 O(n)",
           "error_reason": "",
           "mastered": 0,
-          "created_at": "2026-11-05T23:30:01"
+          "created_at": "2026-11-05T23:56:07"
         }
       ]
     },
     {
       "name": "分析错因+定向变式题",
       "method": "POST",
-      "path": "/api/wrong-questions/12/analyze",
+      "path": "/api/wrong-questions/13/analyze",
       "request": {},
       "status": 200,
       "ok": true,
       "response": {
-        "id": 12,
+        "id": 13,
         "error_reason": "【演示模式 · 错因分析】\n\n· 题目：求斐波那契数列第 n 项，n=40\n· 你的答案：直接递归 f(n)=f(n-1)+f(n-2)\n· 参考答案：使用记忆化或递推，时间复杂度 O(n)\n\n🔍 可能的错因归类：\n  1. 方法选择：直接套用了最直观的解法，未评估其在本题输入规模下的代价。\n  2. 概念边界：对该知识点适用条件与前提的理解不够完整。\n  3. 复杂度 / 边界意识：未检查解法在规模增大或边界输入下是否仍成立。\n\n📌 薄弱知识点定位：建议回到该知识点的基础定义、复杂度分析与典型例题重新过一遍。\n✅ 改进建议：先列出候选解法并比较代价 → 用小样本手算验证 → 再做同类题巩固。\n\n（配置真实大模型密钥后，错因将由 AI 结合题目语义精准诊断。）",
         "variant": "【演示模式 · 定向变式题】\n\n基于你之前的错题「求斐波那契数列第 n 项，n=40…」生成同类变式题，用于定向巩固：\n\n变式 1：改变已知条件，请你用相同思路重新求解。\n变式 2：把选择题改为简答题，训练完整表述。\n变式 3：给出错误做法，请你指出错因并改正。\n\n考查知识点：该错题对应的核心概念与适用条件；答案要点：先明确方法选择依据，再给出推导过程并做边界自检。\n\n做完后把答案发我，我帮你批改并标注薄弱点。"
       }
@@ -691,7 +703,7 @@
     {
       "name": "标记已掌握",
       "method": "POST",
-      "path": "/api/wrong-questions/12/master",
+      "path": "/api/wrong-questions/13/master",
       "request": {
         "mastered": true
       },
@@ -704,7 +716,7 @@
     {
       "name": "筛选未掌握错题",
       "method": "GET",
-      "path": "/api/wrong-questions?course_id=28&unmastered=1",
+      "path": "/api/wrong-questions?course_id=33&unmastered=1",
       "request": null,
       "status": 200,
       "ok": true,
@@ -715,14 +727,14 @@
       "method": "POST",
       "path": "/api/review-tasks",
       "request": {
-        "course_id": 28,
+        "course_id": 33,
         "task_name": "复习第3章 树与二叉树",
         "fire_now": true
       },
       "status": 200,
       "ok": true,
       "response": {
-        "id": 9,
+        "id": 10,
         "fired": {
           "sent": false,
           "reason": "未配置 ESP32_ENDPOINT（硬件联动为可选加分项，不影响主体功能）"
@@ -761,7 +773,7 @@
       "method": "POST",
       "path": "/api/courses",
       "request": {
-        "name": "验收课程A_数据结构_1793892596"
+        "name": "验收课程A_数据结构_1793894167"
       },
       "status": 400,
       "ok": true,
