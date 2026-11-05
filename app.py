@@ -6,8 +6,17 @@
 import threading
 import time
 
-from flask import Flask, jsonify, request, send_from_directory
-from flask_cors import CORS
+try:
+    from flask import Flask, jsonify, request, send_from_directory
+    from flask_cors import CORS
+except ImportError as exc:
+    raise SystemExit(
+        "\n[启动失败] Flask 版后端缺少依赖：%s\n"
+        "本机 pip 源不可用（或尚未联网安装 requirements.txt）时，请改用零依赖入口：\n"
+        "    python server.py\n"
+        "然后访问 http://localhost:5000 —— 功能与 Flask 版完全一致。\n"
+        "如需使用 Flask 版，请先执行：pip install -r requirements.txt\n" % exc
+    )
 
 import db
 from agents import credentials, factory
@@ -17,6 +26,7 @@ from agents.factory import (
 from services import course, tasks, wrong_questions, focus, files as filesvc
 from services import study
 from hardware import esp32
+from version import APP_NAME, APP_VERSION
 
 db.init_db()
 
@@ -36,6 +46,8 @@ def index():
 @app.route("/api/status")
 def api_status():
     return jsonify({
+        "app": APP_NAME,
+        "version": APP_VERSION,
         "active_provider": get_active_provider_name(),
         "providers": list_providers_status(),
     })
