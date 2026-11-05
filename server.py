@@ -23,10 +23,12 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 import db
+from agents import credentials, factory
 from agents.factory import (
     get_active_provider_name, set_active_provider, list_providers_status,
 )
 from services import course, tasks, wrong_questions, focus, files as filesvc
+from services import study
 from hardware import esp32
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -102,12 +104,111 @@ def _review_task(body):
 
 
 class Download:
-    """非 JSON 响应：以附件形式下载文本（如错题本 Markdown 导出）。"""
+    """非 JSON 响应：以附件形式下载文本（如错题本 / 学习资源包 Markdown 导出）。"""
 
     def __init__(self, filename, text, ctype="text/markdown; charset=utf-8"):
         self.filename = filename
-        self.data = text.encode("utf-8")
+        self.data = text.encode("utf-8") if isinstance(text, str) else text
         self.ctype = ctype
+
+
+class Raw:
+    """非 JSON 响应：直接内联返回字节（如思维导图 SVG）。"""
+
+    def __init__(self, text, ctype="image/svg+xml; charset=utf-8"):
+        self.data = text.encode("utf-8") if isinstance(text, str) else text
+        self.ctype = ctype
+
+
+def _agent_test(body):
+    """模型连通性测试；mode=validate 时只校验配置、不发起外部请求。"""
+    name = (body.get("provider") or get_active_provider_name()).strip().lower()
+    if name == "demo":
+        return {"ok": True, "provider": "demo", "mode": body.get("mode", "probe"),
+                "reply": "内置演示模式已就绪，无需外部模型"}
+    if name not in credentials.PROVIDER_FIELDS:
+        raise HttpError(400, "未知提供商：%s" % name)
+    c = credentials.get(name)
+    ok, reason = credentials.validate(name, c)
+    if body.get("mode") == "validate":
+        return {"ok": ok, "provider": name, "mode": "validate", "reason": reason,
+                "configured": ok, "model": c.get("model", ""),
+                "base_url": c.get("base_url", ""), "masked": credentials.status(name)["masked"]}
+    if not ok:
+        return {"ok": False, "provider": name, "mode": "probe", "reason": reason,
+                "configured": False, "error": "配置不完整：" + reason}
+    return factory.probe(name)
+
+
+def _agent_complete(body):
+    """通用模型透传：自建系统可直接调用当前配置的文心 / Kimi / 自定义模型。"""
+    msgs = body.get("messages")
+    if not isinstance(msgs, list) or not msgs:
+        msgs = [{"role": "user", "content": body.get("message", "你好")}]
+    msgs = [{"role": str(m.get("role", "user")), "content": str(m.get("content", ""))}
+            for m in msgs if isinstance(m, dict)]
+    return factory.direct_complete(
+        str(body.get("system_prompt", "你是校园学习陪伴助手，请简洁、准确地回答。")),
+        msgs, (body.get("provider") or None),
+    )
+
+
+def _study_args(body, query=None):
+    """从 POST body 或 GET query 提取学习资源包公共参数。"""
+    query = query or {}
+    def val(k, default=""):
+        if k in body:
+            return body[k]
+        return query.get(k, [default])[0]
+    try:
+        count = int(val("count", 6))
+    except (TypeError, ValueError):
+        count = 6
+    return {
+        "subject": val("subject", "高等数学上册"),
+        "chapter": val("chapter", ""),
+        "count": count,
+        "difficulty": val("difficulty", ""),
+        "provider_name": val("provider", "") or None,
+    }
+
+
+def _s_quiz(b, q=None):
+    a = _study_args(b or {}, q)
+    return study.quiz(a["subject"], a["chapter"], a["count"],
+                      a["difficulty"], a["provider_name"])
+
+
+def _s_summary(b, q=None):
+    a = _study_args(b or {}, q)
+    return study.summary(a["subject"], a["chapter"], a["provider_name"])
+
+
+def _s_article(b, q=None):
+    a = _study_args(b or {}, q)
+    return study.article(a["subject"], a["chapter"], a["provider_name"])
+
+
+def _s_resources(b, q=None):
+    a = _study_args(b or {}, q)
+    return study.resources(a["subject"], a["chapter"])
+
+
+def _s_mindmap(b, q=None):
+    a = _study_args(b or {}, q)
+    return study.mindmap(a["subject"], a["chapter"], a["provider_name"])
+
+
+def _s_pack(b, save=False):
+    a = _study_args(b or {})
+    return study.pack(a["subject"], a["chapter"], a["count"], a["difficulty"],
+                      a["provider_name"], save_to_course=save)
+
+
+def _s_export(q):
+    a = _study_args({}, q)
+    return study.export_markdown(a["subject"], a["chapter"], a["count"],
+                                 a["provider_name"])
 
 
 def _upload_material(cid, body):
@@ -205,6 +306,42 @@ ROUTES = [
     # ---- 硬件状态看板（ESP32 轮询） ----
     ("GET", r"^/api/hardware/status$",
      lambda m, b, q: esp32.hardware_status()),
+
+    # ---- 学习资源包：题目 / 总结 / 文章 / 资料 / 思维导图 ----
+    ("GET", r"^/api/study/catalog$",
+     lambda m, b, q: study.catalog()),
+    ("POST", r"^/api/study/quiz$",
+     lambda m, b, q: _s_quiz(b)),
+    ("POST", r"^/api/study/summary$",
+     lambda m, b, q: _s_summary(b)),
+    ("POST", r"^/api/study/article$",
+     lambda m, b, q: _s_article(b)),
+    ("POST", r"^/api/study/resources$",
+     lambda m, b, q: _s_resources(b)),
+    ("POST", r"^/api/study/mindmap$",
+     lambda m, b, q: _s_mindmap(b)),
+    ("POST", r"^/api/study/pack$",
+     lambda m, b, q: _s_pack(b, bool(b.get("save_to_course")))),
+    ("GET", r"^/api/study/mindmap\.svg$",
+     lambda m, b, q: Raw(_s_mindmap({}, q)["svg"])),
+    ("GET", r"^/api/study/pack/export$",
+     lambda m, b, q: Download("study-pack.md", _s_export(q))),
+
+    # ---- 模型接入接口：文心一言 / Kimi / 自定义兼容端点，运行时配置 ----
+    ("GET", r"^/api/agent/providers$",
+     lambda m, b, q: {"active_provider": get_active_provider_name(),
+                      "providers": list_providers_status(),
+                      "credentials": credentials.list_status()}),
+    ("POST", r"^/api/agent/credentials$",
+     lambda m, b, q: factory.configure(
+         (b.get("provider") or "").strip().lower(), b.get("config") or b,
+         activate=bool(b.get("activate")))),
+    ("POST", r"^/api/agent/credentials/clear$",
+     lambda m, b, q: factory.clear((b.get("provider") or "").strip().lower())),
+    ("POST", r"^/api/agent/test$",
+     lambda m, b, q: _agent_test(b)),
+    ("POST", r"^/api/agent/complete$",
+     lambda m, b, q: _agent_complete(b)),
 ]
 
 
@@ -334,6 +471,15 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(dl.data)
 
+    def _send_raw(self, raw):
+        self.send_response(200)
+        self.send_header("Content-Type", raw.ctype)
+        self.send_header("Content-Length", str(len(raw.data)))
+        self.send_header("Cache-Control", "no-store")
+        self._cors()
+        self.end_headers()
+        self.wfile.write(raw.data)
+
     def _dispatch(self, method):
         parsed = urlparse(self.path)
         path = parsed.path
@@ -357,6 +503,8 @@ class Handler(BaseHTTPRequestHandler):
             result = handler(m, body, query)
             if isinstance(result, Download):
                 self._send_download(result)
+            elif isinstance(result, Raw):
+                self._send_raw(result)
             else:
                 self._send_json(200, result)
             return
