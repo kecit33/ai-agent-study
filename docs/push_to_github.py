@@ -97,6 +97,27 @@ def commit_meta(sha):
     }
 
 
+def ensure_nonempty():
+    """空仓库下 Git Data API 会返回 409，先用 Contents API 建一个引导提交。
+
+    引导提交随后会被 force 覆盖为不可达对象，不出现在最终历史中。
+    """
+    try:
+        api("GET", REPO_PATH + "/git/ref/heads/" + BRANCH)
+        print("main 分支已存在，无需引导提交")
+        return
+    except RuntimeError as e:
+        msg = str(e)
+        # 空仓库时 GitHub 返回 409 "Git Repository is empty."，仓库不存在时才 404
+        if "404" not in msg and "empty" not in msg.lower():
+            raise
+    api("PUT", REPO_PATH + "/contents/BOOTSTRAP.md", {
+        "message": "chore: 初始化 main 分支（引导提交，随后被覆盖）",
+        "content": base64.b64encode(b"bootstrap\n").decode("ascii"),
+    })
+    print("空仓库已建立引导提交，Git Data API 现已可用")
+
+
 def main():
     args = sys.argv[1:]
     start = 0
@@ -110,6 +131,7 @@ def main():
     print("目标仓库: %s (default_branch=%s, private=%s)" %
           (info["full_name"], info["default_branch"], info["private"]))
     print("认证账号:", api("GET", "/user")["login"])
+    ensure_nonempty()
 
     shas = git("log", "--reverse", "--format=%H").splitlines()
     print("本地提交数:", len(shas))
@@ -158,7 +180,8 @@ def main():
     try:
         ref = api("GET", REPO_PATH + "/git/ref/heads/" + BRANCH)
         if ref["object"]["sha"] != parent:
-            api("PATCH", REPO_PATH + "/git/refs/heads/" + BRANCH, {"sha": parent})
+            api("PATCH", REPO_PATH + "/git/refs/heads/" + BRANCH,
+                {"sha": parent, "force": True})
             print("已更新 refs/heads/%s -> %s" % (BRANCH, parent))
         else:
             print("refs/heads/%s 已指向 %s" % (BRANCH, parent))
