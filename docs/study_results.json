@@ -1,0 +1,190 @@
+{
+  "base_url": "http://127.0.0.1:5099",
+  "generated_at": "2026-11-05T23:01:02",
+  "total": 36,
+  "passed": 36,
+  "failed": 0,
+  "local_mock_llm": true,
+  "results": [
+    {
+      "name": "A1 学科目录（数学 → 高等数学上册）",
+      "ok": true,
+      "detail": "7 章 / 别名 8 个"
+    },
+    {
+      "name": "A2 「数学」别名可解析",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "A3 输入「数学 / 高等数学上册」生成第一章题目",
+      "ok": true,
+      "detail": "4 道，来源 knowledge_base"
+    },
+    {
+      "name": "A4 题目含数学内容、标准答案与分步解析",
+      "ok": true,
+      "detail": "示例答案：3/2"
+    },
+    {
+      "name": "A5 可指定第五章（定积分）出题",
+      "ok": true,
+      "detail": "第五章 定积分 / 题中含积分号"
+    },
+    {
+      "name": "A6 生成第三章复习总结（知识点/公式/易错点）",
+      "ok": true,
+      "detail": "1140 字"
+    },
+    {
+      "name": "A7 全册总结覆盖 7 章",
+      "ok": true,
+      "detail": "7176 字"
+    },
+    {
+      "name": "A8 生成与教材相关的专题文章",
+      "ok": true,
+      "detail": "7965 字 / 7 节"
+    },
+    {
+      "name": "A9 生成相关学习资料清单（含链接）",
+      "ok": true,
+      "detail": "5 项"
+    },
+    {
+      "name": "A10 生成知识思维导图（树 + SVG）",
+      "ok": true,
+      "detail": "42 节点 / SVG 12638 字节"
+    },
+    {
+      "name": "A11 SVG 图片接口可直接访问",
+      "ok": true,
+      "detail": "image/svg+xml; charset=utf-8"
+    },
+    {
+      "name": "A12 一键资源包五件套齐全",
+      "ok": true,
+      "detail": "has={'quiz': True, 'summary': True, 'article': True, 'resources': True, 'mindmap': True} / 题目 6 道"
+    },
+    {
+      "name": "A13 资源包可回写课程记忆",
+      "ok": true,
+      "detail": "{'ok': True, 'course_id': 18, 'materials': 2}"
+    },
+    {
+      "name": "A14 资源包 Markdown 导出下载",
+      "ok": true,
+      "detail": "10841 字节"
+    },
+    {
+      "name": "B1 接口暴露全部可插拔模型",
+      "ok": true,
+      "detail": "openai/moonshot/claude/qianfan/custom/demo"
+    },
+    {
+      "name": "B2 文心一言与 Kimi 的配置字段明确",
+      "ok": true,
+      "detail": "qianfan=['api_key'] / moonshot=['api_key']"
+    },
+    {
+      "name": "B3 未知提供商被 400 拒绝",
+      "ok": true,
+      "detail": "{'error': '未知提供商：not-exist，可选 openai/qianfan/moonshot/claude/custom'}"
+    },
+    {
+      "name": "B4 空配置被 400 拒绝",
+      "ok": true,
+      "detail": "{'error': '未提交任何有效配置字段（api_key/base_url/model）'}"
+    },
+    {
+      "name": "B5 未配置时校验给出明确原因（不联网）",
+      "ok": true,
+      "detail": "缺少必填项：api_key"
+    },
+    {
+      "name": "B6 Kimi API Key 运行时写入即生效（无需重启）",
+      "ok": true,
+      "detail": "掩码：sk-m****7890"
+    },
+    {
+      "name": "B7 配置校验通过（Kimi）",
+      "ok": true,
+      "detail": "moonshot-v1-8k"
+    },
+    {
+      "name": "B8 Kimi 模型连通性测试成功",
+      "ok": true,
+      "detail": "连接成功 / 21 ms"
+    },
+    {
+      "name": "B9 通用透传接口调用 Kimi 模型得到回复",
+      "ok": true,
+      "detail": "【模拟模型已响应】已收到请求：你是数学助教 什么是极限？"
+    },
+    {
+      "name": "B10 资源生成自动叠加 Kimi 模型原创题目",
+      "ok": true,
+      "detail": "来源 hybrid(knowledge_base + llm) / 模型题 1 道"
+    },
+    {
+      "name": "B11 模型可补充思维导图节点",
+      "ok": true,
+      "detail": "hybrid(knowledge_base + llm)"
+    },
+    {
+      "name": "B12 文心一言（API Key + Secret Key）配置成功",
+      "ok": true,
+      "detail": "{'api_key': 'mock****3456', 'secret_key': 'mock****7654', 'model': 'erni****5-8k', 'base_url': 'http****chat', 'token_url': 'http****oken'}"
+    },
+    {
+      "name": "B13 文心一言 OAuth 取 token + 对话连通性成功",
+      "ok": true,
+      "detail": "连接成功 / "
+    },
+    {
+      "name": "B14 透传接口调用文心模型得到回复",
+      "ok": true,
+      "detail": "【模拟模型已响应】已收到请求：你是校园学习陪伴助手，请简洁、准确地回答。\n\n你好"
+    },
+    {
+      "name": "B15 自定义 OpenAI 兼容端点接入并切换为当前模型",
+      "ok": true,
+      "detail": "当前：custom"
+    },
+    {
+      "name": "B16 清除配置后自动回退演示模式",
+      "ok": true,
+      "detail": "demo"
+    },
+    {
+      "name": "B17 首页含学习资源包与模型接入 UI",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "C1 学习概览接口",
+      "ok": true,
+      "detail": "2"
+    },
+    {
+      "name": "C2 课程列表接口",
+      "ok": true,
+      "detail": "2"
+    },
+    {
+      "name": "C3 课程问答接口",
+      "ok": true,
+      "detail": "（演示模式 · 课程记忆已绑定「示例课程：数据结构」）\n\n你问的是：请介绍本课程\n\n基于已上传的课程"
+    },
+    {
+      "name": "C4 课件总结接口",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "C5 硬件状态看板",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

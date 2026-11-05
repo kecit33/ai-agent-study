@@ -106,7 +106,10 @@ def main():
     st = call("GET", "/api/status", note="系统状态")
     checks.append(("返回激活的提供商", isinstance(st, dict) and bool(st.get("active_provider"))))
     providers = call("GET", "/api/providers", note="厂商列表")
-    checks.append(("四厂商+演示模式共 5 项", isinstance(providers, list) and len(providers) == 5))
+    checks.append(("四厂商 + 自定义兼容接口 + 演示模式共 6 项",
+                   isinstance(providers, list) and len(providers) == 6
+                   and {p.get("name") for p in providers} >=
+                   {"openai", "qianfan", "moonshot", "claude", "custom", "demo"}))
     if isinstance(providers, list):
         print("       厂商：" + "、".join(p.get("label", p.get("name", "")) for p in providers))
     sw = call("POST", "/api/settings/provider", {"name": "demo"}, note="切换为演示模式")
