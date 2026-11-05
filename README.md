@@ -1,0 +1,230 @@
+# AI 校园学习陪伴助手
+
+一款面向大学生课程学习场景、基于大模型智能体的 **Web 应用**（浏览器访问，B/S 架构）。智能体（GPT / 文心一言 / Kimi / Claude）以**可插拔**方式集成进自研系统，而非直接套用官方聊天页；具备「课程记忆智能体」「AI 错题本与定向出题」等杀手级功能，并预留 ESP32 硬件联动（加分项）。
+
+> 课程作业 · 智能体开发 · 2026
+>
+> **端到端验收结果：26/26 个 HTTP 请求状态正确，30/30 项业务断言通过**（详见 `docs/演示验收报告.md`）。
+
+---
+
+## 一、特性对照（作业评估要点）
+
+- ✅ 智能体嵌入自研系统：统一 `AgentProvider` 接口，四家厂商 + 内置演示模式
+- ✅ 真实调研需求：基于本校同学调研痛点，无虚构
+- ✅ 杀手级功能：课程记忆（按课程隔离上下文）+ 错题闭环（错因分析 → 定向变式题）
+- ✅ 无密钥可运行：未配置任何密钥时自动进入「内置演示模式」，保证师生可直接验收
+- ✅ 可上线：本地一键启动 + 云端部署，生成可访问链接
+- ✅ 零依赖可运行：`server.py` 仅用 Python 标准库，无需 `pip install` 即可启动完整 Web 服务
+- 🟡 硬件联动（可选加分）：ESP32 + LED + 蜂鸣器到点提醒
+
+---
+
+## 二、目录结构
+
+```
+ai-campus-companion/
+├─ server.py              # 【默认入口】零依赖 Web 服务器（Python 标准库，推荐）
+├─ app.py                 # Flask 版后端入口（需 pip install，生产可选）
+├─ config.py              # 配置中心（密钥经环境变量读取）
+├─ db.py                  # SQLite 初始化与连接
+├─ agents/                # 可插拔智能体层
+│  ├─ base.py             # AgentProvider 抽象基类
+│  ├─ openai_provider.py  # GPT
+│  ├─ qianfan_provider.py # 文心一言
+│  ├─ moonshot_provider.py# Kimi
+│  ├─ claude_provider.py  # Claude
+│  ├─ demo_provider.py    # 内置演示模式（无密钥兜底）
+│  └─ factory.py          # 提供商工厂（按配置选择 + 自动回退）
+├─ services/              # 业务服务层
+│  ├─ course.py           # 课程 / 资料 / 课程记忆上下文
+│  ├─ tasks.py            # 问答 / 总结 / 辅导 / 计划 / 错因 / 变式题
+│  └─ wrong_questions.py  # 错题本 / 错因 / 定向出题
+├─ hardware/
+│  ├─ esp32.py            # ESP32 Webhook 联动接口
+│  └─ esp32_firmware.ino  # ESP32 固件（点亮 LED + 蜂鸣器）
+├─ static/                # 原生前端（HTML/CSS/JS，8 个功能模块）
+├─ docs/
+│  ├─ demo_check.py       # 端到端 HTTP 验收脚本
+│  ├─ demo_results.json   # 真实响应数据留存
+│  ├─ 演示验收报告.md      # 可读验收报告
+│  ├─ 软件需求规格说明书.docx
+│  └─ AI校园学习陪伴助手_答辩.pptx
+├─ requirements.txt       # 仅 Flask 版 / 真实厂商接口需要
+├─ Procfile               # 云端启动命令（web: python server.py）
+└─ .env.example           # 密钥模板
+```
+
+> `server.py` 与 `app.py` 暴露**完全相同**的 REST API 与静态页面，共用同一套业务层，可随时互换。
+
+---
+
+## 三、本地运行（师生验收）
+
+### 方式 A：零依赖一键启动（推荐，无需联网装包）
+
+```bash
+python server.py
+# 浏览器打开 http://localhost:5000
+```
+
+只需 Python 3.8+，不需要 `pip install`、不需要密钥、不需要联网。适合答辩现场与机房验收。
+
+### 方式 B：Flask 版（生产环境可选）
+
+```bash
+pip install -r requirements.txt
+python app.py
+# 浏览器打开 http://localhost:5000
+```
+
+两者均支持 `PORT` 环境变量（云端自动注入）：`PORT=8080 python server.py`。
+
+> 不配置密钥时，所有功能以「内置演示模式」运行（规则化应答），**功能流程完全可走通**。
+> 配置密钥后，对应厂商自动切换为真实大模型。
+
+---
+
+## 四、配置真实大模型密钥（可选）
+
+```bash
+cp .env.example .env
+# 编辑 .env，填入你申请的密钥，例如：
+OPENAI_API_KEY=sk-xxx
+QIANFAN_API_KEY=xxx
+QIANFAN_SECRET_KEY=xxx
+MOONSHOT_API_KEY=xxx
+CLAUDE_API_KEY=xxx
+ACTIVE_PROVIDER=openai     # demo / openai / qianfan / moonshot / claude
+```
+
+也可直接用环境变量：`ACTIVE_PROVIDER=openai OPENAI_API_KEY=sk-xxx python server.py`。
+在页面「设置」页可随时切换与查看各厂商可用性。密钥只从环境变量读取，不写入代码或数据库。
+
+---
+
+## 五、云端部署（供师生在线检查）
+
+### 当前已上线（可直接使用，无需任何账号）
+
+**https://ai-campus-companion.app.workbuddy.host/?sharecode=CEUN7FBTFJ**
+
+浏览器直接打开（手机同样可访问），无需安装、无需密钥。链接中的 `sharecode` 为访问凭证，请**原样转发**给师生（去掉会返回 403）。
+
+---
+
+### Render（Blueprint 一键部署，约 2 分钟）
+
+已提供根目录 `render.yaml`（Render Blueprint），声明了服务类型、启动命令、健康检查与环境变量，**无需手工填 Build/Start Command**。
+
+1. 把本项目推送到 GitHub 仓库（创建方法见下方「代码仓库与账号边界」）
+2. Render 控制台 → **New +** → **Blueprint** → 连接该 GitHub 仓库
+3. 点击 **Apply / Deploy**，等待构建完成
+4. 获得 `https://ai-campus-companion.onrender.com`（名称被占用时 Render 会自动加后缀）
+5. 可选：在 Environment 添加 `OPENAI_API_KEY` 等密钥；不填则自动使用内置演示模式
+
+手工方式（不用 Blueprint 时）：Build Command 填 `echo "zero-dependency runtime"`，Start Command 填 `python server.py`，健康检查路径 `/api/status`。服务监听 Render 注入的 `PORT` 并绑定 `0.0.0.0`，`server.py` 已实现。
+
+> Render 免费实例约 15 分钟无访问会休眠，首次打开需等待 30~60 秒；答辩前建议先访问一次预热。
+
+---
+
+### PythonAnywhere（WSGI，免费账户适用）
+
+免费账户**不能常驻监听端口**，因此走 Flask 版 + WSGI（不能用 `python server.py`）：
+
+```bash
+# 1. 上传项目到 /home/<用户名>/ai-campus-companion 后，在 Bash 控制台：
+cd ~/ai-campus-companion
+pip install --user -r requirements.txt
+```
+
+1. Web → **Add a new web app** → **Manual configuration** → Python 3.10 / 3.11
+2. 把 `deploy/pythonanywhere_wsgi.py` 的内容粘进 WSGI 配置文件，将其中的 `YOUR_USERNAME` 改成你的真实用户名
+3. Web 页设置 **Source code** 为项目目录，**Reload**
+4. 访问 `https://<用户名>.pythonanywhere.com`
+
+> `os.chdir(PROJECT_DIR)` 是必需的：`app.py` 的静态目录使用相对路径 `static`。
+
+---
+
+### Flask 版部署（Render 上的可选替代）
+
+Build `pip install -r requirements.txt`，Start `python app.py`；功能与零依赖版完全一致。
+
+### 代码仓库与账号边界（重要）
+
+Render / PythonAnywhere 都需要**你自己的平台账号**，我无法代登录，因此这两个平台的最终部署动作必须由你完成；但代码与配置已全部备齐：
+
+- `render.yaml` —— Render Blueprint，导入即自动创建 Web Service
+- `deploy/pythonanywhere_wsgi.py` —— PythonAnywhere WSGI 配置模板
+- `Procfile` / `requirements.txt` / `server.py` —— 启动与依赖声明
+
+GitHub 仓库需你在 https://github.com/new 手动创建（当前连接器的 GitHub App 凭据无权创建个人仓库，实测返回 `403 Resource not accessible by integration`）：仓库名 `ai-campus-companion`，选 **Private**，**勾选「Add a README file」**以生成 `main` 分支。建好后告诉我，我可代你把全部代码推送上去；或本地执行：
+
+```bash
+git init && git add . && git commit -m "init: AI 校园学习陪伴助手"
+git remote add origin https://github.com/kecit33/ai-campus-companion.git
+git push -u origin main
+```
+
+> 若不想做任何平台操作，直接使用上方「当前已上线」链接即可，师生在线验收效果完全相同。
+
+---
+
+## 六、REST API 速览
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/status` | 系统状态与提供商列表 |
+| GET/POST | `/api/courses` | 课程列表 / 新建课程 |
+| GET/POST | `/api/courses/<id>/materials` | 课程资料列表 / 上传资料 |
+| POST | `/api/chat` | 课程记忆智能体问答 |
+| POST | `/api/summarize` | 课件总结 |
+| POST | `/api/tutor` | 习题引导式辅导 |
+| POST | `/api/review-plan` | 复习计划生成 |
+| GET/POST | `/api/wrong-questions` | 错题列表 / 新增错题 |
+| POST | `/api/wrong-questions/<id>/analyze` | 错因分析 + 变式出题 |
+| POST | `/api/wrong-questions/<id>/master` | 标记掌握 |
+| GET/POST | `/api/providers`、`/api/settings/provider` | 厂商状态 / 切换 |
+| POST | `/api/review-tasks` | 创建复习任务（可即时/到点下发） |
+| POST | `/api/hardware/test` | 向 ESP32 下发测试提醒 |
+
+---
+
+## 七、硬件联动（可选加分项）
+
+1. 烧录 `hardware/esp32_firmware.ino` 到 ESP32（改 WiFi 名/密码，开发板监听 `/remind`）
+2. 配置 `ESP32_ENDPOINT=http://<开发板IP>/remind`
+3. 页面「硬件联动」创建复习任务（不填时间即即时下发，可立即验证），到点后开发板点亮 LED + 触发蜂鸣器
+4. 未配置 `ESP32_ENDPOINT` 不影响主体功能，接口仍正常返回 `{sent: false, reason: ...}`
+
+---
+
+## 八、端到端验收
+
+```bash
+# 先启动服务
+python server.py
+
+# 另开终端执行（默认验证 http://localhost:5000）
+python docs/demo_check.py
+
+# 验证线上站点（sharecode 用于建立访问会话）
+BASE_URL=https://ai-campus-companion.app.workbuddy.host \
+SHARECODE=CEUN7FBTFJ python docs/demo_check.py
+```
+
+脚本以真实 HTTP 请求覆盖：静态页面与资源、厂商切换、课程记忆绑定与隔离、课件总结、引导式辅导、复习计划、错题闭环、硬件联动、异常与边界（400/404），并把每个请求与响应写入 `docs/demo_results.json`，生成 `docs/演示验收报告.md`。
+
+验收要点：可访问性 · 无密钥可运行 · 课程记忆隔离 · 课件总结 · 习题辅导不直接给答案 · 复习计划 · 错题闭环 · 可插拔切换 · 密钥安全 · 硬件（可选）。
+
+---
+
+## 九、文档与答辩材料
+
+- `docs/软件需求规格说明书.docx` —— 符合 GB/T 9385-2008 / GB/T 8567-2006 的需求文档（含迭代记录表、项目标志、思维导图、类图、功能描述、验收标准、前后端详尽描述）
+- `docs/AI校园学习陪伴助手_答辩.pptx` —— 答辩材料（团队展示 / 选题报告 / 需求分析 / 核心功能 / 类图 / 创新点，图文并茂）
+- `docs/演示验收报告.md` —— 真实 HTTP 请求与响应数据摘录
+
+> 注：PPT 与需求文档中的图表为 SVG 矢量图，请使用 PowerPoint 2016+ 或 WPS 打开以获得最佳效果。
