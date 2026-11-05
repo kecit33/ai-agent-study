@@ -160,11 +160,14 @@ Render / PythonAnywhere 都需要**你自己的平台账号**，我无法代登�
 - `deploy/pythonanywhere_wsgi.py` —— PythonAnywhere WSGI 配置模板
 - `Procfile` / `requirements.txt` / `server.py` —— 启动与依赖声明
 
-GitHub 仓库需你在 https://github.com/new 手动创建（当前连接器的 GitHub App 凭据无权创建个人仓库，实测返回 `403 Resource not accessible by integration`）：仓库名 `ai-campus-companion`，选 **Private**，**勾选「Add a README file」**以生成 `main` 分支。建好后告诉我，我可代你把全部代码推送上去；或本地执行：
+GitHub 仓库已创建并推送完成：**[kecit33/ai-agent-study](https://github.com/kecit33/ai-agent-study)**（Public，默认分支 `main`）。本地按模块拆分的逐步提交已按原顺序重建到远端，可用 `git log --oneline` 查看完整迭代历史。
+
+> 环境说明：GitHub 连接器的 App 凭据为只读（写操作返回 `403 Resource not accessible by integration`），且沙箱代理阻断 `github.com:443`；因此推送经 `api.github.com` 的 Git Data API 完成，工具脚本见 `docs/push_to_github.py`，需要时可重复执行。
+
+若在你自己的机器上重新关联或推送：
 
 ```bash
-git init && git add . && git commit -m "init: AI 校园学习陪伴助手"
-git remote add origin https://github.com/kecit33/ai-campus-companion.git
+git remote set-url origin https://github.com/kecit33/ai-agent-study.git
 git push -u origin main
 ```
 
@@ -233,7 +236,7 @@ SHARECODE=CEUN7FBTFJ python docs/demo_check.py
 
 ## 十、版本迭代与提交规范
 
-本地仓库按模块**逐步提交**（不是一次性打包），共 16 个 commit，与需求文档的迭代记录表对应。用 `git log --oneline` 可查看：
+本地仓库按模块**逐步提交**（不是一次性打包），共 18 个 commit，其中前 16 个与需求文档的迭代记录表对应；远端 `main` 分支已按相同顺序重建。用 `git log --oneline` 可查看：
 
 | # | 阶段 | 提交说明 |
 |---|---|---|
@@ -253,7 +256,9 @@ SHARECODE=CEUN7FBTFJ python docs/demo_check.py
 | 14 | 文档 | `docs: 国标需求规格说明书与答辩 PPT（含生成脚本与矢量图）` |
 | 15 | 部署 | `deploy: Render Blueprint 与 PythonAnywhere WSGI 模板` |
 | 16 | 文档 | `docs: 本地运行、云端部署与验收说明` |
+| 17 | 文档 | `docs: 补充版本迭代记录与逐步提交规范` |
+| 18 | 工程 | `chore: 校正 GitHub 仓库地址并提供逐提交推送工具` |
 
 - 分支：`main`；忽略：`data/`、`__pycache__/`、`.env`、`docs/.slidep/`、`docs/pptx/`（后两者为工具残留，非交付物）。
-- GitHub 仓库名不含空格，采用 `aiagent-study`；本地 `origin` 已指向 `https://github.com/kecit33/aiagent-study.git`。
-- 仓库可用后执行：`git push -u origin main`（一次推送即保留全部 16 个逐步提交历史）。
+- GitHub 仓库名不含空格，实际采用 `ai-agent-study`；本地 `origin` 已指向 `https://github.com/kecit33/ai-agent-study.git`。
+- 远端 `main` 已按本地顺序重建全部 18 个逐步提交（含中文提交说明与二进制文档）；网络允许时可直接 `git push -u origin main`。
