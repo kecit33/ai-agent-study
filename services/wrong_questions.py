@@ -68,3 +68,27 @@ def mark_mastered(wid: int, mastered: bool = True) -> bool:
     conn.commit()
     conn.close()
     return True
+
+
+def export_markdown(course_id: int = None) -> str:
+    """导出错题本为 Markdown，便于打印或导入笔记软件复盘。"""
+    rows = list_wrong_questions(course_id=course_id)
+    lines = ["# AI 错题本导出", "",
+             "> 导出错题 %d 道 · 生成时间 %s" % (len(rows), datetime.now().isoformat(timespec="seconds")), ""]
+    if not rows:
+        lines.append("（暂无错题，先去录入一道错题吧）")
+    for i, w in enumerate(rows, 1):
+        lines += [
+            "## %d. 错题 #%d %s" % (i, w["id"], "（已掌握）" if w["mastered"] else "（待掌握）"),
+            "",
+            "**题目**：" + (w["question"] or ""),
+            "",
+        ]
+        if w["user_answer"]:
+            lines += ["**我的答案**：" + w["user_answer"], ""]
+        if w["correct_answer"]:
+            lines += ["**正确答案**：" + w["correct_answer"], ""]
+        if w["error_reason"]:
+            lines += ["**错因分析**：", "", w["error_reason"], ""]
+        lines += ["- 录入时间：%s" % w["created_at"], "", "---", ""]
+    return "\n".join(lines)

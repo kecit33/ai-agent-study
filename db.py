@@ -56,6 +56,16 @@ CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT
 );
+
+CREATE TABLE IF NOT EXISTS focus_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    course_id INTEGER,
+    minutes INTEGER NOT NULL,
+    note TEXT,
+    started_at TEXT,
+    ended_at TEXT,
+    created_at TEXT NOT NULL
+);
 """
 
 
