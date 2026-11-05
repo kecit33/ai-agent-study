@@ -101,7 +101,7 @@ def image(name, emu_w=5486400):
 today = datetime.date.today().isoformat()
 title("软件需求规格说明书")
 p("AI 校园学习陪伴助手（AI Campus Learning Companion）")
-p(f"版本：V1.0    日期：{today}    编写：第X开发组（占位）")
+p(f"版本：V1.1    日期：{today}    编写：第X开发组（占位）")
 
 h1("文档信息与迭代记录表")
 table(["版本", "日期", "迭代内容", "负责人（占位）"],
@@ -109,7 +109,8 @@ table(["版本", "日期", "迭代内容", "负责人（占位）"],
        ["V0.5", "需求与架构", "功能设计、可插拔智能体架构、数据模型", "后端"],
        ["V0.8", "核心实现", "Flask 后端、原生前端、课程记忆与错题闭环", "全组"],
        ["V0.9", "硬件接口", "ESP32 Webhook 联动接口与固件（可选加分）", "硬件"],
-       ["V1.0", "上线与交付", "部署指南、需求文档、答辩材料", "全组"]],
+       ["V1.0", "上线与交付", "部署指南、需求文档、答辩材料", "全组"],
+       ["V1.1", "体验增强", "深浅色主题与主题色、语音输入、文件上传/导出、学习概览、番茄钟、硬件双向联动、12 项新接口", "全组"]],
       widths=[1400, 1800, 4560, 1600])
 
 h1("项目标志")
@@ -142,7 +143,7 @@ bullet("本校学生：直接使用问答、总结、辅导、计划、错题本
 bullet("教师 / 助教：检查系统功能、验证课程记忆与定向出题效果。")
 h2("2.3 运行环境")
 bullet("前端：任意现代浏览器（Chrome / Edge / Firefox / Safari）。")
-bullet("后端：Python 3.9+，Flask 框架。")
+bullet("后端：Python 3.8+；默认入口 server.py 仅用标准库，零依赖可运行；app.py 为等价 Flask 版。")
 bullet("数据存储：SQLite（轻量、零配置）。")
 bullet("部署：PythonAnywhere / Render 等免费平台，生成可访问链接。")
 bullet("可选硬件：ESP32 开发板 + LED + 蜂鸣器（硬件联动加分项）。")
@@ -166,7 +167,13 @@ table(["编号", "功能", "说明", "优先级"],
        ["F5", "课程记忆智能体", "按课程上传资料并隔离上下文，切换课程自动切换记忆", "高（杀手级）"],
        ["F6", "AI 错题本与定向出题", "录入错题、分析错因、生成同类变式题巩固", "高（杀手级）"],
        ["F7", "硬件联动提醒", "复习任务到点向 ESP32 下发 LED+蜂鸣器提醒（可选）", "低（加分）"],
-       ["F8", "智能体可插拔切换", "GPT/文心/Kimi/Claude 可切换，无密钥回退演示", "高"]],
+       ["F8", "智能体可插拔切换", "GPT/文心/Kimi/Claude 可切换，无密钥回退演示", "高"],
+       ["F9", "深浅色主题与主题色", "跟随系统 + 手动三档 + 6 套主题色与自定义主色，本地持久化", "中"],
+       ["F10", "语音输入", "Web Speech API，覆盖问答/总结/辅导/资料/错题 5 处输入", "中"],
+       ["F11", "文件上传与导出", "txt/md/docx 课件上传自动入课程记忆；错题本导出 Markdown", "中"],
+       ["F12", "学习概览", "课程/资料/掌握率/今日专注/待复习/最近记录聚合看板", "中"],
+       ["F13", "番茄钟专注", "自定义时长、开始/暂停/重置、到点记录并联动硬件", "中"],
+       ["F14", "硬件双向联动", "下行提醒与专注灯 + 上行学习状态轮询，共 6 个交互点", "低（加分）"]],
       widths=[900, 2200, 4960, 1300])
 
 h2("3.2 智能体可插拔接口需求")
@@ -206,7 +213,13 @@ table(["方法", "路径", "说明"],
        ["GET/POST", "/api/wrong-questions", "错题列表 / 新增错题"],
        ["POST", "/api/wrong-questions/<id>/analyze", "错因分析 + 变式出题"],
        ["POST", "/api/review-tasks", "创建复习任务（可即时/到点下发）"],
-       ["POST", "/api/hardware/test", "向 ESP32 下发测试提醒"]],
+       ["POST", "/api/hardware/test", "向 ESP32 下发测试提醒"],
+       ["POST", "/api/courses/<id>/materials/upload", "课件文件上传（multipart）"],
+       ["GET", "/api/wrong-questions/export", "导出错题本 Markdown"],
+       ["GET", "/api/overview", "学习概览统计"],
+       ["GET/POST", "/api/focus/sessions", "专注记录列表 / 新增专注"],
+       ["POST", "/api/focus/state", "设置专注状态并推送硬件"],
+       ["GET", "/api/hardware/status", "学习状态看板（供 ESP32 轮询）"]],
       widths=[1200, 3600, 4560])
 
 h2("3.6 硬件联动需求（可选加分）")
@@ -240,19 +253,77 @@ table(["编号", "验收项", "可测标准"],
 h1("五、前后端详尽描述")
 h2("5.1 前端")
 bullet("技术：原生 HTML + CSS + JavaScript，无框架，轻量、易上线。")
-bullet("结构：顶部品牌栏与提供商徽标；8 个功能模块以标签页切换。")
+bullet("结构：顶部品牌栏、智能体徽标与主题切换按钮；9 个功能模块以标签页切换，支持 URL hash 直达。")
 bullet("模块：智能问答（课程隔离对话）、课件总结、习题辅导、复习计划、课程记忆（资料上传）、"
       "错题本（错因+变式）、硬件联动、设置（提供商切换与配置说明）。")
 bullet("交互：课程下拉选择影响问答/记忆/错题；所有请求通过 fetch 调用 REST API，结果渲染到页面。")
 h2("5.2 后端")
-bullet("技术：Python Flask，CORS 支持；SQLite 存储；后台 30s 调度扫描到期复习任务。")
+bullet("技术：双后端入口，server.py（Python 标准库，零依赖，默认）与 app.py（Flask，可选）；SQLite 存储；后台 30s 调度扫描到期复习任务。")
 bullet("目录：agents/（可插拔智能体）、services/（业务服务）、hardware/（ESP32）、db.py（数据层）、app.py（路由入口）。")
 bullet("服务层：CourseService（课程/资料/上下文）、TaskService（问答/总结/辅导/计划）、"
       "WrongQuestionService（错题/变式）、HardwareService（提醒下发）。")
 bullet("数据访问：全部使用参数化 SQL，防止注入；数据库文件位于 data/companion.db，首次启动自动初始化。")
 h2("5.3 部署与运行")
-p("详见随附《README 部署指南》：本地运行 `pip install -r requirements.txt && python app.py`，"
-  "访问 http://localhost:5000；云端部署按 Render / PythonAnywhere 文档配置启动命令与环境变量即可生成访问链接。")
+p("详见随附《README 部署指南》：默认零依赖启动 `python server.py`（或双击 start.bat），"
+  "访问 http://localhost:5000；Flask 版需 `pip install -r requirements.txt && python app.py`；"
+  "云端按 Render Blueprint / PythonAnywhere WSGI 配置即可生成访问链接。")
+
+
+h1("六、功能描述（V1.1 增量）")
+p("本章为 V1.1 迭代新增功能的详细描述，与第三章基础需求共同构成完整功能描述；"
+  "对应迭代记录表 V1.1 行。本章所有条目均已实现，并有真实 HTTP 验证数据（见 6.7）。")
+
+h2("6.1 主题与外观配置")
+bullet("深/浅色跟随系统：依据 CSS 媒体查询 prefers-color-scheme 自动切换，并监听系统主题变化事件实时跟随；首屏渲染前读取本地偏好，避免闪白。")
+bullet("手动三档：浅色 / 深色 / 跟随系统，顶栏一键循环与「设置」页分段控件双入口，选择写入 localStorage 持久化。")
+bullet("主题色：6 套预设（蓝/青/紫/橙/粉/绿）与自定义主色拾色器，改写 CSS 变量即时生效。")
+bullet("上传区、番茄钟、统计卡、硬件看板、语音按钮等新增组件全部适配暗色，文字对比度可读。")
+
+h2("6.2 语音输入")
+bullet("基于浏览器 Web Speech API（webkitSpeechRecognition），识别语言 zh-CN，结果写入对应输入框。")
+bullet("覆盖智能问答、课件总结、习题辅导、课程资料、错题题干共 5 处输入。")
+bullet("不支持该 API 的浏览器给出明确降级提示；切换标签页时停止识别并释放麦克风，不影响其余功能。")
+
+h2("6.3 文件传输")
+bullet("上传：POST /api/courses/<id>/materials/upload，multipart/form-data 由标准库手写解析，无第三方依赖。")
+bullet("类型白名单 .txt/.md/.markdown/.docx；.docx 通过 zipfile 读取 document.xml 提取正文；UTF-8/GBK 双解码；单文件上限 2 MB；非法类型返回 400。")
+bullet("上传成功后资料自动写入该课程记忆，后续问答即可引用，形成「上传即记忆」闭环。")
+bullet("导出：GET /api/wrong-questions/export 导出错题本 Markdown，Content-Disposition 携带 UTF-8 编码文件名。")
+
+h2("6.4 学习概览与番茄钟")
+bullet("学习概览：课程数、资料数、错题掌握率、今日专注分钟、待复习任务数、最近专注记录，均由参数化 SQL 聚合得出。")
+bullet("番茄钟：自定义时长、开始/暂停/重置；计时结束写入 focus_sessions 表，并可选向 ESP32 下发休息提醒。")
+bullet("专注状态同步写入 settings 表，供 Web 概览、服务端与开发板状态灯三处读取，保持一致。")
+
+h2("6.5 硬件双向联动（6 个交互点）")
+table(["编号", "交互点", "方向 / 接口", "硬件表现"],
+      [["H1", "复习任务到点提醒", "服务端每 30s 扫描 → POST {ESP32}/remind", "LED 亮 + 蜂鸣器响 1.5s"],
+       ["H2", "手动测试提醒", "POST /api/hardware/test → /remind", "同上，答辩现场即时演示"],
+       ["H3", "番茄钟到点提醒", "POST /api/focus/sessions → /remind", "专注完成时声光提醒休息"],
+       ["H4", "专注状态灯", "POST /api/focus/state → POST {ESP32}/focus", "专注中 LED 常亮，结束熄灭"],
+       ["H5", "学习状态看板（上行）", "ESP32 每 60s GET /api/hardware/status", "OLED/串口显示待复习数、待掌握错题数、专注状态"],
+       ["H6", "通用消息下发（预留）", "esp32.notify_esp32(task, message)", "可扩展打卡、考试倒计时提醒"]],
+      widths=[700, 2100, 3800, 2760])
+p("说明：固件与服务端接口均已实现并通过自动化验证；本机无 ESP32 开发板，LED/蜂鸣器的物理表现与 WiFi 连通性未做实机联调，答辩时如实说明。")
+
+h2("6.6 新增数据实体")
+table(["数据实体", "主要字段", "说明"],
+      [["FocusSession", "id, minutes, course_id, note, created_at", "一次专注记录，用于今日专注分钟与最近记录"],
+       ["Setting（扩展）", "key, value（focus_active / focus_since）", "专注状态与起始时间，供硬件看板读取"]],
+      widths=[2000, 3960, 3400])
+
+h2("6.7 增量验收标准")
+table(["编号", "验收项", "可测标准"],
+      [["A11", "深浅色跟随系统", "切换操作系统主题时页面自动跟随；手动三档与主题色刷新后保持"],
+       ["A12", "语音输入", "支持的浏览器中点击麦克风可将语音转为文字填入输入框"],
+       ["A13", "文件上传", "txt/md/docx 上传成功并进入课程记忆；非法类型返回 400；超 2 MB 被拒绝"],
+       ["A14", "错题导出", "GET 导出接口返回 Markdown 附件且 Content-Disposition 正确"],
+       ["A15", "概览与番茄钟", "统计数字与数据库一致；专注记录可写入并在看板中反映专注状态"],
+       ["A16", "硬件状态看板", "GET /api/hardware/status 返回待复习数、待掌握错题数、专注状态与可读 display 文本"]],
+      widths=[900, 2200, 6260])
+p("实测结果（2026-11-05，目标 http://localhost:5000，真实 HTTP 请求）：原有回归 26/26 个请求状态正确、30/30 项业务断言通过；"
+  "新增功能 19/19 项断言通过；全量 Python 源码编译通过；无头浏览器深/浅色渲染截图 5 张，人工复核无重叠、乱码与裁切。"
+  "数据留存于 docs/demo_results.json、docs/feature_results.json 与 docs/演示验收报告.md。")
 
 # ================= 打包 =================
 document_xml = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
