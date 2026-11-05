@@ -6,6 +6,8 @@
 >
 > **端到端验收结果（2026-11-05，本地 + 线上双环境）：原有回归 26/26 个 HTTP 请求状态正确 + 30/30 项业务断言通过；V1.1 新增功能 19/19 项断言通过；V1.2「高等数学上册资源生成 + 文心/Kimi 模型接入」本地自测 36/36 项、线上 25/25 项断言通过**（模型联网探针仅本地可跑，见 `docs/study_results.json` 与 `docs/study_results_线上.json`）。
 >
+> **V1.2.1 启动修复（2026-11-05 23:59）**：修复「旧版后端残留 5000 端口 + 静态页已更新」导致的新页面点按钮全 404，以及 Windows `SO_REUSEADDR` 允许多进程重复绑定同一端口的隐患；新增版本指纹、端口自动顺延与一键启动自检 `python docs/startup_check.py`（本地 26/26 通过）。详见 `docs/启动检查报告.md`。
+>
 > 需求符合性自检见 `docs/自我检查报告.md`，硬件交互点全清单见 `docs/硬件交互说明.md`，模型接入接口说明见 `docs/模型接入接口说明.md`。
 
 ---
@@ -33,9 +35,10 @@
 ```
 ai-campus-companion/
 ├─ start.bat              # 【双击启动】Windows 一键启动 + 自动开浏览器
-├─ launch.py              # 启动器：探测端口、避免重复启动、拉起 server.py
+├─ launch.py              # 启动器：版本指纹探测、端口自动顺延、拉起 server.py
 ├─ server.py              # 【默认入口】零依赖 Web 服务器（Python 标准库，推荐）
 ├─ app.py                 # Flask 版后端入口（需 pip install，生产可选）
+├─ version.py             # 版本指纹（后端 /api/status 与启动器共用）
 ├─ config.py              # 配置中心（密钥经环境变量读取）
 ├─ db.py                  # SQLite 初始化与连接（8 张表，含 focus_sessions、provider_credentials）
 ├─ agents/                # 可插拔智能体层
@@ -63,6 +66,9 @@ ai-campus-companion/
 │  └─ esp32_firmware.ino  # 固件：/remind、/focus、上行状态轮询
 ├─ static/                # 原生前端（HTML/CSS/JS，9 个功能模块，深浅色主题）
 ├─ docs/
+│  ├─ startup_check.py    # 【V1.2.1】一键启动自检（版本指纹 + 26 项接口检查）
+│  ├─ startup_results.json# 启动自检结果
+│  ├─ 启动检查报告.md      # 启动故障根因、修复与完整重测记录
 │  ├─ demo_check.py       # 原有端到端 HTTP 验收脚本
 │  ├─ demo_results.json   # 真实响应数据留存
 │  ├─ feature_check.py    # V1.1 新增功能端到端验收脚本（19 项）
@@ -94,11 +100,12 @@ ai-campus-companion/
 
 ### 方式 0：双击启动（最省事，推荐给不熟悉命令行的同学）
 
-双击项目根目录的 **`start.bat`**：自动检测 5000 端口 → 启动 Web 服务 → 自动打开浏览器。
+双击项目根目录的 **`start.bat`**：探测端口与后端版本 → 启动 Web 服务 → 自动打开浏览器，**窗口里会打印实际访问地址**。
 
 - 窗口保持开启即服务持续运行；按 `Ctrl+C` 或关闭窗口即停止。
-- 若服务已在运行，脚本**不会重复启动**，只打开浏览器（可反复双击）。
-- 已占用 5000 端口时：`set PORT=8080 && start.bat`，浏览器访问 `http://localhost:8080`。
+- 若**同版本**服务已在运行，脚本不会重复启动，只打开浏览器（可反复双击）。
+- 若 5000 端口被**旧版本服务**或**其它程序**占用，会自动顺延到 5001、5002……并明确提示，不会打开"新页面 + 旧接口"的坏组合。
+- 想固定用 8080 端口：`set PORT=8080 && start.bat`。
 - 等价命令：`python launch.py`；脚本仅依赖 Python 3.8+ 标准库，无需 pip、密钥或联网。
 - 若提示找不到 Python，请在 https://www.python.org/downloads/ 安装并勾选 **Add Python to PATH**。
 
@@ -119,7 +126,20 @@ python app.py
 # 浏览器打开 http://localhost:5000
 ```
 
+> ⚠️ 本机若无法联网 / pip 源不可用（安装 Flask 报 502），**请直接用方式 A 的 `python server.py`** —— 零依赖入口与 Flask 版功能完全一致。直接运行 `python app.py` 而缺少 Flask 时，现在会打印中文引导信息而不是一串 `ModuleNotFoundError` 堆栈。
+
 两者均支持 `PORT` 环境变量（云端自动注入）：`PORT=8080 python server.py`。
+
+### 启动排障（V1.2.1 新增）
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| 页面能打开，但「学习资源包」「模型接入」点一下全 404 | 5000 端口残留着**旧版本后端**，静态页却读的是磁盘上的新 HTML | 关闭旧服务窗口；或重新双击 `start.bat`（会自动顺延到新端口）；或用 `curl http://localhost:5000/api/status` 查看 `version` 是否为 `1.2.1` |
+| 提示端口被占用 / 启动失败 | 已有服务或其它程序占用端口 | 本地默认会自动顺延端口；显式设了 `PORT` 时严格绑定，需释放端口：`Get-NetTCPConnection -LocalPort 5000 \| Select-Object OwningProcess` → `Stop-Process -Id <PID>` |
+| `ModuleNotFoundError: No module named 'flask'` | 走了 Flask 版但依赖未安装 | 改用 `python server.py`（零依赖） |
+| 双击后窗口一闪而过 | Python 不在 PATH | 安装 Python 并勾选 **Add Python to PATH**，或在项目目录打开终端执行 `python launch.py` 看完整输出 |
+
+一键自检：`python docs/startup_check.py`（检查版本指纹、端口占用、首页与全部关键接口）。
 
 > 不配置密钥时，所有功能以「内置演示模式」运行（规则化应答），**功能流程完全可走通**。
 > 配置密钥后，对应厂商自动切换为真实大模型。
@@ -339,6 +359,7 @@ curl -X POST http://localhost:5000/api/study/pack \
 python server.py
 
 # 另开终端执行（默认验证 http://localhost:5000）
+python docs/startup_check.py    # 【V1.2.1】启动自检：版本指纹 + 26 项接口
 python docs/demo_check.py       # 原有 26 请求 / 30 断言
 python docs/feature_check.py    # V1.1 新增 19 项断言
 python docs/study_check.py      # 【V1.2】高等数学资源 + 文心/Kimi 接入 36 项断言
