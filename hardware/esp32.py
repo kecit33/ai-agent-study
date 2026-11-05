@@ -43,3 +43,54 @@ def check_due_tasks() -> list:
     conn.commit()
     conn.close()
     return fired
+
+
+# ---------------- 专注状态灯（番茄钟联动） ----------------
+
+def set_focus_state(active: bool, minutes: int = 0) -> dict:
+    """记录专注状态并推送 ESP32：专注中 LED 常亮，结束熄灭。"""
+    conn = get_conn()
+    conn.execute("INSERT OR REPLACE INTO settings(key, value) VALUES('focus_active', ?)",
+                 ("1" if active else "0",))
+    conn.execute("INSERT OR REPLACE INTO settings(key, value) VALUES('focus_since', ?)",
+                 (_now() if active else "",))
+    conn.commit()
+    conn.close()
+    pushed = _push_focus(active, minutes)
+    return {"active": active, "pushed": pushed}
+
+
+def _push_focus(active: bool, minutes: int) -> dict:
+    """向 ESP32 的 /focus 端点推送专注状态；未配置或失败不影响主体。"""
+    if not ESP32_ENDPOINT:
+        return {"sent": False, "reason": "未配置 ESP32_ENDPOINT，专注状态仅在 Web 端展示"}
+    import requests
+    url = ESP32_ENDPOINT.rsplit("/", 1)[0] + "/focus"
+    try:
+        resp = requests.post(url, json={"active": bool(active), "minutes": int(minutes), "ts": _now()}, timeout=5)
+        return {"sent": True, "status_code": resp.status_code, "endpoint": url}
+    except Exception as e:
+        return {"sent": False, "reason": "专注状态下发失败：%s" % e}
+
+
+def hardware_status() -> dict:
+    """供 ESP32 轮询的学习状态看板：待复习任务、待掌握错题、专注状态。
+
+    ESP32 定时 GET /api/hardware/status，可把这三项显示在 OLED / 串口，
+    让开发板成为桌面「学习状态屏」，形成双向联动（下行提醒 + 上行状态）。
+    """
+    conn = get_conn()
+    pending = conn.execute("SELECT COUNT(*) FROM review_tasks WHERE notified=0").fetchone()[0]
+    unmastered = conn.execute("SELECT COUNT(*) FROM wrong_questions WHERE mastered=0").fetchone()[0]
+    row = conn.execute("SELECT value FROM settings WHERE key='focus_active'").fetchone()
+    since = conn.execute("SELECT value FROM settings WHERE key='focus_since'").fetchone()
+    conn.close()
+    return {
+        "pending_tasks": pending,
+        "unmastered_wrong": unmastered,
+        "focus_active": bool(row and row["value"] == "1"),
+        "focus_since": since["value"] if since else "",
+        "server_time": _now(),
+        "display": "待复习 %d | 待掌握错题 %d | %s" % (
+            pending, unmastered, "专注中" if (row and row["value"] == "1") else "空闲"),
+    }
