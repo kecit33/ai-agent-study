@@ -37,8 +37,7 @@
 ai-campus-companion/
 ├─ start.bat              # 【双击启动】Windows 一键启动 + 自动开浏览器
 ├─ launch.py              # 启动器：版本指纹探测、端口自动顺延、拉起 server.py
-├─ server.py              # 【默认入口】零依赖 Web 服务器（Python 标准库，推荐）
-├─ app.py                 # Flask 版后端入口（需 pip install，生产可选）
+├─ server.py              # 【唯一入口】零依赖 Web 服务器（Python 标准库）
 ├─ version.py             # 版本指纹（后端 /api/status 与启动器共用）
 ├─ config.py              # 配置中心（密钥经环境变量读取）
 ├─ db.py                  # SQLite 初始化与连接（8 张表，含 focus_sessions、provider_credentials）
@@ -46,12 +45,13 @@ ai-campus-companion/
 │  ├─ base.py             # AgentProvider 抽象基类（complete / probe / 自动降级）
 │  ├─ credentials.py      # 运行时密钥中心（环境变量 + SQLite 覆盖，输出掩码）
 │  ├─ http_client.py      # 标准库 urllib 厂商 HTTP 客户端（零第三方依赖）
+│  ├─ demo_knowledge.py   # 内置学科知识库（计算机/高数高频考点真实问答）
 │  ├─ openai_provider.py  # GPT
 │  ├─ qianfan_provider.py # 文心一言（千帆 v2 / 旧版 OAuth 双模式）
 │  ├─ moonshot_provider.py# Kimi
 │  ├─ claude_provider.py  # Claude
 │  ├─ custom_provider.py  # 任意 OpenAI 兼容端点
-│  ├─ demo_provider.py    # 内置演示模式（无密钥兜底）
+│  ├─ demo_provider.py    # 内置演示模式（知识库问答 + 无密钥兜底）
 │  └─ factory.py          # 提供商工厂（选择 / 配置 / 探针 / 透传 / 回退）
 ├─ services/              # 业务服务层
 │  ├─ course.py           # 课程 / 资料 / 课程记忆上下文
@@ -86,14 +86,13 @@ ai-campus-companion/
 │  ├─ 软件需求规格说明书.docx
 │  ├─ AI校园学习陪伴助手_答辩.pptx
 │  └─ blog/               # 博客园技术复盘文章与配图
-├─ requirements.txt       # 仅 Flask 版 / 真实厂商接口需要
+├─ requirements.txt       # 依赖说明（零依赖运行，requests/dotenv 为可选）
 ├─ Procfile               # 云端启动命令（web: python server.py）
 ├─ render.yaml            # Render Blueprint
-├─ deploy/pythonanywhere_wsgi.py
 └─ .env.example           # 密钥模板
 ```
 
-> `server.py` 与 `app.py` 暴露**完全相同**的 REST API 与静态页面，共用同一套业务层，可随时互换。
+> 全项目仅 `server.py` 一个后端入口，**零第三方依赖**，任何环境 `python server.py` 即可运行，不存在双后端不一致的问题。
 
 ---
 
@@ -110,7 +109,7 @@ ai-campus-companion/
 - 等价命令：`python launch.py`；脚本仅依赖 Python 3.8+ 标准库，无需 pip、密钥或联网。
 - 若提示找不到 Python，请在 https://www.python.org/downloads/ 安装并勾选 **Add Python to PATH**。
 
-### 方式 A：命令行零依赖启动（推荐，无需联网装包）
+### 方式 A：命令行零依赖启动（唯一入口，无需联网装包）
 
 ```bash
 python server.py
@@ -119,17 +118,7 @@ python server.py
 
 只需 Python 3.8+，不需要 `pip install`、不需要密钥、不需要联网。适合答辩现场与机房验收。
 
-### 方式 B：Flask 版（生产环境可选）
-
-```bash
-pip install -r requirements.txt
-python app.py
-# 浏览器打开 http://localhost:5000
-```
-
-> ⚠️ 本机若无法联网 / pip 源不可用（安装 Flask 报 502），**请直接用方式 A 的 `python server.py`** —— 零依赖入口与 Flask 版功能完全一致。直接运行 `python app.py` 而缺少 Flask 时，现在会打印中文引导信息而不是一串 `ModuleNotFoundError` 堆栈。
-
-两者均支持 `PORT` 环境变量（云端自动注入）：`PORT=8080 python server.py`。
+支持 `PORT` 环境变量（云端自动注入）：`PORT=8080 python server.py`。
 
 ### 启动排障（V1.2.1 新增）
 
@@ -137,12 +126,11 @@ python app.py
 |---|---|---|
 | 页面能打开，但「学习资源包」「模型接入」点一下全 404 | 5000 端口残留着**旧版本后端**，静态页却读的是磁盘上的新 HTML | 关闭旧服务窗口；或重新双击 `start.bat`（会自动顺延到新端口）；或用 `curl http://localhost:5000/api/status` 查看 `version` 是否为 `1.2.1` |
 | 提示端口被占用 / 启动失败 | 已有服务或其它程序占用端口 | 本地默认会自动顺延端口；显式设了 `PORT` 时严格绑定，需释放端口：`Get-NetTCPConnection -LocalPort 5000 \| Select-Object OwningProcess` → `Stop-Process -Id <PID>` |
-| `ModuleNotFoundError: No module named 'flask'` | 走了 Flask 版但依赖未安装 | 改用 `python server.py`（零依赖） |
 | 双击后窗口一闪而过 | Python 不在 PATH | 安装 Python 并勾选 **Add Python to PATH**，或在项目目录打开终端执行 `python launch.py` 看完整输出 |
 
 一键自检：`python docs/startup_check.py`（检查版本指纹、端口占用、首页与全部关键接口）。
 
-> 不配置密钥时，所有功能以「内置演示模式」运行（规则化应答），**功能流程完全可走通**。
+> 不配置密钥时，所有功能以「内置演示模式」运行（内置知识库真实作答计算机/高数高频考点，其余给出分析框架），**功能流程完全可走通**。
 > 配置密钥后，对应厂商自动切换为真实大模型。
 > 语音输入依赖浏览器 Web Speech API（Chrome/Edge 最佳），不支持时会给出降级提示，其余功能不受影响。
 
@@ -219,36 +207,12 @@ ACTIVE_PROVIDER=moonshot MOONSHOT_API_KEY=sk-xxx python server.py
 
 ---
 
-### PythonAnywhere（WSGI，免费账户适用）
-
-免费账户**不能常驻监听端口**，因此走 Flask 版 + WSGI（不能用 `python server.py`）：
-
-```bash
-# 1. 上传项目到 /home/<用户名>/ai-campus-companion 后，在 Bash 控制台：
-cd ~/ai-campus-companion
-pip install --user -r requirements.txt
-```
-
-1. Web → **Add a new web app** → **Manual configuration** → Python 3.10 / 3.11
-2. 把 `deploy/pythonanywhere_wsgi.py` 的内容粘进 WSGI 配置文件，将其中的 `YOUR_USERNAME` 改成你的真实用户名
-3. Web 页设置 **Source code** 为项目目录，**Reload**
-4. 访问 `https://<用户名>.pythonanywhere.com`
-
-> `os.chdir(PROJECT_DIR)` 是必需的：`app.py` 的静态目录使用相对路径 `static`。
-
----
-
-### Flask 版部署（Render 上的可选替代）
-
-Build `pip install -r requirements.txt`，Start `python app.py`；功能与零依赖版完全一致。
-
 ### 代码仓库与账号边界（重要）
 
-Render / PythonAnywhere 都需要**你自己的平台账号**，我无法代登录，因此这两个平台的最终部署动作必须由你完成；但代码与配置已全部备齐：
+Render 需要**你自己的平台账号**，我无法代登录，因此 Render 的最终部署动作必须由你完成；但代码与配置已全部备齐：
 
 - `render.yaml` —— Render Blueprint，导入即自动创建 Web Service
-- `deploy/pythonanywhere_wsgi.py` —— PythonAnywhere WSGI 配置模板
-- `Procfile` / `requirements.txt` / `server.py` —— 启动与依赖声明
+- `Procfile` / `server.py` —— 启动与依赖声明（零依赖）
 
 GitHub 仓库已创建并推送完成：**[kecit33/ai-agent-study](https://github.com/kecit33/ai-agent-study)**（Public，默认分支 `main`）。本地按模块拆分的逐步提交已按原顺序重建到远端，可用 `git log --oneline` 查看完整迭代历史。
 
@@ -283,6 +247,8 @@ git push -u origin main
 | POST | `/api/wrong-questions/<id>/master` | 标记掌握 |
 | GET/POST | `/api/providers`、`/api/settings/provider` | 厂商状态 / 切换 |
 | POST | `/api/review-tasks` | 创建复习任务（可即时/到点下发） |
+| GET | `/api/review-tasks` | 待复习任务列表（含课程名） |
+| POST | `/api/review-tasks/<id>/done` | 标记复习任务完成 |
 | POST | `/api/hardware/test` | 向 ESP32 下发测试提醒 |
 
 ### 本轮新增接口
@@ -296,7 +262,7 @@ git push -u origin main
 | POST | `/api/focus/state` | 设置专注状态 → 推送 ESP32 专注灯 |
 | GET | `/api/hardware/status` | 学习状态看板（供 ESP32 上行轮询） |
 
-> 以上接口在 `server.py` 与 `app.py` 双后端中均已实现，路径与返回结构一致。
+> 以上接口均由 `server.py`（唯一后端入口）实现，路径与返回结构见下方示例。
 
 ### V1.2 新增接口：学习资源包 + 模型接入
 
