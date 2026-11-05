@@ -1,0 +1,102 @@
+{
+  "base_url": "http://localhost:5000",
+  "total": 19,
+  "passed": 19,
+  "results": [
+    {
+      "name": "首页可访问",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "主题系统 UI（跟随系统/深色/浅色）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "语音输入按钮",
+      "ok": true,
+      "detail": "5"
+    },
+    {
+      "name": "文件上传区",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "学习概览与番茄钟",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "硬件交互点清单",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "深色模式样式",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "语音 API 与系统偏好监听",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "学习概览",
+      "ok": true,
+      "detail": "课程3 掌握率50.0"
+    },
+    {
+      "name": "专注状态开启",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "硬件看板反映专注中",
+      "ok": true,
+      "detail": "待复习 0 | 待掌握错题 1 | 专注中"
+    },
+    {
+      "name": "专注关闭后看板空闲",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "番茄钟记录+ESP32提醒",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "专注记录列表",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "Markdown 上传",
+      "ok": true,
+      "detail": "21"
+    },
+    {
+      "name": "docx 上传并解析",
+      "ok": true,
+      "detail": "满二叉树与完全二叉树的区别。"
+    },
+    {
+      "name": "非法类型被 400 拦截",
+      "ok": true,
+      "detail": "400"
+    },
+    {
+      "name": "错题导出 Markdown 下载",
+      "ok": true,
+      "detail": "attachment; filename*=UTF-8''wrong-questions.md"
+    },
+    {
+      "name": "上传资料已进入课程记忆",
+      "ok": true,
+      "detail": "5"
+    }
+  ]
+}
