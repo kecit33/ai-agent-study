@@ -228,17 +228,27 @@ async function loadOverview() {
   const d = await api("/api/overview");
   const cards = [
     { num: d.courses, label: "课程", sub: `${d.materials} 份课程资料`, tab: "memory", hint: "点击管理课程与资料" },
-    { num: d.mastery_rate + "%", label: "错题掌握率", sub: `${d.wrong_mastered}/${d.wrong_total} 已掌握 · ${d.wrong_unmastered} 待攻克`, tab: "wrong", hint: "点击进入错题本" },
+    { num: d.wrong_total ? d.mastery_rate + "%" : "暂无", label: "错题掌握率",
+      sub: d.wrong_total ? `${d.wrong_mastered}/${d.wrong_total} 已掌握 · ${d.wrong_unmastered} 待攻克` : "还没有错题记录",
+      tab: "wrong", hint: "点击进入错题本" },
     { num: d.focus_today_minutes + " 分钟", label: "今日专注", sub: `累计 ${d.focus_total_minutes} 分钟 / ${d.focus_count} 次`, tab: "", hint: "用下方番茄钟记录专注" },
-    { num: d.pending_tasks, label: "待复习任务", sub: "到点自动推送 ESP32 提醒", tab: "hardware", hint: "点击查看硬件联动" },
+    { num: d.pending_tasks, label: "待复习任务", sub: "到点自动推送 ESP32 提醒", tab: "dashboard", focus: "quickTask", hint: "点击此处添加一条待复习任务" },
   ];
   $("statCards").innerHTML = cards.map((c) =>
-    `<div class="card${c.tab ? " clickable" : ""}" data-tab="${c.tab}" title="${c.hint || c.sub}">
+    `<div class="card${c.tab ? " clickable" : ""}" data-tab="${c.tab || ""}" data-focus="${c.focus || ""}" title="${c.hint || c.sub}">
       <div class="num">${c.num}</div><div class="label">${c.label}</div><div class="sub-num">${c.sub}</div>
     </div>`
   ).join("");
   $("statCards").querySelectorAll(".card.clickable").forEach((el) => {
-    el.onclick = () => activateTab(el.dataset.tab);
+    el.onclick = () => {
+      if (el.dataset.focus) {
+        activateTab(el.dataset.tab || "dashboard");
+        const t = $(el.dataset.focus);
+        if (t) { t.focus(); if (t.scrollIntoView) t.scrollIntoView({ behavior: "smooth", block: "center" }); }
+      } else {
+        activateTab(el.dataset.tab);
+      }
+    };
   });
 
   const ul = $("focusList");
@@ -319,6 +329,88 @@ let lastSvg = "", lastOutline = "";
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+/* ==================== 轻量 Markdown 渲染（escape-first，杜绝 XSS） ====================
+ * 仅支持「演示模式 / 大模型」实际产出的子集：标题、粗体、斜体、行内代码、
+ * 代码块、引用、有序/无序列表、分割线、表格、段落。所有文本先转义再格式化，
+ * 因此即便模型返回 <script> 等也不会被执行。 */
+function mdEscape(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function mdInline(s) {
+  // s 已经过 HTML 转义；再叠加行内标记
+  s = s.replace(/`([^`]+)`/g, (_, c) => "<code>" + c + "</code>");
+  s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  return s;
+}
+function renderMarkdown(src) {
+  if (src == null) return "";
+  const lines = String(src).replace(/\r\n/g, "\n").split("\n");
+  const codes = [];
+  const out = [];
+  // 先抽离围栏代码块，避免块内内容被当成其它语法
+  for (let i = 0; i < lines.length; i++) {
+    if (/^```/.test(lines[i])) {
+      const buf = [];
+      i++;
+      while (i < lines.length && !/^```\s*$/.test(lines[i])) { buf.push(lines[i]); i++; }
+      codes.push(mdEscape(buf.join("\n")));
+      out.push(" CODE" + (codes.length - 1) + " ");
+    } else {
+      out.push(lines[i]);
+    }
+  }
+  const isRow = (l) => /^\|.*\|\s*$/.test(l);
+  const parseCells = (l) => l.split("|").slice(1, -1).map((c) => c.trim());
+  const isSep = (cells) => cells.length > 0 && cells.every((c) => /^:?-+:?$/.test(c));
+
+  let html = "", listType = null, para = [], table = null;
+  const flushPara = () => { if (para.length) { html += "<p>" + mdInline(mdEscape(para.join(" "))) + "</p>"; para = []; } };
+  const flushList = () => { if (listType) { html += "</" + listType + ">"; listType = null; } };
+  const flushTable = () => {
+    if (table && table.head.length) {
+      html += "<table><thead><tr>" + table.head.map((h) => "<th>" + mdInline(mdEscape(h)) + "</th>").join("") +
+        "</tr></thead><tbody>" +
+        table.rows.map((r) => "<tr>" + r.map((c) => "<td>" + mdInline(mdEscape(c)) + "</td>").join("") + "</tr>").join("") +
+        "</tbody></table>";
+    }
+    table = null;
+  };
+  const flushAll = () => { flushPara(); flushList(); flushTable(); };
+
+  for (const line of out) {
+    if (/^ CODE\d+ $/.test(line)) {
+      flushAll();
+      const id = parseInt(line.match(/\d+/)[0], 10);
+      html += "<pre><code>" + codes[id] + "</code></pre>";
+      continue;
+    }
+    if (!line.trim()) { flushAll(); continue; }
+    const h = line.match(/^(#{1,4})\s+(.*)$/);
+    if (h) { flushAll(); const lv = h[1].length; html += "<h" + lv + ">" + mdInline(mdEscape(h[2])) + "</h" + lv + ">"; continue; }
+    if (/^(---|\*\*\*|___)\s*$/.test(line)) { flushAll(); html += "<hr>"; continue; }
+    if (/^>\s?/.test(line)) { flushAll(); html += "<blockquote>" + mdInline(mdEscape(line.replace(/^>\s?/, ""))) + "</blockquote>"; continue; }
+    if (isRow(line)) {
+      const cells = parseCells(line);
+      if (isSep(cells)) { if (table && table.pending) { table.head = table.pending; table.pending = null; } continue; }
+      if (!table) { table = { pending: cells, head: [], rows: [] }; }
+      else if (table.pending && !table.head.length) { table.head = table.pending; table.rows.push(cells); table.pending = null; }
+      else { table.rows.push(cells); }
+      continue;
+    } else { flushTable(); }
+    const ul = line.match(/^([•\-*])\s+(.*)$/);
+    if (ul) { flushPara(); if (listType !== "ul") { flushList(); html += "<ul>"; listType = "ul"; } html += "<li>" + mdInline(mdEscape(ul[2])) + "</li>"; continue; }
+    const ol = line.match(/^\d+\.\s+(.*)$/);
+    if (ol) { flushPara(); if (listType !== "ol") { flushList(); html += "<ol>"; listType = "ol"; } html += "<li>" + mdInline(mdEscape(ol[1])) + "</li>"; continue; }
+    flushList(); flushTable();
+    para.push(line);
+  }
+  flushAll();
+  return html;
+}
+function setMarkdown(el, md) { if (el) el.innerHTML = renderMarkdown(md); }
+
 function studyParams() {
   return {
     subject: $("studySubject").value.trim() || "高等数学上册",
@@ -375,52 +467,90 @@ function renderMindmap(d) {
 
 function renderPack(r) {
   renderQuiz(r.quiz);
-  $("studySummaryOut").textContent = r.summary.markdown;
-  $("studyArticleOut").textContent = r.article.markdown;
+  setMarkdown($("studySummaryOut"), r.summary.markdown);
+  setMarkdown($("studyArticleOut"), r.article.markdown);
   renderResources(r.resources);
   renderMindmap(r.mindmap);
-  $("studyMeta").textContent =
+  let meta =
     `《${r.subject}》· ${r.scope} · ${r.chapters.length} 个章节 ｜ 题目 ${r.quiz.count} 道 ｜ 总结 ${r.summary.markdown.length} 字 ｜ 文章 ${r.article.chars} 字 ｜ 资料 ${r.resources.count} 项 ｜ 导图 ${r.mindmap.node_count} 节点 ｜ 智能体：${r.provider} ｜ 来源：${r.quiz.source}` +
     (r.saved && r.saved.ok ? ` ｜ 已存入课程记忆（课程 #${r.saved.course_id}）` : "");
+  if (r.discipline && r.discipline === "自定义科目") {
+    meta += " ｜ ⚠️ 未内置《" + r.subject + "》专用知识库，已用通用模板；接入文心一言/Kimi 等真实模型可结合课件深度生成";
+  }
+  $("studyMeta").textContent = meta;
 }
 
 async function doStudyPack() {
-  $("studyMeta").textContent = "正在生成全套资源（题目 / 总结 / 文章 / 资料 / 导图）…";
-  const p = studyParams();
-  const r = await api("/api/study/pack", {
-    method: "POST",
-    body: JSON.stringify({ ...p, save_to_course: $("studySave").checked }),
+  studyBusy(true, "正在生成全套资源（题目 / 总结 / 文章 / 资料 / 导图）…");
+  try {
+    const p = studyParams();
+    const r = await api("/api/study/pack", {
+      method: "POST",
+      body: JSON.stringify({ ...p, save_to_course: $("studySave").checked }),
+    });
+    if (r.error) { $("studyMeta").textContent = "生成失败：" + r.error; return; }
+    renderPack(r);
+  } finally {
+    studyBusy(false);
+  }
+}
+
+function studyBusy(on, msg) {
+  ["studyPack", "studyQuiz", "studySummary", "studyArticle", "studyMindmap"].forEach((id) => {
+    const b = $(id); if (b) b.disabled = on;
   });
-  if (r.error) { $("studyMeta").textContent = "生成失败：" + r.error; return; }
-  renderPack(r);
+  if (on) $("studyMeta").textContent = msg || "正在生成，请稍候…";
+}
+
+function subjectHintText(r) {
+  if (r && r.discipline && r.discipline === "自定义科目") {
+    return " ｜ ⚠️ 未内置《" + (r.subject || "该科目") + "》专用知识库，已用通用模板；接入真实模型可结合课件生成";
+  }
+  return "";
 }
 
 function bindStudy() {
   $("studyPack").onclick = doStudyPack;
   $("studyQuiz").onclick = async () => {
-    const r = await api("/api/study/quiz", { method: "POST", body: JSON.stringify(studyParams()) });
-    renderQuiz(r);
-    $("studyMeta").textContent = `《${r.subject}》${r.scope}：已生成 ${r.count} 道题（来源 ${r.source}）`;
+    studyBusy(true, "正在生成自测题…");
+    try {
+      const r = await api("/api/study/quiz", { method: "POST", body: JSON.stringify(studyParams()) });
+      if (r.error) { $("studyMeta").textContent = "生成失败：" + r.error; return; }
+      renderQuiz(r);
+      $("studyMeta").textContent = `《${r.subject}》${r.scope}：已生成 ${r.count} 道题（来源 ${r.source}）` + subjectHintText(r);
+    } finally { studyBusy(false); }
   };
   $("studySummary").onclick = async () => {
-    const r = await api("/api/study/summary", { method: "POST", body: JSON.stringify(studyParams()) });
-    $("studySummaryOut").textContent = r.markdown;
-    $("studyMeta").textContent = `总结已生成：${r.chapter_count} 章 / ${r.markdown.length} 字（${r.source}）`;
+    studyBusy(true, "正在生成复习总结…");
+    try {
+      const r = await api("/api/study/summary", { method: "POST", body: JSON.stringify(studyParams()) });
+      if (r.error) { $("studyMeta").textContent = "生成失败：" + r.error; return; }
+      setMarkdown($("studySummaryOut"), r.markdown);
+      $("studyMeta").textContent = `总结已生成：${r.chapter_count} 章 / ${r.markdown.length} 字（${r.source}）` + subjectHintText(r);
+    } finally { studyBusy(false); }
   };
   $("studyArticle").onclick = async () => {
-    const p = studyParams();
-    const [a, res] = await Promise.all([
-      api("/api/study/article", { method: "POST", body: JSON.stringify(p) }),
-      api("/api/study/resources", { method: "POST", body: JSON.stringify(p) }),
-    ]);
-    $("studyArticleOut").textContent = a.markdown;
-    renderResources(res);
-    $("studyMeta").textContent = `专题文章 ${a.chars} 字 / ${a.sections} 个章节段落，资料 ${res.count} 项已生成`;
+    studyBusy(true, "正在生成专题文章与资料…");
+    try {
+      const p = studyParams();
+      const [a, res] = await Promise.all([
+        api("/api/study/article", { method: "POST", body: JSON.stringify(p) }),
+        api("/api/study/resources", { method: "POST", body: JSON.stringify(p) }),
+      ]);
+      if (a.error) { $("studyMeta").textContent = "生成失败：" + a.error; return; }
+      setMarkdown($("studyArticleOut"), a.markdown);
+      renderResources(res);
+      $("studyMeta").textContent = `专题文章 ${a.chars} 字 / ${a.sections} 个章节段落，资料 ${res.count} 项已生成` + subjectHintText(a);
+    } finally { studyBusy(false); }
   };
   $("studyMindmap").onclick = async () => {
-    const r = await api("/api/study/mindmap", { method: "POST", body: JSON.stringify(studyParams()) });
-    renderMindmap(r);
-    $("studyMeta").textContent = `思维导图：${r.chapter_count} 章 / ${r.node_count} 节点（${r.source}）`;
+    studyBusy(true, "正在生成思维导图…");
+    try {
+      const r = await api("/api/study/mindmap", { method: "POST", body: JSON.stringify(studyParams()) });
+      if (r.error) { $("studyMeta").textContent = "生成失败：" + r.error; return; }
+      renderMindmap(r);
+      $("studyMeta").textContent = `思维导图：${r.chapter_count} 章 / ${r.node_count} 节点（${r.source}）` + subjectHintText(r);
+    } finally { studyBusy(false); }
   };
   $("studyExport").onclick = () => {
     window.location.href = "/api/study/pack/export?" + new URLSearchParams(studyParams()).toString();
@@ -429,7 +559,6 @@ function bindStudy() {
     $("studyMindmapOut").innerHTML = lastOutline
       ? "<pre class='out' style='white-space:pre-wrap'>" + esc(lastOutline) + "</pre>"
       : "<div class='hint'>请先生成思维导图。</div>";
-    if (lastSvg) setTimeout(() => { /* 保留 SVG 供下载 */ }, 0);
   };
   $("studySvgDownload").onclick = () => {
     if (!lastSvg) return alert("请先生成思维导图");
@@ -597,16 +726,25 @@ function bindEvents() {
   };
 
   $("doSummarize").onclick = async () => {
-    const r = await api("/api/summarize", { method: "POST", body: JSON.stringify({ text: $("sumText").value }) });
-    $("sumOut").textContent = r.result || r.error;
+    const btn = $("doSummarize"); btn.disabled = true;
+    try {
+      const r = await api("/api/summarize", { method: "POST", body: JSON.stringify({ text: $("sumText").value }) });
+      setMarkdown($("sumOut"), r.result || r.error);
+    } finally { btn.disabled = false; }
   };
   $("doTutor").onclick = async () => {
-    const r = await api("/api/tutor", { method: "POST", body: JSON.stringify({ problem: $("tutorText").value }) });
-    $("tutorOut").textContent = r.result || r.error;
+    const btn = $("doTutor"); btn.disabled = true;
+    try {
+      const r = await api("/api/tutor", { method: "POST", body: JSON.stringify({ problem: $("tutorText").value }) });
+      setMarkdown($("tutorOut"), r.result || r.error);
+    } finally { btn.disabled = false; }
   };
   $("doPlan").onclick = async () => {
-    const r = await api("/api/review-plan", { method: "POST", body: JSON.stringify({ subject: $("planSubject").value, days: $("planDays").value }) });
-    $("planOut").textContent = r.result || r.error;
+    const btn = $("doPlan"); btn.disabled = true;
+    try {
+      const r = await api("/api/review-plan", { method: "POST", body: JSON.stringify({ subject: $("planSubject").value, days: $("planDays").value }) });
+      setMarkdown($("planOut"), r.result || r.error);
+    } finally { btn.disabled = false; }
   };
 
   $("addMaterial").onclick = async () => {
@@ -682,10 +820,13 @@ async function sendChat() {
   if (!currentCourseId) return alert("请先选择课程");
   const msg = $("chatInput").value.trim();
   if (!msg) return;
+  const btn = $("sendChat"); btn.disabled = true;
   addMsg("user", msg);
   $("chatInput").value = "";
-  const r = await api("/api/chat", { method: "POST", body: JSON.stringify({ course_id: currentCourseId, message: msg }) });
-  addMsg("assistant", r.reply || r.error);
+  try {
+    const r = await api("/api/chat", { method: "POST", body: JSON.stringify({ course_id: currentCourseId, message: msg }) });
+    addMsg("assistant", r.reply || r.error);
+  } finally { btn.disabled = false; }
 }
 
 function addMsg(role, text) {
@@ -693,7 +834,7 @@ function addMsg(role, text) {
   const div = document.createElement("div");
   div.className = "msg " + role;
   div.innerHTML = `<div class="who">${role === "user" ? "我" : "智能体"}</div><div class="bubble"></div>`;
-  div.querySelector(".bubble").textContent = text;
+  div.querySelector(".bubble").innerHTML = renderMarkdown(text);
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
 }

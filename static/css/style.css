@@ -117,6 +117,26 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   max-height: 420px; overflow: auto;
 }
 
+/* ============ Markdown 渲染内容排版 ============ */
+.md { white-space: normal; word-break: break-word; line-height: 1.7; }
+.md > :first-child { margin-top: 0; }
+.md > :last-child { margin-bottom: 0; }
+.md h1, .md h2, .md h3, .md h4 { margin: 14px 0 6px; line-height: 1.35; color: inherit; }
+.md h1 { font-size: 1.22em; } .md h2 { font-size: 1.12em; } .md h3 { font-size: 1.02em; } .md h4 { font-size: .96em; }
+.md p { margin: 8px 0; }
+.md ul, .md ol { margin: 8px 0; padding-left: 22px; }
+.md li { margin: 4px 0; }
+.md blockquote { margin: 8px 0; padding: 6px 12px; border-left: 3px solid var(--primary);
+  background: rgba(127,127,127,.10); border-radius: 6px; }
+.md code { background: rgba(127,127,127,.20); padding: 1px 5px; border-radius: 4px;
+  font-family: ui-monospace, Menlo, Consolas, "Courier New", monospace; font-size: .92em; }
+.md pre { background: rgba(127,127,127,.14); padding: 10px 12px; border-radius: 8px; overflow: auto; }
+.md pre code { background: none; padding: 0; }
+.md hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+.md table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: .92em; }
+.md th, .md td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; }
+.md strong { color: var(--primary); font-weight: 700; }
+
 /* ============ 问答 ============ */
 .model-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
