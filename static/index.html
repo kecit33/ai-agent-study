@@ -40,6 +40,7 @@
   <nav class="tabs" id="tabs">
     <button class="tab active" data-tab="dashboard">学习概览</button>
     <button class="tab" data-tab="chat">智能问答</button>
+    <button class="tab" data-tab="study">学习资源包</button>
     <button class="tab" data-tab="summarize">课件总结</button>
     <button class="tab" data-tab="tutor">习题辅导</button>
     <button class="tab" data-tab="plan">复习计划</button>
@@ -94,6 +95,56 @@
         <button class="mic-btn" data-mic-target="chatInput" title="语音输入">🎤</button>
         <button id="sendChat">发送</button>
       </div>
+    </section>
+
+    <!-- 学习资源包：题目 / 总结 / 文章 / 资料 / 思维导图 -->
+    <section class="panel" id="panel-study">
+      <p class="hint">以「数学 → 高等数学上册」为例：选定教材与章节，一键生成带答案解析的自测题、
+        复习总结、专题文章、学习资料清单与可视化思维导图。无密钥时由内置学科知识库生成；
+        接入文心一言 / Kimi 等模型后自动叠加 AI 生成内容。</p>
+      <div class="study-bar">
+        <label>教材 / 科目
+          <input id="studySubject" value="高等数学上册" list="subjectOptions" placeholder="如：数学 / 高等数学上册" />
+          <datalist id="subjectOptions">
+            <option value="高等数学上册"></option><option value="数学"></option>
+            <option value="高数"></option><option value="数据结构"></option>
+          </datalist>
+        </label>
+        <label>章节 <select id="studyChapter"></select></label>
+        <label>题量 <input id="studyCount" type="number" min="1" max="30" value="6" /></label>
+        <label>难度
+          <select id="studyDifficulty">
+            <option value="">混合</option><option value="基础">基础</option>
+            <option value="中等">中等</option><option value="较难">较难</option>
+          </select>
+        </label>
+      </div>
+      <div class="study-actions">
+        <button id="studyPack">🚀 一键生成全套</button>
+        <button id="studyQuiz" class="ghost">仅生成题目</button>
+        <button id="studySummary" class="ghost">总结</button>
+        <button id="studyArticle" class="ghost">文章与资料</button>
+        <button id="studyMindmap" class="ghost">思维导图</button>
+        <button id="studyExport" class="ghost">⬇ 导出 Markdown</button>
+        <label class="chk"><input type="checkbox" id="studySave" /> 同时存入课程记忆</label>
+      </div>
+      <div id="studyMeta" class="study-meta">就绪：默认教材「高等数学上册」，未配置密钥时使用内置知识库。</div>
+
+      <h3>一、自测题 <span class="tag down">含标准答案与解析</span></h3>
+      <div id="studyQuizOut" class="quiz-list"></div>
+
+      <h3>二、复习总结</h3>
+      <pre id="studySummaryOut" class="out study-pre"></pre>
+
+      <h3>三、专题文章与学习资料</h3>
+      <pre id="studyArticleOut" class="out study-pre"></pre>
+      <div id="studyResourcesOut" class="res-list"></div>
+
+      <h3>四、知识思维导图
+        <button id="studySvgDownload" class="mini">⬇ 下载 SVG</button>
+        <button id="studyOutline" class="mini">查看大纲</button>
+      </h3>
+      <div id="studyMindmapOut" class="mindmap-box">点击「思维导图」或「一键生成全套」查看。</div>
     </section>
 
     <!-- 课件总结 -->
@@ -235,18 +286,63 @@
       </div>
       <div class="swatches" id="swatches"></div>
 
-      <h3>智能体提供商（可插拔）</h3>
-      <p class="hint">未配置密钥的厂商会自动使用「内置演示模式」，保证无密钥也能完整体验。</p>
+      <h3>模型接入：文心一言 / Kimi / 自定义端点（填完立即生效，无需重启）</h3>
+      <p class="hint">拿到 API Key 后在此填写即可切换模型；配置只保存在服务端本地数据库，
+        列表只显示掩码。未配置密钥时自动使用内置演示模式，功能不中断。
+        自建系统也可直接调用 <code>POST /api/agent/credentials</code> 与 <code>POST /api/agent/complete</code>。</p>
+      <div class="agent-form">
+        <label>提供商
+          <select id="agentProvider">
+            <option value="qianfan">百度文心一言（QianFan / ERNIE）</option>
+            <option value="moonshot">Kimi（Moonshot）</option>
+            <option value="openai">OpenAI GPT</option>
+            <option value="claude">Anthropic Claude</option>
+            <option value="custom">自定义 OpenAI 兼容接口</option>
+          </select>
+        </label>
+        <label>API Key <input id="agentKey" type="password" autocomplete="off" placeholder="必填，如 sk-… / 千帆 API Key" /></label>
+        <label>Secret Key <input id="agentSecret" type="password" autocomplete="off" placeholder="仅文心旧版 WenxinWorkshop 需要" /></label>
+        <label>模型名 <input id="agentModel" placeholder="留空用默认：ernie-3.5-8k / moonshot-v1-8k" /></label>
+        <label>接口地址 base_url <input id="agentBaseUrl" placeholder="可选；千帆 v2 或自定义端点必填" /></label>
+        <label>Token 地址 <input id="agentTokenUrl" placeholder="仅文心旧版需要，可留空" /></label>
+        <div class="agent-btns">
+          <button id="agentSave">💾 保存并启用</button>
+          <button id="agentValidate" class="ghost">仅校验配置</button>
+          <button id="agentTest" class="ghost">🔌 连通性测试</button>
+          <button id="agentClear" class="ghost">清除该配置</button>
+        </div>
+        <pre id="agentStatus" class="out">未执行任何操作。</pre>
+      </div>
+
+      <h3>已接入模型状态（点击可切换当前智能体）</h3>
       <div id="providerList" class="list"></div>
-      <h3>配置说明</h3>
+
+      <h3>常用接入参数速查</h3>
+      <pre class="out"># 文心一言·千帆 v2（推荐，只需 API Key）
+provider=qianfan  model=ernie-4.5-8k
+base_url=https://qianfan.baidubce.com/v2/chat/completions
+
+# 文心一言·旧版 WenxinWorkshop（需 API Key + Secret Key）
+provider=qianfan  model=ernie-3.5-8k
+token_url=https://aip.baidubce.com/oauth/2.0/token
+base_url=https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions
+
+# Kimi
+provider=moonshot  model=moonshot-v1-8k
+base_url=https://api.moonshot.cn/v1/chat/completions
+
+# 命令行等价调用
+curl -X POST /api/agent/credentials -H "Content-Type: application/json" \
+  -d '{"provider":"moonshot","api_key":"sk-xxx","model":"moonshot-v1-8k","activate":true}'</pre>
+      <h3>环境变量配置（可选，优先级低于上面的运行时配置）</h3>
       <pre class="out">在项目根目录创建 .env 文件：
-OPENAI_API_KEY=sk-xxx
-QIANFAN_API_KEY=xxx
-QIANFAN_SECRET_KEY=xxx
+ACTIVE_PROVIDER=demo
+QIANFAN_API_KEY=xxx / QIANFAN_SECRET_KEY=xxx
 MOONSHOT_API_KEY=xxx
+OPENAI_API_KEY=xxx
 CLAUDE_API_KEY=xxx
-ESP32_ENDPOINT=http://开发板IP/remind
-ACTIVE_PROVIDER=openai   # demo/openai/qianfan/moonshot/claude</pre>
+CUSTOM_API_KEY=xxx / CUSTOM_BASE_URL=xxx / CUSTOM_MODEL=xxx
+ESP32_ENDPOINT=http://开发板IP</pre>
     </section>
   </main>
 

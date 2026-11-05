@@ -273,6 +273,191 @@ function initUpload() {
   });
 }
 
+/* ==================== 学习资源包 ==================== */
+let lastSvg = "", lastOutline = "";
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function studyParams() {
+  return {
+    subject: $("studySubject").value.trim() || "高等数学上册",
+    chapter: $("studyChapter").value,
+    count: Number($("studyCount").value) || 6,
+    difficulty: $("studyDifficulty").value,
+  };
+}
+
+async function loadStudyCatalog() {
+  const c = await api("/api/study/catalog");
+  const sel = $("studyChapter");
+  sel.innerHTML = '<option value="">全部章节（全册）</option>' +
+    c.chapters.map((ch) => `<option value="${esc(ch.id)}">${esc(ch.title)}（${ch.question_count} 题）</option>`).join("");
+}
+
+function renderQuiz(d) {
+  const box = $("studyQuizOut");
+  if (!d.questions || !d.questions.length) {
+    box.innerHTML = "<div class='hint'>该范围暂无题目，试试切换章节或清空难度筛选。</div>";
+    return;
+  }
+  box.innerHTML = d.questions.map((q, i) => `
+    <div class="quiz-card">
+      <div class="q-head">
+        <span class="q-no">#${i + 1}</span>
+        <span class="tag">${esc(q.type)}</span>
+        <span class="tag down">${esc(q.difficulty)}</span>
+        <span class="tag">${q.origin === "llm" ? "模型生成" : "知识库"}</span>
+      </div>
+      <div class="q-stem">${esc(q.stem)}</div>
+      <div class="q-meta">章节：${esc(q.chapter)} ｜ 考点：${esc((q.points || []).join("、")) || "—"}</div>
+      <details><summary>查看答案与解析</summary>
+        <p><b>答案：</b>${esc(q.answer)}</p>
+        <p><b>解析：</b>${esc(q.analysis)}</p>
+      </details>
+    </div>`).join("");
+}
+
+function renderResources(d) {
+  $("studyResourcesOut").innerHTML =
+    `<h4>资料清单（${d.count} 项）</h4>` +
+    d.items.map((r) => `<div class="res-item">
+      <div class="r-title">${esc(r.title)} <span class="tag">${esc(r.kind)}</span></div>
+      <div class="r-desc">${esc(r.desc)}</div>
+      <a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.url)}</a>
+    </div>`).join("");
+}
+
+function renderMindmap(d) {
+  lastSvg = d.svg || ""; lastOutline = d.outline || "";
+  $("studyMindmapOut").innerHTML = lastSvg || "<div class='hint'>未生成思维导图。</div>";
+}
+
+function renderPack(r) {
+  renderQuiz(r.quiz);
+  $("studySummaryOut").textContent = r.summary.markdown;
+  $("studyArticleOut").textContent = r.article.markdown;
+  renderResources(r.resources);
+  renderMindmap(r.mindmap);
+  $("studyMeta").textContent =
+    `《${r.subject}》· ${r.scope} · ${r.chapters.length} 个章节 ｜ 题目 ${r.quiz.count} 道 ｜ 总结 ${r.summary.markdown.length} 字 ｜ 文章 ${r.article.chars} 字 ｜ 资料 ${r.resources.count} 项 ｜ 导图 ${r.mindmap.node_count} 节点 ｜ 智能体：${r.provider} ｜ 来源：${r.quiz.source}` +
+    (r.saved && r.saved.ok ? ` ｜ 已存入课程记忆（课程 #${r.saved.course_id}）` : "");
+}
+
+async function doStudyPack() {
+  $("studyMeta").textContent = "正在生成全套资源（题目 / 总结 / 文章 / 资料 / 导图）…";
+  const p = studyParams();
+  const r = await api("/api/study/pack", {
+    method: "POST",
+    body: JSON.stringify({ ...p, save_to_course: $("studySave").checked }),
+  });
+  if (r.error) { $("studyMeta").textContent = "生成失败：" + r.error; return; }
+  renderPack(r);
+}
+
+function bindStudy() {
+  $("studyPack").onclick = doStudyPack;
+  $("studyQuiz").onclick = async () => {
+    const r = await api("/api/study/quiz", { method: "POST", body: JSON.stringify(studyParams()) });
+    renderQuiz(r);
+    $("studyMeta").textContent = `《${r.subject}》${r.scope}：已生成 ${r.count} 道题（来源 ${r.source}）`;
+  };
+  $("studySummary").onclick = async () => {
+    const r = await api("/api/study/summary", { method: "POST", body: JSON.stringify(studyParams()) });
+    $("studySummaryOut").textContent = r.markdown;
+    $("studyMeta").textContent = `总结已生成：${r.chapter_count} 章 / ${r.markdown.length} 字（${r.source}）`;
+  };
+  $("studyArticle").onclick = async () => {
+    const p = studyParams();
+    const [a, res] = await Promise.all([
+      api("/api/study/article", { method: "POST", body: JSON.stringify(p) }),
+      api("/api/study/resources", { method: "POST", body: JSON.stringify(p) }),
+    ]);
+    $("studyArticleOut").textContent = a.markdown;
+    renderResources(res);
+    $("studyMeta").textContent = `专题文章 ${a.chars} 字 / ${a.sections} 个章节段落，资料 ${res.count} 项已生成`;
+  };
+  $("studyMindmap").onclick = async () => {
+    const r = await api("/api/study/mindmap", { method: "POST", body: JSON.stringify(studyParams()) });
+    renderMindmap(r);
+    $("studyMeta").textContent = `思维导图：${r.chapter_count} 章 / ${r.node_count} 节点（${r.source}）`;
+  };
+  $("studyExport").onclick = () => {
+    window.location.href = "/api/study/pack/export?" + new URLSearchParams(studyParams()).toString();
+  };
+  $("studyOutline").onclick = () => {
+    $("studyMindmapOut").innerHTML = lastOutline
+      ? "<pre class='out' style='white-space:pre-wrap'>" + esc(lastOutline) + "</pre>"
+      : "<div class='hint'>请先生成思维导图。</div>";
+    if (lastSvg) setTimeout(() => { /* 保留 SVG 供下载 */ }, 0);
+  };
+  $("studySvgDownload").onclick = () => {
+    if (!lastSvg) return alert("请先生成思维导图");
+    const blob = new Blob([lastSvg], { type: "image/svg+xml;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "高等数学上册-思维导图.svg";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+  };
+}
+
+/* ==================== 模型接入（文心一言 / Kimi / 自定义） ==================== */
+function agentPayload() {
+  const payload = { provider: $("agentProvider").value };
+  [["api_key", "agentKey"], ["secret_key", "agentSecret"], ["model", "agentModel"],
+   ["base_url", "agentBaseUrl"], ["token_url", "agentTokenUrl"]].forEach(([k, id]) => {
+    const v = $(id).value.trim();
+    if (v) payload[k] = v;
+  });
+  return payload;
+}
+
+function agentLog(title, r) {
+  $("agentStatus").textContent = title + "\n" + JSON.stringify(r, null, 2);
+}
+
+function bindAgent() {
+  $("agentProvider").onchange = () => {
+    const p = $("agentProvider").value;
+    $("agentModel").placeholder = p === "qianfan" ? "默认 ernie-3.5-8k（v2 可填 ernie-4.5-8k）"
+      : p === "moonshot" ? "默认 moonshot-v1-8k" : p === "custom" ? "必填，如 qwen-plus / llama3"
+      : p === "openai" ? "默认 gpt-3.5-turbo" : "默认 claude-3-5-sonnet-20241022";
+    $("agentBaseUrl").placeholder = p === "custom" ? "必填，如 http://localhost:11434/v1/chat/completions"
+      : p === "qianfan" ? "可选；填千帆 v2 地址则只需 API Key" : "可选，留空使用官方地址";
+  };
+  $("agentSave").onclick = async () => {
+    const r = await api("/api/agent/credentials", {
+      method: "POST", body: JSON.stringify({ ...agentPayload(), activate: true }),
+    });
+    agentLog("保存结果：", r);
+    if (r.ok) {
+      $("agentKey").value = ""; $("agentSecret").value = "";
+      await loadStatus(); await loadProviders();
+    }
+  };
+  $("agentValidate").onclick = async () => {
+    const r = await api("/api/agent/test", {
+      method: "POST", body: JSON.stringify({ provider: $("agentProvider").value, mode: "validate" }),
+    });
+    agentLog("配置校验（不联网）：", r);
+  };
+  $("agentTest").onclick = async () => {
+    $("agentStatus").textContent = "正在连接模型，请稍候…";
+    const r = await api("/api/agent/test", {
+      method: "POST", body: JSON.stringify({ provider: $("agentProvider").value, mode: "probe" }),
+    });
+    agentLog("连通性测试结果：", r);
+  };
+  $("agentClear").onclick = async () => {
+    const r = await api("/api/agent/credentials/clear", {
+      method: "POST", body: JSON.stringify({ provider: $("agentProvider").value }),
+    });
+    agentLog("已清除运行时配置：", r);
+    ["agentKey", "agentSecret", "agentModel", "agentBaseUrl", "agentTokenUrl"].forEach((id) => { $(id).value = ""; });
+    await loadStatus(); await loadProviders();
+  };
+}
+
 /* ==================== 初始化 ==================== */
 async function init() {
   initTheme();
@@ -281,14 +466,20 @@ async function init() {
   await loadMaterials();
   await loadWrongQuestions();
   await loadProviders();
+  await loadStudyCatalog();
   await loadOverview();
   loadHardwareStatus();
   bindEvents();
+  bindStudy();
+  bindAgent();
   initUpload();
   pomoRender();
   document.querySelectorAll(".mic-btn").forEach((b) => { b.onclick = () => toggleMic(b); });
+  const autoPack = new URLSearchParams(location.search).get("autopack") === "1";
   const hash = location.hash.slice(1);
   if (hash && $("panel-" + hash)) activateTab(hash);
+  // 答辩/验收快捷入口：/?autopack=1 打开即自动生成「高等数学上册」全套资源
+  if (autoPack) { activateTab("study"); doStudyPack(); }
 }
 
 function activateTab(name) {
@@ -302,6 +493,7 @@ function activateTab(name) {
   if (history.replaceState) history.replaceState(null, "", "#" + name);
   if (name === "dashboard") loadOverview();
   if (name === "hardware") loadHardwareStatus();
+  if (name === "settings") loadProviders();
 }
 
 async function loadStatus() {
@@ -496,20 +688,39 @@ async function loadWrongQuestions() {
 }
 
 async function loadProviders() {
-  const list = await api("/api/providers");
+  const d = await api("/api/agent/providers");
   const ul = $("providerList");
   ul.innerHTML = "";
-  list.forEach((p) => {
+  d.providers.forEach((p) => {
     const li = document.createElement("li");
-    li.innerHTML = `<h4>${p.label} ${p.active ? "· 当前" : ""}</h4>
-      <div class="meta">${p.available ? "✅ 已配置密钥，可用真实模型" : "⚠️ 未配置密钥，将使用演示模式"}</div>
-      ${p.active ? "" : `<div class="actions"><button data-name="${p.name}">切换为当前</button></div>`}`;
+    const masked = (p.masked && p.masked.api_key) ? " ｜ Key " + p.masked.api_key : "";
+    li.innerHTML = `<h4>${esc(p.label)} ${p.active ? "· 当前" : ""}</h4>
+      <div class="meta">${p.configured ? "✅ 已配置，可用真实模型" : "⚠️ 未配置，使用内置演示模式"}
+        ｜ 来源 ${esc(p.source)} ｜ 模型 ${esc(p.model || "—")}${esc(masked)}</div>
+      ${p.hint ? `<div class="meta">${esc(p.hint)}</div>` : ""}
+      <div class="actions">
+        <button data-cfg="${p.name}">配置</button>
+        ${p.active ? "" : `<button data-name="${p.name}">切换为当前</button>`}
+        ${p.name === "demo" ? "" : `<button data-probe="${p.name}">连通性测试</button>`}
+      </div>`;
     ul.appendChild(li);
   });
   ul.querySelectorAll("button").forEach((b) => {
     b.onclick = async () => {
-      await api("/api/settings/provider", { method: "POST", body: JSON.stringify({ name: b.dataset.name }) });
-      loadStatus(); loadProviders();
+      if (b.dataset.cfg) {
+        $("agentProvider").value = b.dataset.cfg;
+        $("agentProvider").onchange();
+        activateTab("settings");
+        $("agentProvider").scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (b.dataset.name) {
+        await api("/api/settings/provider", { method: "POST", body: JSON.stringify({ name: b.dataset.name }) });
+        loadStatus(); loadProviders();
+      } else if (b.dataset.probe) {
+        const r = await api("/api/agent/test", {
+          method: "POST", body: JSON.stringify({ provider: b.dataset.probe, mode: "probe" }),
+        });
+        agentLog("连通性测试 · " + b.dataset.probe + "：", r);
+      }
     };
   });
 }
