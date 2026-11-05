@@ -14,6 +14,7 @@ import json
 import mimetypes
 import os
 import re
+import socket
 import sys
 import threading
 import time
@@ -30,6 +31,7 @@ from agents.factory import (
 from services import course, tasks, wrong_questions, focus, files as filesvc
 from services import study
 from hardware import esp32
+from version import APP_NAME, APP_VERSION
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -47,6 +49,8 @@ class HttpError(Exception):
 
 def _status():
     return {
+        "app": APP_NAME,
+        "version": APP_VERSION,
         "active_provider": get_active_provider_name(),
         "providers": list_providers_status(),
     }
@@ -541,14 +545,78 @@ def _scheduler():
         time.sleep(30)
 
 
+def _port_in_use(host, port):
+    """主动探测端口上是否已有服务在监听。
+
+    Windows 下 HTTPServer 默认开启 SO_REUSEADDR，第二个进程 bind 同一端口
+    竟然会「成功」，于是两个版本的服务同时监听 5000，请求随机落到旧进程上
+    （页面是新的、接口却 404）。因此不能只依赖 bind 是否抛异常，必须先做
+    TCP 连接探测。
+    """
+    probe_host = "127.0.0.1" if host in ("0.0.0.0", "", "::") else host
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(0.4)
+    try:
+        return sock.connect_ex((probe_host, port)) == 0
+    except OSError:
+        return False
+    finally:
+        sock.close()
+
+
+def _bind_server(host, start_port, strict):
+    """绑定监听端口。
+
+    本地默认启动（未显式设置 PORT）时，若端口被旧进程占用则自动顺延，
+    保证「双击就能跑」；云端或用户显式指定 PORT 时严格绑定，避免平台健康
+    检查指向错误端口。
+    """
+    attempts = 1 if strict else 20
+    port = start_port
+    for i in range(attempts):
+        if _port_in_use(host, port):
+            if strict:
+                raise OSError("端口 %d 上已有服务在运行" % port)
+            print("[提示] 端口 %d 已有服务在运行，自动尝试 %d ……"
+                  % (port, port + 1), flush=True)
+            port += 1
+            continue
+        try:
+            return ThreadingHTTPServer((host, port), Handler), port
+        except OSError as exc:
+            if strict or i == attempts - 1:
+                raise
+            print("[提示] 端口 %d 绑定失败，自动尝试 %d ……（%s）"
+                  % (port, port + 1, exc), flush=True)
+            port += 1
+    raise OSError("无可用端口")
+
+
 def main():
-    port = int(os.getenv("PORT", "5000"))
+    raw_port = os.getenv("PORT")
+    start_port = int(raw_port or "5000")
+    strict = bool(raw_port)
     host = os.getenv("HOST", "0.0.0.0")
-    threading.Thread(target=_scheduler, daemon=True).start()
-    srv = ThreadingHTTPServer((host, port), Handler)
+    try:
+        srv, port = _bind_server(host, start_port, strict)
+    except OSError as exc:
+        print("=" * 60, flush=True)
+        print("[启动失败] 无法在端口 %d 上启动 Web 服务：%s" % (start_port, exc), flush=True)
+        print("最常见原因：之前启动的旧版本服务还占着这个端口。", flush=True)
+        print("解决办法（任选其一）：", flush=True)
+        print("  1. 关闭之前那个黑色的服务窗口；", flush=True)
+        print("  2. PowerShell 执行：Get-NetTCPConnection -LocalPort %d | "
+              "Select-Object OwningProcess" % start_port, flush=True)
+        print("     再执行：Stop-Process -Id <上一步查到的PID>", flush=True)
+        print("  3. 换端口启动：set PORT=8080 && python server.py", flush=True)
+        print("=" * 60, flush=True)
+        raise SystemExit(1)
+
     srv.daemon_threads = True
+    threading.Thread(target=_scheduler, daemon=True).start()
     print("=" * 56, flush=True)
-    print("  AI 校园学习陪伴助手 · Web 服务已启动（零依赖模式）", flush=True)
+    print("  %s · Web 服务已启动（零依赖模式）" % APP_NAME, flush=True)
+    print("  版本：V%s" % APP_VERSION, flush=True)
     print("  本机访问：http://localhost:%d" % port, flush=True)
     print("  局域网访问：http://<本机IP>:%d" % port, flush=True)
     print("  数据文件：%s" % db.DB_PATH, flush=True)
