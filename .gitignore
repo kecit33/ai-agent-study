@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.env
+data/
+venv/
+.venv/
+# slidep 早期失败残留（非交付物）
+docs/.slidep/
+docs/pptx/
