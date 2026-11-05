@@ -1,6 +1,6 @@
 {
   "base_url": "https://ai-campus-companion.app.workbuddy.host",
-  "generated_at": "2026-11-06T00:31:06",
+  "generated_at": "2026-11-06T01:05:55",
   "total": 25,
   "passed": 25,
   "failed": 0,
@@ -109,17 +109,17 @@
     {
       "name": "C1 学习概览接口",
       "ok": true,
-      "detail": "16"
+      "detail": "18"
     },
     {
       "name": "C2 课程列表接口",
       "ok": true,
-      "detail": "16"
+      "detail": "18"
     },
     {
       "name": "C3 课程问答接口",
       "ok": true,
-      "detail": "（演示模式 · 课程记忆已绑定「示例课程：数据结构」）\n\n你问的是：请介绍本课程\n\n基于已上传的课程"
+      "detail": "（演示模式 · 课程记忆已绑定「示例课程：数据结构」）\n\n你问的是：请介绍本课程\n\n目前是**内置演"
     },
     {
       "name": "C4 课件总结接口",
