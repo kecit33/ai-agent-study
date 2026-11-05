@@ -1,10 +1,10 @@
 {
-  "base_url": "https://ai-campus-companion.app.workbuddy.host",
-  "generated_at": "2026-11-06T01:05:55",
-  "total": 25,
-  "passed": 25,
+  "base_url": "http://127.0.0.1:5055",
+  "generated_at": "2026-11-06T01:27:05",
+  "total": 36,
+  "passed": 36,
   "failed": 0,
-  "local_mock_llm": false,
+  "local_mock_llm": true,
   "results": [
     {
       "name": "A1 学科目录（数学 → 高等数学上册）",
@@ -102,19 +102,74 @@
       "detail": "缺少必填项：api_key"
     },
     {
-      "name": "B6~B16 本地模拟模型联调（线上环境跳过，本地已验证）",
+      "name": "B6 Kimi API Key 运行时写入即生效（无需重启）",
       "ok": true,
-      "detail": "线上环境无法访问本机模拟端点；完整模型联调结果见 docs/study_results.json"
+      "detail": "掩码：sk-m****7890"
+    },
+    {
+      "name": "B7 配置校验通过（Kimi）",
+      "ok": true,
+      "detail": "moonshot-v1-8k"
+    },
+    {
+      "name": "B8 Kimi 模型连通性测试成功",
+      "ok": true,
+      "detail": "连接成功 / 12 ms"
+    },
+    {
+      "name": "B9 通用透传接口调用 Kimi 模型得到回复",
+      "ok": true,
+      "detail": "【模拟模型已响应】已收到请求：你是数学助教 什么是极限？"
+    },
+    {
+      "name": "B10 资源生成自动叠加 Kimi 模型原创题目",
+      "ok": true,
+      "detail": "来源 hybrid(knowledge_base + llm) / 模型题 1 道"
+    },
+    {
+      "name": "B11 模型可补充思维导图节点",
+      "ok": true,
+      "detail": "hybrid(knowledge_base + llm)"
+    },
+    {
+      "name": "B12 文心一言（API Key + Secret Key）配置成功",
+      "ok": true,
+      "detail": "{'api_key': 'mock****3456', 'secret_key': 'mock****7654', 'model': 'erni****5-8k', 'base_url': 'http****chat', 'token_url': 'http****oken'}"
+    },
+    {
+      "name": "B13 文心一言 OAuth 取 token + 对话连通性成功",
+      "ok": true,
+      "detail": "连接成功 / "
+    },
+    {
+      "name": "B14 透传接口调用文心模型得到回复",
+      "ok": true,
+      "detail": "【模拟模型已响应】已收到请求：你是校园学习陪伴助手，请简洁、准确地回答。\n\n你好"
+    },
+    {
+      "name": "B15 自定义 OpenAI 兼容端点接入并切换为当前模型",
+      "ok": true,
+      "detail": "当前：custom"
+    },
+    {
+      "name": "B16 清除配置后自动回退演示模式",
+      "ok": true,
+      "detail": "demo"
+    },
+    {
+      "name": "B17 首页含学习资源包与模型接入 UI",
+      "ok": true,
+      "detail": ""
     },
     {
       "name": "C1 学习概览接口",
       "ok": true,
-      "detail": "18"
+      "detail": "22"
     },
     {
       "name": "C2 课程列表接口",
       "ok": true,
-      "detail": "18"
+      "detail": "22"
     },
     {
       "name": "C3 课程问答接口",
