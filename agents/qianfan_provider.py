@@ -1,11 +1,23 @@
-"""百度文心一言 (QianFan / ERNIE) 提供商。
+"""百度文心一言（千帆 QianFan / ERNIE）提供商。
 
-调用流程：先用 API Key + Secret Key 换取 access_token，再携带 token 调用 ERNIE 对话接口。
-token 有效期约 30 天，这里在内存中缓存。
+自动适配两种官方鉴权方式，密钥可在 .env、Web 设置页或 REST 接口配置：
+
+1. 千帆 v2（推荐，OpenAI 兼容）
+   base_url = https://qianfan.baidubce.com/v2/chat/completions
+   使用 Authorization: Bearer <API Key>，只需 api_key，无需 access_token。
+   模型如 ernie-4.5-8k / ernie-3.5-8k / ernie-speed-8k。
+
+2. 旧版 WenxinWorkshop
+   token_url = https://aip.baidubce.com/oauth/2.0/token
+   base_url  = https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions
+   先用 API Key + Secret Key 换 access_token（内存缓存 30 天），再带 token 调用。
+
+base_url / token_url 均可覆盖，因此也能指向自建网关或本地模拟服务做联调。
 """
 import time
+import urllib.parse
 
-from config import QIANFAN_API_KEY, QIANFAN_SECRET_KEY, QIANFAN_MODEL
+from agents import credentials, http_client
 from .base import AgentProvider
 
 
@@ -13,58 +25,52 @@ class QianFanProvider(AgentProvider):
     name = "qianfan"
     label = "百度文心一言"
 
-    TOKEN_URL = "https://aip.baidubce.com/oauth/2.0/token"
-    CHAT_URL = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions"
+    V2_URL = "https://qianfan.baidubce.com/v2/chat/completions"
+    LEGACY_TOKEN_URL = "https://aip.baidubce.com/oauth/2.0/token"
+    LEGACY_CHAT_URL = ("https://aip.baidubce.com/rpc/2.0/ai_custom/"
+                       "v1/wenxinworkshop/chat/completions")
 
-    _token = None
-    _token_expire = 0
+    _token_cache = {}
 
     def is_available(self):
-        return bool(QIANFAN_API_KEY) and bool(QIANFAN_SECRET_KEY)
+        return credentials.validate("qianfan")[0]
 
-    def _get_token(self):
-        import requests
-        now = time.time()
-        if self._token and now < self._token_expire - 60:
-            return self._token
-        resp = requests.get(
-            self.TOKEN_URL,
-            params={
-                "grant_type": "client_credentials",
-                "client_id": QIANFAN_API_KEY,
-                "client_secret": QIANFAN_SECRET_KEY,
-            },
-            timeout=30,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        if "access_token" not in data:
-            raise RuntimeError(data.get("error_description", "获取 token 失败"))
-        self._token = data["access_token"]
-        self._token_expire = now + data.get("expires_in", 2592000)
-        return self._token
+    def _get_token(self, c):
+        url = c.get("token_url") or self.LEGACY_TOKEN_URL
+        key = (c["api_key"], c.get("secret_key", ""), url)
+        hit = self._token_cache.get(key)
+        if hit and time.time() < hit[1] - 60:
+            return hit[0]
+        data = http_client.get_json(url, params={
+            "grant_type": "client_credentials",
+            "client_id": c["api_key"],
+            "client_secret": c.get("secret_key", ""),
+        }, timeout=30)
+        token = data.get("access_token")
+        if not token:
+            raise RuntimeError("获取 access_token 失败：%s" % str(data)[:200])
+        self._token_cache[key] = (token, time.time() + int(data.get("expires_in", 2592000)))
+        return token
 
-    def complete(self, system_prompt: str, messages: list) -> str:
-        if not self.is_available():
-            return "（未配置文心一言密钥，已回退演示模式）"
-        import requests
-        payload_msgs = [{"role": m["role"], "content": m["content"]} for m in messages]
-        # 文心一言把系统提示合并进首条 user 消息更稳妥
-        if payload_msgs:
-            payload_msgs[0]["content"] = system_prompt + "\n\n" + payload_msgs[0]["content"]
-        try:
-            token = self._get_token()
-            resp = requests.post(
-                self.CHAT_URL,
-                params={"access_token": token},
-                headers={"Content-Type": "application/json"},
-                json={"messages": payload_msgs, "temperature": 0.7},
-                timeout=60,
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            if "result" in data:
-                return data["result"].strip()
-            raise RuntimeError(data.get("error_msg", "未知错误"))
-        except Exception as e:
-            return f"（文心一言接口调用失败，已回退演示模式：{e}）"
+    def _call(self, system_prompt: str, messages: list) -> str:
+        c = credentials.get("qianfan")
+        msgs = [{"role": m["role"], "content": m["content"]} for m in messages]
+        if credentials._is_qianfan_v2(c):
+            url = c.get("base_url") or self.V2_URL
+            payload = {"model": c["model"], "messages":
+                       [{"role": "system", "content": system_prompt}] + msgs,
+                       "temperature": 0.7}
+            data = http_client.post_json(
+                url, payload,
+                headers={"Authorization": "Bearer %s" % c["api_key"]}, timeout=60)
+            return http_client.extract_content(data)
+
+        # 旧版：system 提示合并进首条 user，更稳妥
+        if msgs:
+            msgs[0]["content"] = system_prompt + "\n\n" + msgs[0]["content"]
+        url = c.get("base_url") or self.LEGACY_CHAT_URL
+        token = self._get_token(c)
+        url += ("&" if "?" in url else "?") + "access_token=" + urllib.parse.quote(token)
+        data = http_client.post_json(
+            url, {"messages": msgs, "model": c["model"], "temperature": 0.7}, timeout=60)
+        return http_client.extract_content(data)

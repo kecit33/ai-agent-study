@@ -5,12 +5,26 @@
 """
 import os
 
-# python-dotenv 为可选依赖：未安装时不影响运行（演示模式与手动环境变量同样可用）
+# python-dotenv 为可选依赖：未安装时用标准库自解析 .env，保证零依赖模式同样生效
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except Exception:
-    pass
+    def _load_env_file(path):
+        try:
+            with open(path, "r", encoding="utf-8-sig") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    key, _, value = line.partition("=")
+                    key, value = key.strip(), value.strip().strip('"').strip("'")
+                    if key and key not in os.environ:
+                        os.environ[key] = value
+        except OSError:
+            pass
+
+    _load_env_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "data", "companion.db")

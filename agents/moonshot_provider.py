@@ -1,5 +1,10 @@
-"""Kimi (Moonshot) 提供商，OpenAI 兼容接口格式。"""
-from config import MOONSHOT_API_KEY, MOONSHOT_MODEL
+"""Kimi（月之暗面 Moonshot）提供商，OpenAI 兼容接口格式。
+
+密钥可在 .env 用 MOONSHOT_API_KEY 配置，也可在 Web「设置」页或
+POST /api/agent/credentials 运行时写入，写入后立即生效、无需重启。
+常用模型：moonshot-v1-8k / moonshot-v1-32k / moonshot-v1-128k / kimi-k2 系列。
+"""
+from agents import credentials, http_client
 from .base import AgentProvider
 
 
@@ -7,29 +12,17 @@ class MoonshotProvider(AgentProvider):
     name = "moonshot"
     label = "Kimi (Moonshot)"
 
-    BASE_URL = "https://api.moonshot.cn/v1/chat/completions"
-
     def is_available(self):
-        return bool(MOONSHOT_API_KEY)
+        return credentials.validate("moonshot")[0]
 
-    def complete(self, system_prompt: str, messages: list) -> str:
-        if not self.is_available():
-            return "（未配置 MOONSHOT_API_KEY，已回退演示模式）"
-        import requests
+    def _call(self, system_prompt: str, messages: list) -> str:
+        c = credentials.get("moonshot")
         payload_msgs = [{"role": "system", "content": system_prompt}]
         payload_msgs += [{"role": m["role"], "content": m["content"]} for m in messages]
-        try:
-            resp = requests.post(
-                self.BASE_URL,
-                headers={
-                    "Authorization": f"Bearer {MOONSHOT_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={"model": MOONSHOT_MODEL, "messages": payload_msgs, "temperature": 0.7},
-                timeout=60,
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            return data["choices"][0]["message"]["content"].strip()
-        except Exception as e:
-            return f"（Kimi 接口调用失败，已回退演示模式：{e}）"
+        data = http_client.post_json(
+            c["base_url"],
+            {"model": c["model"], "messages": payload_msgs, "temperature": 0.7},
+            headers={"Authorization": "Bearer %s" % c["api_key"]},
+            timeout=45,
+        )
+        return http_client.extract_content(data)

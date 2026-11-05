@@ -14,6 +14,8 @@ from .base import AgentProvider
 class DemoProvider(AgentProvider):
     name = "demo"
     label = "内置演示模式（无需密钥）"
+    # 演示模式依靠 【MODE:xxx】 分发任务，不能剥离标记
+    strip_mode_marker = False
 
     _MODE_RE = re.compile(r"【MODE:(\w+)】")
     _INSTRUCTION_RE = re.compile(r"^(请总结|请辅导|请基于|请分析|以下是|用户消息)")
@@ -21,7 +23,7 @@ class DemoProvider(AgentProvider):
     def is_available(self):
         return True
 
-    def complete(self, system_prompt: str, messages: list) -> str:
+    def _call(self, system_prompt: str, messages: list) -> str:
         mode = "chat"
         m = self._MODE_RE.search(system_prompt or "")
         if m:
