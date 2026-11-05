@@ -1,12 +1,9 @@
-"""AI 校园学习陪伴助手 —— 零依赖 Web 服务器（仅 Python 标准库）。
-
-与 app.py（Flask 版）暴露完全相同的 REST API 与静态页面，二者共用同一套
-db / agents / services / hardware 业务层，行为一致。
+"""AI 校园学习陪伴助手 —— Web 服务器（仅 Python 标准库，零第三方依赖）。
 
 设计目的：
 1. 本机或云环境无法 pip install 时，仍可一键启动真实可访问的 Web 应用；
 2. 答辩现场 / 师生验收时无需任何密钥、无需联网安装依赖；
-3. Render / PythonAnywhere 等平台可直接以 `python server.py` 启动（尊重 PORT）。
+3. Render 等平台可直接以 `python server.py` 启动（尊重 PORT 环境变量）。
 
 启动：python server.py    访问：http://localhost:5000
 """
@@ -105,6 +102,28 @@ def _review_task(body):
     if body.get("fire_now"):
         fired = esp32.notify_esp32(body.get("task_name", "复习任务"))
     return {"id": tid, "fired": fired}
+
+
+def _list_review_tasks():
+    """待复习任务列表（含课程名），供学习概览直接查看与勾选完成。"""
+    conn = db.get_conn()
+    rows = conn.execute(
+        "SELECT r.id, r.task_name, r.due_time, r.notified, r.created_at, "
+        "c.name AS course_name FROM review_tasks r "
+        "LEFT JOIN courses c ON c.id = r.course_id "
+        "ORDER BY (r.notified = 0) DESC, r.due_time ASC"
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def _mark_task_done(tid):
+    """标记复习任务为已完成（notified=1 复用为完成状态）。"""
+    conn = db.get_conn()
+    conn.execute("UPDATE review_tasks SET notified = 1 WHERE id = ?", (tid,))
+    conn.commit()
+    conn.close()
+    return {"ok": True, "id": tid}
 
 
 class Download:
@@ -283,6 +302,10 @@ ROUTES = [
 
     ("POST", r"^/api/review-tasks$",
      lambda m, b, q: _review_task(b)),
+    ("GET", r"^/api/review-tasks$",
+     lambda m, b, q: _list_review_tasks()),
+    ("POST", r"^/api/review-tasks/(\d+)/done$",
+     lambda m, b, q: _mark_task_done(int(m.group(1)))),
     ("POST", r"^/api/hardware/test$",
      lambda m, b, q: esp32.notify_esp32(b.get("task_name", "测试提醒"),
                                         b.get("message", "硬件联动测试"))),

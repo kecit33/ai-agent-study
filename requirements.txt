@@ -1,4 +1,11 @@
-Flask==3.0.3
-Flask-Cors==4.0.1
-requests==2.32.3
-python-dotenv==1.0.1
+# AI 校园学习陪伴助手 —— 依赖说明
+#
+# 本项目默认入口 server.py **零第三方依赖**（仅 Python 3.8+ 标准库），
+# 无需 pip install 即可启动：python server.py
+#
+# 以下为可选依赖，仅在需要时安装（均为懒加载，缺失时自动降级）：
+#   requests      —— 可选：ESP32 硬件联动推送（未配置硬件时不加载）
+#   python-dotenv —— 可选：读取 .env 环境变量文件（缺失时用系统环境变量）
+#
+# 真实大模型（文心一言 / Kimi / GPT / Claude / 自定义）接口已改用标准库
+# urllib 实现，同样无需 requests。
