@@ -1,23 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="700" viewBox="0 0 1000 700" font-family="Arial, 'Microsoft YaHei', sans-serif">
-  <rect width="1000" height="700" fill="#ffffff"/>
-
-  <!-- 关系线 -->
-  <g stroke="#41506a" stroke-width="1.6" fill="none">
-    <path d="M250 250 L250 300" marker-end="url(#tri)"/>
-    <path d="M120 250 L120 300"/>
-    <path d="M380 250 L380 300"/>
-    <path d="M510 250 L510 300"/>
-    <path d="M640 250 L640 300"/>
-    <path d="M250 175 L250 210"/>  <!-- AgentProvider 到抽象框 -->
-    <path d="M250 360 L250 410"/>  <!-- AgentProvider 到工厂/服务 -->
-    <path d="M250 470 L250 520"/>
-    <path d="M760 250 L760 300"/>
-  </g>
-  <g stroke="#9fb3d6" stroke-width="1.4" stroke-dasharray="5 4" fill="none">
-    <path d="M250 360 C400 360 400 360 470 360"/>
-    <path d="M760 360 C650 360 650 360 600 360"/>
-    <path d="M760 250 C700 250 700 250 660 250"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="800" viewBox="0 0 1100 800" font-family="Arial, 'Microsoft YaHei', sans-serif">
+  <rect width="1100" height="800" fill="#ffffff"/>
+  <text x="1060" y="26" font-size="12" fill="#8a97ab" text-anchor="end">V1.5.0 类图（模块 / 实体关系）</text>
 
   <defs>
     <marker id="tri" markerWidth="10" markerHeight="10" refX="5" refY="9" orient="auto">
@@ -25,79 +8,100 @@
     </marker>
   </defs>
 
-  <!-- AgentProvider 抽象 -->
-  <g>
-    <rect x="150" y="285" width="200" height="80" rx="8" fill="#eaf1ff" stroke="#2f6fed"/>
-    <text x="250" y="308" font-size="14" font-weight="700" fill="#1f2733" text-anchor="middle">&lt;&lt;abstract&gt;&gt; AgentProvider</text>
-    <text x="160" y="330" font-size="11" fill="#41506a">+ name, label</text>
-    <text x="160" y="348" font-size="11" fill="#41506a">+ complete(sys,msgs)</text>
-    <text x="160" y="364" font-size="11" fill="#41506a">+ is_available()</text>
+  <!-- 抽象基类 -->
+  <rect x="370" y="40" width="330" height="96" rx="9" fill="#eaf1ff" stroke="#2f6fed" stroke-width="1.8"/>
+  <text x="535" y="66" font-size="14" font-weight="700" fill="#1f2733" text-anchor="middle">&lt;&lt;abstract&gt;&gt; AgentProvider</text>
+  <text x="386" y="88" font-size="11.5" fill="#41506a">+ name, label, strip_mode_marker</text>
+  <text x="386" y="107" font-size="11.5" fill="#41506a">+ complete(sys, msgs) · is_available()</text>
+  <text x="386" y="126" font-size="11.5" fill="#41506a">+ _call() · probe()   （异常统一降级）</text>
+
+  <!-- 实现分叉 -->
+  <g stroke="#41506a" stroke-width="1.4" fill="none">
+    <path d="M535 136 L535 158"/>
+    <path d="M160 158 L910 158"/>
+    <path d="M160 158 L160 182"/><path d="M535 158 L535 182"/><path d="M910 158 L910 182"/>
+    <path d="M160 232 L160 252"/><path d="M535 232 L535 252"/><path d="M910 232 L910 252"/>
+    <path d="M160 158 L160 250"/><path d="M910 158 L910 250"/>
   </g>
 
-  <!-- 四个实现 + Demo -->
-  <g font-size="11" fill="#2f6fed">
-    <rect x="20" y="300" width="150" height="35" rx="6" fill="#ffffff" stroke="#2f6fed"/>
-    <text x="95" y="322" text-anchor="middle">OpenAIProvider</text>
-    <rect x="310" y="300" width="150" height="35" rx="6" fill="#ffffff" stroke="#2f6fed"/>
-    <text x="385" y="322" text-anchor="middle">QianFanProvider</text>
-    <rect x="440" y="300" width="150" height="35" rx="6" fill="#ffffff" stroke="#2f6fed"/>
-    <text x="515" y="322" text-anchor="middle">MoonshotProvider</text>
-    <rect x="570" y="300" width="150" height="35" rx="6" fill="#ffffff" stroke="#2f6fed"/>
-    <text x="645" y="322" text-anchor="middle">ClaudeProvider</text>
-    <rect x="690" y="300" width="140" height="35" rx="6" fill="#fff3e0" stroke="#e08a00"/>
-    <text x="760" y="322" text-anchor="middle">DemoProvider</text>
+  <!-- 6 个 Provider -->
+  <g font-size="12" text-anchor="middle">
+    <rect x="40" y="182" width="240" height="48" rx="6" fill="#ffffff" stroke="#2f6fed"/>
+    <text x="160" y="211" fill="#2f4d8a">OpenAIProvider（GPT）</text>
+    <rect x="415" y="182" width="240" height="48" rx="6" fill="#ffffff" stroke="#2f6fed"/>
+    <text x="535" y="211" fill="#2f4d8a">QianFanProvider（文心）</text>
+    <rect x="790" y="182" width="240" height="48" rx="6" fill="#ffffff" stroke="#2f6fed"/>
+    <text x="910" y="211" fill="#2f4d8a">MoonshotProvider（Kimi）</text>
+    <rect x="40" y="252" width="240" height="48" rx="6" fill="#ffffff" stroke="#2f6fed"/>
+    <text x="160" y="281" fill="#2f4d8a">ClaudeProvider</text>
+    <rect x="415" y="252" width="240" height="48" rx="6" fill="#ffffff" stroke="#2f6fed"/>
+    <text x="535" y="281" fill="#2f4d8a">CustomProvider（兼容端点）</text>
+    <rect x="790" y="252" width="240" height="48" rx="6" fill="#fff3e0" stroke="#e08a00"/>
+    <text x="910" y="281" fill="#a3650a">DemoProvider（无密钥兜底）</text>
   </g>
 
-  <!-- ProviderFactory -->
-  <g>
-    <rect x="150" y="365" width="200" height="95" rx="8" fill="#eaf1ff" stroke="#2f6fed"/>
-    <text x="250" y="388" font-size="13" font-weight="700" fill="#1f2733" text-anchor="middle">ProviderFactory</text>
-    <text x="160" y="408" font-size="10.5" fill="#41506a">+ get_provider()</text>
-    <text x="160" y="424" font-size="10.5" fill="#41506a">+ get_active_provider_name()</text>
-    <text x="160" y="440" font-size="10.5" fill="#41506a">+ set_active_provider()</text>
-    <text x="160" y="456" font-size="10.5" fill="#41506a">+ list_providers_status()</text>
-  </g>
+  <!-- 工厂 + 配置中心 -->
+  <rect x="40" y="340" width="330" height="180" rx="9" fill="#f0ecff" stroke="#6b4fed"/>
+  <text x="205" y="366" font-size="13.5" font-weight="700" fill="#1f2733" text-anchor="middle">ProviderFactory / credentials</text>
+  <text x="56" y="390" font-size="11.5" fill="#41506a">_PROVIDERS = 6（注册表）</text>
+  <text x="56" y="410" font-size="11.5" fill="#41506a">+ get_provider(name) → 不可用回退 demo</text>
+  <text x="56" y="430" font-size="11.5" fill="#41506a">+ configure / clear / probe</text>
+  <text x="56" y="450" font-size="11.5" fill="#41506a">+ direct_complete(...) → fallback 标记</text>
+  <text x="56" y="474" font-size="11" fill="#5539b8">credentials: save / get / status（掩码）</text>
+  <text x="56" y="494" font-size="11" fill="#5539b8">优先级：运行时 SQLite &gt; 环境变量 &gt; demo</text>
 
   <!-- 服务层 -->
-  <g>
-    <rect x="430" y="345" width="220" height="155" rx="8" fill="#eaf7ef" stroke="#1aa260"/>
-    <text x="540" y="368" font-size="13" font-weight="700" fill="#1f2733" text-anchor="middle">服务层 (services)</text>
-    <text x="442" y="390" font-size="11" fill="#41506a">CourseService: 课程/资料/上下文</text>
-    <text x="442" y="410" font-size="11" fill="#41506a">TaskService: 问答/总结/辅导/计划</text>
-    <text x="442" y="430" font-size="11" fill="#41506a">WrongQuestionService: 错题/变式</text>
-    <text x="442" y="450" font-size="11" fill="#41506a">HardwareService: 提醒下发</text>
-    <text x="442" y="478" font-size="10.5" fill="#1aa260">uses ▸ AgentProvider（可插拔）</text>
-  </g>
+  <rect x="410" y="340" width="330" height="180" rx="9" fill="#eaf7ef" stroke="#1aa260"/>
+  <text x="575" y="366" font-size="13.5" font-weight="700" fill="#1f2733" text-anchor="middle">业务服务层 services（8 模块）</text>
+  <text x="426" y="390" font-size="11.5" fill="#41506a">course · tasks · wrong_questions</text>
+  <text x="426" y="410" font-size="11.5" fill="#41506a">files · focus · subject_knowledge</text>
+  <text x="426" y="430" font-size="11.5" fill="#41506a">study · mindmap</text>
+  <text x="426" y="454" font-size="11" fill="#1a6f48">uses ▸ AgentProvider（业务不感知厂商）</text>
+  <text x="426" y="474" font-size="11" fill="#1a6f48">build_course_context() ≤ 12000 字</text>
+  <text x="426" y="494" font-size="11" fill="#1a6f48">全部 SQL 参数化绑定</text>
 
-  <!-- 数据层 -->
-  <g>
-    <rect x="700" y="345" width="270" height="225" rx="8" fill="#fff3e0" stroke="#e08a00"/>
-    <text x="835" y="368" font-size="13" font-weight="700" fill="#1f2733" text-anchor="middle">数据实体 (SQLite)</text>
-    <text x="712" y="390" font-size="11" fill="#41506a">Course (id, name)</text>
-    <text x="712" y="410" font-size="11" fill="#41506a">CourseMaterial (course_id,content)</text>
-    <text x="712" y="430" font-size="11" fill="#41506a">Conversation (course_id,role,text)</text>
-    <text x="712" y="450" font-size="11" fill="#41506a">WrongQuestion (course_id,reason)</text>
-    <text x="712" y="470" font-size="11" fill="#41506a">ReviewTask (due_time,notified)</text>
-    <text x="712" y="490" font-size="11" fill="#41506a">Setting (active_provider)</text>
+  <!-- 数据实体 -->
+  <rect x="780" y="340" width="290" height="300" rx="9" fill="#fff3e0" stroke="#e08a00"/>
+  <text x="925" y="366" font-size="13.5" font-weight="700" fill="#1f2733" text-anchor="middle">数据实体 SQLite（8 张表）</text>
+  <g font-size="11.5" fill="#41506a">
+    <text x="796" y="392">courses（课程，隔离单元）</text>
+    <text x="796" y="416">course_materials（资料全文）</text>
+    <text x="796" y="440">conversations（对话历史）</text>
+    <text x="796" y="464">wrong_questions（错因 / 掌握）</text>
+    <text x="796" y="488">review_tasks（复习任务）</text>
+    <text x="796" y="512">settings（激活 Provider / 专注）</text>
+    <text x="796" y="536">focus_sessions（专注记录）</text>
+    <text x="796" y="560">provider_credentials（密钥）</text>
   </g>
+  <text x="796" y="592" font-size="11" fill="#a3650a">get_conn(): timeout=10 · busy_timeout=5000</text>
+  <text x="796" y="614" font-size="11" fill="#a3650a">写入前显式校验课程存在（拒孤儿数据）</text>
 
-  <!-- Flask App -->
-  <g>
-    <rect x="430" y="520" width="270" height="70" rx="8" fill="#f0ecff" stroke="#6b4fed"/>
-    <text x="565" y="545" font-size="13" font-weight="700" fill="#1f2733" text-anchor="middle">Flask App (app.py)</text>
-    <text x="442" y="567" font-size="11" fill="#41506a">REST 路由 · CORS · 静态资源 · 调度</text>
-  </g>
+  <!-- HTTP 入口 -->
+  <rect x="410" y="560" width="330" height="100" rx="9" fill="#eaf1ff" stroke="#2f6fed"/>
+  <text x="575" y="586" font-size="13.5" font-weight="700" fill="#1f2733" text-anchor="middle">server.py（唯一 HTTP 入口）</text>
+  <text x="426" y="610" font-size="11.5" fill="#41506a">ThreadingHTTPServer · ROUTES 40 条</text>
+  <text x="426" y="630" font-size="11.5" fill="#41506a">Download / Raw · multipart · 30s 调度</text>
+  <text x="426" y="650" font-size="11" fill="#2f4d8a">零第三方依赖 · version.py 版本指纹</text>
 
   <!-- 前端 -->
-  <g>
-    <rect x="60" y="540" width="300" height="70" rx="8" fill="#eaf1ff" stroke="#2f6fed"/>
-    <text x="210" y="565" font-size="13" font-weight="700" fill="#1f2733" text-anchor="middle">前端 (HTML/CSS/JS)</text>
-    <text x="72" y="587" font-size="11" fill="#41506a">8 个功能模块 · 调用 REST API</text>
-  </g>
-  <g stroke="#9fb3d6" stroke-width="1.4" stroke-dasharray="5 4" fill="none">
-    <path d="M360 575 C400 575 400 555 430 555"/>
-  </g>
+  <rect x="40" y="560" width="330" height="100" rx="9" fill="#eaf1ff" stroke="#2f6fed"/>
+  <text x="205" y="586" font-size="13.5" font-weight="700" fill="#1f2733" text-anchor="middle">前端 static/（10 个模块）</text>
+  <text x="56" y="610" font-size="11.5" fill="#41506a">index.html · style.css · app.js</text>
+  <text x="56" y="630" font-size="11.5" fill="#41506a">api() · esc() · renderMarkdown(b)</text>
+  <text x="56" y="650" font-size="11" fill="#2f4d8a">escape-first Markdown · 键盘可达</text>
 
-  <text x="250" y="200" font-size="12" fill="#6b7686" text-anchor="middle">「实现」</text>
-  <text x="250" y="500" font-size="12" fill="#6b7686" text-anchor="middle">「创建/返回」</text>
+  <!-- 关系连线 -->
+  <g stroke="#41506a" stroke-width="1.5" fill="none" marker-end="url(#tri)">
+    <path d="M370 430 L408 430"/>
+    <path d="M740 430 L778 430"/>
+    <path d="M575 520 L575 558"/>
+    <path d="M410 610 L372 610"/>
+  </g>
+  <g stroke="#9fb3d6" stroke-width="1.3" stroke-dasharray="5 4" fill="none">
+    <path d="M205 340 C205 320 150 320 150 302"/>
+    <path d="M205 560 C250 560 300 540 370 530"/>
+    <path d="M740 610 C765 610 765 590 778 590"/>
+  </g>
+  <text x="535" y="700" font-size="11.5" fill="#6b7686" text-anchor="middle">实线：调用 / 依赖　　虚线：配置注入与数据读写</text>
+  <text x="535" y="724" font-size="11.5" fill="#6b7686" text-anchor="middle">V1.3.0 起 Flask app.py 已移除，全系统只有 server.py 一个后端入口</text>
 </svg>
