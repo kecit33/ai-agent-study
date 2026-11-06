@@ -87,12 +87,14 @@ def _mark_mastered(wid, body):
 
 
 def _review_task(body):
+    # 任务名为空时回落到默认名，避免入库一条用户永远看不懂的空任务
+    name = (body.get("task_name") or "").strip() or "复习任务"
     due = body.get("due_time") or datetime.now().isoformat(timespec="seconds")
     conn = db.get_conn()
     cur = conn.execute(
         "INSERT INTO review_tasks(course_id, task_name, due_time, notified, created_at) "
         "VALUES(?, ?, ?, 0, ?)",
-        (body.get("course_id"), body.get("task_name", "复习任务"),
+        (body.get("course_id"), name,
          due, datetime.now().isoformat(timespec="seconds")),
     )
     conn.commit()
@@ -100,8 +102,8 @@ def _review_task(body):
     conn.close()
     fired = None
     if body.get("fire_now"):
-        fired = esp32.notify_esp32(body.get("task_name", "复习任务"))
-    return {"id": tid, "fired": fired}
+        fired = esp32.notify_esp32(name)
+    return {"id": tid, "fired": fired, "task_name": name}
 
 
 def _list_review_tasks():

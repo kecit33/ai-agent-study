@@ -33,6 +33,11 @@ def add_material(course_id: int, title: str, content: str) -> dict:
     if not content:
         raise ValueError("资料内容不能为空")
     conn = get_conn()
+    # SQLite 默认未启用外键约束，若不显式校验会写入「孤儿资料」：
+    # 接口返回成功，但任何课程都查不到，用户以为资料丢了。
+    if not conn.execute("SELECT 1 FROM courses WHERE id=?", (course_id,)).fetchone():
+        conn.close()
+        raise ValueError("课程不存在，请先选择或新建课程")
     cur = conn.execute(
         "INSERT INTO course_materials(course_id, title, content, created_at) VALUES(?, ?, ?, ?)",
         (course_id, (title or "").strip(), content, datetime.now().isoformat(timespec="seconds")),
@@ -53,8 +58,16 @@ def list_materials(course_id: int) -> list:
     return [dict(r) for r in rows]
 
 
+MAX_CONTEXT_CHARS = 12000  # 课程记忆总预算（字）：防止资料累积撑爆模型上下文
+
+
 def build_course_context(course_id: int) -> str:
-    """拼接该课程已上传的资料，作为智能体系统提示的「课程记忆」上下文。"""
+    """拼接该课程已上传的资料，作为智能体系统提示的「课程记忆」上下文。
+
+    单份资料最多 4000 字，整体另有 12000 字总预算。原实现只有单份截断、
+    没有总量控制：实测 20 份资料会拼出 8 万字 system prompt，真实模型会
+    直接超限或产生不必要的 token 开销。超预算时按上传顺序保留并明确提示。
+    """
     conn = get_conn()
     course = conn.execute("SELECT name FROM courses WHERE id=?", (course_id,)).fetchone()
     mats = conn.execute(
@@ -67,11 +80,21 @@ def build_course_context(course_id: int) -> str:
              f"你是一款校园学习陪伴助手，当前绑定的课程是「{cname}」。"]
     parts.append("以下是该课程学生已上传的学习资料（你的回答必须严格限定在此课程范围内，"
                  "不超纲、不跑偏；若资料未覆盖，请说明并建议复习方向）：\n")
+    budget = MAX_CONTEXT_CHARS
+    included = 0
     for i, m in enumerate(mats, 1):
         t = f"（资料{i}：{m['title']}）\n" if m["title"] else f"（资料{i}）\n"
-        # 控制上下文长度，避免超长
         content = m["content"][:4000]
-        parts.append(t + content)
+        room = budget - len(t)
+        if room <= 0:
+            break
+        take = min(len(content), room)
+        parts.append(t + content[:take])
+        budget -= len(t) + take
+        included += 1
     if not mats:
         parts.append("（该课程暂无上传资料，请基于通用课程知识作答，并提醒学生上传资料以获得更精准的回答。）")
+    elif included < len(mats):
+        parts.append(f"（课程记忆共 {len(mats)} 份资料，已按上下文预算展示前 {included} 份；"
+                     "其余资料可在「课程记忆」中打开全文查看。）")
     return "\n".join(parts)

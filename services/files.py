@@ -5,6 +5,7 @@
 - 大小上限：单文件 2 MB
 - 不保存原始文件到磁盘，仅提取文本入库，避免任意文件落盘
 """
+import html
 import io
 import re
 import zipfile
@@ -31,7 +32,9 @@ def _extract_docx(data: bytes) -> str:
     for para in re.split(r"</w:p>", xml):
         texts = re.findall(r"<w:t[^>]*>(.*?)</w:t>", para, re.S)
         line = "".join(texts)
-        line = (line.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&"))
+        # html.unescape 同时覆盖 &lt;/&gt;/&amp;/&quot;/&apos; 与数字实体，
+        # 避免 Word 文档里的引号被原样提取成 &quot; 混进课程记忆。
+        line = html.unescape(line)
         if line.strip():
             paragraphs.append(line.strip())
     return "\n".join(paragraphs)

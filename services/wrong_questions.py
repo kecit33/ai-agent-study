@@ -11,6 +11,9 @@ def add_wrong_question(course_id: int, question: str, user_answer: str = "",
     if not question:
         raise ValueError("错题内容不能为空")
     conn = get_conn()
+    if not conn.execute("SELECT 1 FROM courses WHERE id=?", (course_id,)).fetchone():
+        conn.close()
+        raise ValueError("课程不存在，请先选择或新建课程")
     cur = conn.execute(
         "INSERT INTO wrong_questions(course_id, question, user_answer, correct_answer, error_reason, mastered, created_at) "
         "VALUES(?, ?, ?, ?, ?, 0, ?)",

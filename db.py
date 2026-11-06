@@ -77,8 +77,11 @@ CREATE TABLE IF NOT EXISTS provider_credentials (
 
 
 def get_conn():
-    conn = sqlite3.connect(DB_PATH)
+    # ThreadingHTTPServer 多线程并发写：给 SQLite 一个合理的等待窗口，
+    # 避免并发请求偶发 "database is locked" 直接变成 500。
+    conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA busy_timeout=5000")
     return conn
 
 
