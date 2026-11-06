@@ -195,9 +195,11 @@ def image(ref, emu_w=5486400):
     _docpr_id[0] += 1
     if has_svg:
         rid_png = "rId_" + stem + "_png"
-        blip = (f'<a:blip r:embed="{rid_main}">'
+        # Office SVG 扩展约定：a:blip 主引用必须是 PNG（任何阅读器都能显示），
+        # asvg:svgBlip 扩展引用 SVG（Word 2016+ 优先取矢量）。写反会导致图不显示。
+        blip = (f'<a:blip r:embed="{rid_png}">'
                 f'<a:extLst><a:ext uri="{{96DAC541-7B7A-43D3-8B79-8D1A8339B2E1}}">'
-                f'<asvg:svgBlip r:embed="{rid_png}"/></a:ext></a:extLst></a:blip>')
+                f'<asvg:svgBlip r:embed="{rid_main}"/></a:ext></a:extLst></a:blip>')
     else:
         blip = f'<a:blip r:embed="{rid_main}"/>'
     drawing = f'''<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"
