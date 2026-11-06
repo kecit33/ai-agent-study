@@ -136,6 +136,7 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .md table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: .92em; }
 .md th, .md td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; }
 .md strong { color: var(--primary); font-weight: 700; }
+.mat-full { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); max-height: 460px; overflow: auto; }
 
 /* ============ 问答 ============ */
 .model-banner {

@@ -844,12 +844,51 @@ async function loadMaterials() {
   const list = await api(`/api/courses/${currentCourseId}/materials`);
   const ul = $("matList");
   ul.innerHTML = "";
+  if (!list.length) {
+    ul.innerHTML = "<li><div class='meta'>暂无资料，可在上方粘贴文本或上传文件。</div></li>";
+    return;
+  }
   list.forEach((m) => {
     const li = document.createElement("li");
-    li.innerHTML = `<h4>${m.title || "未命名资料"}</h4><div class="meta">${m.created_at}</div>
-      <div class="meta">${String(m.content).slice(0, 120)}…</div>`;
+    const fullId = `mat-full-${m.id}`;
+    const text = String(m.content == null ? "" : m.content);
+    li.innerHTML = `<h4>${esc(m.title || "未命名资料")}</h4><div class="meta">${esc(m.created_at)}</div>
+      <div class="meta">${esc(text.slice(0, 120))}${text.length > 120 ? "…" : ""}</div>
+      <div class="actions">
+        <button data-act="view">查看全文</button>
+        <button data-act="download" class="ghost">下载 .md</button>
+      </div>
+      <div id="${fullId}" class="md mat-full" hidden></div>`;
     ul.appendChild(li);
+    // 查看全文 / 收起：复用安全 Markdown 渲染器（先转义，防 XSS）
+    const viewBtn = li.querySelector('[data-act="view"]');
+    const box = li.querySelector(".mat-full");
+    viewBtn.onclick = () => {
+      if (box.hidden) {
+        setMarkdown(box, text);
+        box.hidden = false;
+        viewBtn.textContent = "收起";
+      } else {
+        box.hidden = true;
+        viewBtn.textContent = "查看全文";
+      }
+    };
+    li.querySelector('[data-act="download"]').onclick = () => downloadMaterial(m);
   });
+}
+
+// 将单份资料导出为 Markdown 文件（标题 + 时间 + 全文）
+function downloadMaterial(m) {
+  const title = String(m.title || `资料-${m.id}`).replace(/[\\/:*?"<>|]/g, "_");
+  const body = `# ${m.title || "未命名资料"}\n\n> 导出时间：${m.created_at}\n\n${m.content || ""}`;
+  const blob = new Blob([body], { type: "text/markdown;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${title}.md`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
 }
 
 async function loadWrongQuestions() {
