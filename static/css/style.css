@@ -299,6 +299,13 @@ input[type="color"] { width: 46px; height: 34px; padding: 2px; cursor: pointer; 
 .agent-btns { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
 #agentStatus { grid-column: 1 / -1; margin: 0; max-height: 180px; overflow: auto; white-space: pre-wrap; }
 
+/* V1.5.0：统计卡片与上传区是 div，补可见焦点让键盘用户知道当前位置 */
+.card.clickable:focus-visible,
+#uploadZone:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
 @media (max-width: 640px) {
   .brand h1 { font-size: 16px; }
   .pomo-time { font-size: 44px; }

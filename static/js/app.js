@@ -10,15 +10,48 @@ const api = async (url, opts) => {
     console.warn("[api] 网络请求失败", url, e);
     return { error: "网络请求失败，请确认服务已启动：" + e };
   }
+  let data;
   try {
-    return await res.json();
+    data = await res.json();
   } catch (e) {
     console.warn("[api] 响应不是 JSON", url, res.status);
     return { error: "响应解析失败（HTTP " + res.status + "）" };
   }
+  // 统一异常响应形状：调用方永远能安全地读 .error，
+  // 不会因服务端返回 JSON null / 非 2xx 而拿到 undefined 再 .xxx 崩溃。
+  if (data === null || data === undefined) {
+    return { error: "服务端返回空响应（HTTP " + res.status + "）" };
+  }
+  if (!res.ok && !data.error) {
+    return { error: "请求失败（HTTP " + res.status + "）" };
+  }
+  return data;
 };
 
+// 统一错误提示：接口返回 {error} 时给用户可见反馈，而不是「点了没反应」
+function showApiError(r) {
+  if (r && r.error) { alert(r.error); return false; }
+  return true;
+}
+
+// 带下载语义的导出：用 blob 下载，接口异常时只提示，不用 location.href
+// 把整个应用页面导航替换掉（会丢失未保存的展开状态与输入内容）。
+function downloadFromUrl(url, filename) {
+  fetch(url).then(async (res) => {
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+  }).catch((e) => alert("导出失败：" + e));
+}
+
 let currentCourseId = null;
+let courseLoadSeq = 0;  // 切换课程时丢弃过期异步响应，避免旧课程数据覆盖新课程
 
 /* ==================== 主题：深色 / 浅色 / 跟随系统 + 主题色 ==================== */
 const ACCENTS = [
@@ -226,6 +259,11 @@ async function pomoFinish() {
 /* ==================== 学习概览 ==================== */
 async function loadOverview() {
   const d = await api("/api/overview");
+  if (!d || d.error || !Array.isArray(d.recent_sessions)) {
+    $("statCards").innerHTML = "<div class='card'><div class='label'>概览暂不可用</div>" +
+      "<div class='sub-num'>接口加载失败，其余功能仍可正常使用</div></div>";
+    return;
+  }
   const cards = [
     { num: d.courses, label: "课程", sub: `${d.materials} 份课程资料`, tab: "memory", hint: "点击管理课程与资料" },
     { num: d.wrong_total ? d.mastery_rate + "%" : "暂无", label: "错题掌握率",
@@ -235,19 +273,25 @@ async function loadOverview() {
     { num: d.pending_tasks, label: "待复习任务", sub: "到点自动推送 ESP32 提醒", tab: "dashboard", focus: "quickTask", hint: "点击此处添加一条待复习任务" },
   ];
   $("statCards").innerHTML = cards.map((c) =>
-    `<div class="card${c.tab ? " clickable" : ""}" data-tab="${c.tab || ""}" data-focus="${c.focus || ""}" title="${c.hint || c.sub}">
-      <div class="num">${c.num}</div><div class="label">${c.label}</div><div class="sub-num">${c.sub}</div>
+    `<div class="card${c.tab ? " clickable" : ""}" data-tab="${c.tab || ""}" data-focus="${c.focus || ""}"
+      ${c.tab ? 'tabindex="0" role="button"' : ""} title="${esc(c.hint || c.sub)}">
+      <div class="num">${esc(c.num)}</div><div class="label">${esc(c.label)}</div><div class="sub-num">${esc(c.sub)}</div>
     </div>`
   ).join("");
+  const activateCard = (el) => {
+    if (el.dataset.focus) {
+      activateTab(el.dataset.tab || "dashboard");
+      const t = $(el.dataset.focus);
+      if (t) { t.focus(); if (t.scrollIntoView) t.scrollIntoView({ behavior: "smooth", block: "center" }); }
+    } else {
+      activateTab(el.dataset.tab);
+    }
+  };
   $("statCards").querySelectorAll(".card.clickable").forEach((el) => {
-    el.onclick = () => {
-      if (el.dataset.focus) {
-        activateTab(el.dataset.tab || "dashboard");
-        const t = $(el.dataset.focus);
-        if (t) { t.focus(); if (t.scrollIntoView) t.scrollIntoView({ behavior: "smooth", block: "center" }); }
-      } else {
-        activateTab(el.dataset.tab);
-      }
+    el.onclick = () => activateCard(el);
+    // 统计卡片是 div，原生不可聚焦；补键盘激活，纯键盘用户也能跳转
+    el.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activateCard(el); }
     };
   });
 
@@ -255,8 +299,9 @@ async function loadOverview() {
   ul.innerHTML = d.recent_sessions.length ? "" : "<li><div class='meta'>还没有专注记录，用上面的番茄钟开始第一段专注吧。</div></li>";
   d.recent_sessions.forEach((s) => {
     const li = document.createElement("li");
-    li.innerHTML = `<h4>🍅 ${s.minutes} 分钟 ${s.course_name ? "· " + s.course_name : ""}</h4>
-      <div class="meta">${s.created_at}${s.note ? " · " + s.note : ""}</div>`;
+    // 课程名与专注备注均为用户可控文本，必须转义（存储型 XSS）
+    li.innerHTML = `<h4>🍅 ${esc(s.minutes)} 分钟 ${s.course_name ? "· " + esc(s.course_name) : ""}</h4>
+      <div class="meta">${esc(s.created_at)}${s.note ? " · " + esc(s.note) : ""}</div>`;
     ul.appendChild(li);
   });
   loadQuickTasks();
@@ -274,7 +319,7 @@ async function loadQuickTasks() {
   pending.forEach((t) => {
     const li = document.createElement("li");
     li.innerHTML = `<h4>${esc(t.task_name)}${t.course_name ? " · " + esc(t.course_name) : ""}</h4>
-      <div class="meta">到点：${t.due_time || "未设置"}</div>
+      <div class="meta">到点：${esc(t.due_time || "未设置")}</div>
       <div class="actions"><button data-done="${t.id}">✓ 标记完成</button></div>`;
     ul.appendChild(li);
   });
@@ -294,23 +339,33 @@ async function uploadMaterial(file) {
   $("uploadResult").innerHTML = "正在解析并入库…";
   try {
     const res = await fetch(`/api/courses/${currentCourseId}/materials/upload`, { method: "POST", body: fd });
-    const r = await res.json();
-    if (r.error) {
-      $("uploadResult").innerHTML = `<span style="color:#d93025">上传失败：${r.error}</span>`;
+    let r;
+    try { r = await res.json(); }
+    catch (e) { throw new Error("响应不是 JSON（HTTP " + res.status + "）"); }
+    if (!r || r.error || !res.ok) {
+      $("uploadResult").innerHTML = `<span style="color:#d93025">上传失败：${esc((r && r.error) || ("HTTP " + res.status))}</span>`;
       return;
     }
+    // 文件名与预览来自用户上传的文件内容，必须转义（存储/反射型 XSS）
     $("uploadResult").innerHTML =
-      `<span class="status">✅ 已存入课程记忆：《${r.filename}》提取 ${r.chars} 字` +
-      `${r.truncated ? "（超长已截断至 2 万字）" : ""}</span><div class="meta">预览：${r.preview}…</div>`;
+      `<span class="status">✅ 已存入课程记忆：《${esc(r.filename)}》提取 ${esc(r.chars)} 字` +
+      `${r.truncated ? "（超长已截断至 2 万字）" : ""}</span><div class="meta">预览：${esc(r.preview)}…</div>`;
     loadMaterials(); loadOverview();
   } catch (e) {
-    $("uploadResult").innerHTML = `<span style="color:#d93025">网络异常：${e}</span>`;
+    $("uploadResult").innerHTML = `<span style="color:#d93025">网络异常：${esc(e)}</span>`;
   }
 }
 
 function initUpload() {
   const zone = $("uploadZone"), input = $("fileInput");
+  // 上传区是 div，原生不可聚焦；补焦点/role/键盘激活，让纯键盘用户也能选文件
+  zone.tabIndex = 0;
+  zone.setAttribute("role", "button");
+  zone.setAttribute("aria-label", "点击或按回车选择课件文件，也可拖拽到此处");
   zone.onclick = () => input.click();
+  zone.onkeydown = (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); }
+  };
   input.onchange = () => { if (input.files[0]) uploadMaterial(input.files[0]); input.value = ""; };
   ["dragover", "dragenter"].forEach((ev) => zone.addEventListener(ev, (e) => {
     e.preventDefault(); zone.classList.add("dragover");
@@ -423,8 +478,9 @@ function studyParams() {
 async function loadStudyCatalog() {
   const c = await api("/api/study/catalog");
   const sel = $("studyChapter");
+  const chapters = (c && !c.error && Array.isArray(c.chapters)) ? c.chapters : [];
   sel.innerHTML = '<option value="">全部章节（全册）</option>' +
-    c.chapters.map((ch) => `<option value="${esc(ch.id)}">${esc(ch.title)}（${ch.question_count} 题）</option>`).join("");
+    chapters.map((ch) => `<option value="${esc(ch.id)}">${esc(ch.title)}（${esc(ch.question_count)} 题）</option>`).join("");
 }
 
 function renderQuiz(d) {
@@ -451,13 +507,23 @@ function renderQuiz(d) {
 }
 
 function renderResources(d) {
+  // 接口异常时 d 可能是 {error}；链接只放行 http(s)/站内路径，挡掉 javascript: 等协议
+  const items = (d && Array.isArray(d.items)) ? d.items : [];
+  const count = (d && d.count != null) ? d.count : items.length;
   $("studyResourcesOut").innerHTML =
-    `<h4>资料清单（${d.count} 项）</h4>` +
-    d.items.map((r) => `<div class="res-item">
+    `<h4>资料清单（${esc(count)} 项）</h4>` +
+    (items.length ? items.map((r) => {
+      const raw = String(r.url || "");
+      const safe = /^(https?:\/\/|\/)/i.test(raw) ? raw : "";
+      const link = safe
+        ? `<a href="${esc(safe)}" target="_blank" rel="noopener noreferrer">${esc(raw)}</a>`
+        : `<span class="meta">${esc(raw || "无链接")}</span>`;
+      return `<div class="res-item">
       <div class="r-title">${esc(r.title)} <span class="tag">${esc(r.kind)}</span></div>
       <div class="r-desc">${esc(r.desc)}</div>
-      <a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.url)}</a>
-    </div>`).join("");
+      ${link}
+    </div>`;
+    }).join("") : "<div class='hint'>资料清单暂不可用，请重试。</div>");
 }
 
 function renderMindmap(d) {
@@ -466,13 +532,17 @@ function renderMindmap(d) {
 }
 
 function renderPack(r) {
+  if (!r || r.error || !r.quiz || !r.summary || !r.article || !r.resources || !r.mindmap) {
+    $("studyMeta").textContent = "资源包数据不完整，请重试或缩小章节范围";
+    return;
+  }
   renderQuiz(r.quiz);
   setMarkdown($("studySummaryOut"), r.summary.markdown);
   setMarkdown($("studyArticleOut"), r.article.markdown);
   renderResources(r.resources);
   renderMindmap(r.mindmap);
   let meta =
-    `《${r.subject}》· ${r.scope} · ${r.chapters.length} 个章节 ｜ 题目 ${r.quiz.count} 道 ｜ 总结 ${r.summary.markdown.length} 字 ｜ 文章 ${r.article.chars} 字 ｜ 资料 ${r.resources.count} 项 ｜ 导图 ${r.mindmap.node_count} 节点 ｜ 智能体：${r.provider} ｜ 来源：${r.quiz.source}` +
+    `《${r.subject}》· ${r.scope} · ${(r.chapters || []).length} 个章节 ｜ 题目 ${r.quiz.count} 道 ｜ 总结 ${r.summary.markdown.length} 字 ｜ 文章 ${r.article.chars} 字 ｜ 资料 ${r.resources.count} 项 ｜ 导图 ${r.mindmap.node_count} 节点 ｜ 智能体：${r.provider} ｜ 来源：${r.quiz.source}` +
     (r.saved && r.saved.ok ? ` ｜ 已存入课程记忆（课程 #${r.saved.course_id}）` : "");
   if (r.discipline && r.discipline === "自定义科目") {
     meta += " ｜ ⚠️ 未内置《" + r.subject + "》专用知识库，已用通用模板；接入文心一言/Kimi 等真实模型可结合课件深度生成";
@@ -490,6 +560,8 @@ async function doStudyPack() {
     });
     if (r.error) { $("studyMeta").textContent = "生成失败：" + r.error; return; }
     renderPack(r);
+  } catch (e) {
+    $("studyMeta").textContent = "生成失败：" + e;
   } finally {
     studyBusy(false);
   }
@@ -537,10 +609,18 @@ function bindStudy() {
         api("/api/study/article", { method: "POST", body: JSON.stringify(p) }),
         api("/api/study/resources", { method: "POST", body: JSON.stringify(p) }),
       ]);
-      if (a.error) { $("studyMeta").textContent = "生成失败：" + a.error; return; }
-      setMarkdown($("studyArticleOut"), a.markdown);
+      // 两个请求彼此独立：任一失败都应给出明确结果，而不是抛未捕获异常
+      // 让 studyMeta 永久停在「正在生成…」
+      if (a && !a.error && a.markdown) setMarkdown($("studyArticleOut"), a.markdown);
       renderResources(res);
-      $("studyMeta").textContent = `专题文章 ${a.chars} 字 / ${a.sections} 个章节段落，资料 ${res.count} 项已生成` + subjectHintText(a);
+      const articleOk = !!(a && !a.error && a.markdown);
+      const resCount = (res && !res.error && res.count != null) ? res.count : 0;
+      $("studyMeta").textContent = articleOk
+        ? `专题文章 ${a.chars || a.markdown.length} 字 / ${a.sections || "—"} 个章节段落，资料 ${resCount} 项已生成` + subjectHintText(a)
+        : "生成失败：" + ((a && a.error) || "文章接口未返回内容") +
+          (res && res.error ? "；资料清单也未生成" : "");
+    } catch (e) {
+      $("studyMeta").textContent = "生成失败：" + e;
     } finally { studyBusy(false); }
   };
   $("studyMindmap").onclick = async () => {
@@ -553,7 +633,8 @@ function bindStudy() {
     } finally { studyBusy(false); }
   };
   $("studyExport").onclick = () => {
-    window.location.href = "/api/study/pack/export?" + new URLSearchParams(studyParams()).toString();
+    downloadFromUrl("/api/study/pack/export?" + new URLSearchParams(studyParams()).toString(),
+                    "学习资源包.md");
   };
   $("studyOutline").onclick = () => {
     $("studyMindmapOut").innerHTML = lastOutline
@@ -631,20 +712,30 @@ function bindAgent() {
 /* ==================== 初始化 ==================== */
 async function init() {
   initTheme();
-  await loadStatus();
-  await loadCourses();
-  await loadMaterials();
-  await loadWrongQuestions();
-  await loadProviders();
-  await loadStudyCatalog();
-  await loadOverview();
-  loadHardwareStatus();
+  // 关键顺序：先完成所有交互绑定，再发起任何网络请求。
+  // 原实现把 bindEvents 放在一长串 await 之后，任意一个接口异常就会抛出
+  // 并中断 init()，导致标签、按钮、上传、番茄钟全部失效（整页变砖）。
   bindEvents();
   bindStudy();
   bindAgent();
   initUpload();
   pomoRender();
   document.querySelectorAll(".mic-btn").forEach((b) => { b.onclick = () => toggleMic(b); });
+
+  // 单个模块加载失败只降级该模块，不影响其余模块与已绑定的交互。
+  const safe = async (name, fn) => {
+    try { await fn(); }
+    catch (e) { console.warn("[init] " + name + " 加载失败，已降级", e); }
+  };
+  await safe("状态", loadStatus);
+  await safe("课程", loadCourses);   // 必须先取课程，后续模块依赖 currentCourseId
+  await safe("课程资料", loadMaterials);
+  await safe("错题本", loadWrongQuestions);
+  await safe("模型接入", loadProviders);
+  await safe("资源包目录", loadStudyCatalog);
+  await safe("学习概览", loadOverview);
+  safe("硬件状态", loadHardwareStatus);
+
   const autoPack = new URLSearchParams(location.search).get("autopack") === "1";
   const hash = location.hash.slice(1);
   if (hash && $("panel-" + hash)) activateTab(hash);
@@ -668,6 +759,10 @@ function activateTab(name) {
 
 async function loadStatus() {
   const s = await api("/api/status");
+  if (!s || s.error || !Array.isArray(s.providers)) {
+    $("providerBadge").textContent = "智能体：状态不可用";
+    return;
+  }
   const active = s.providers.find((p) => p.active);
   $("providerBadge").textContent = "智能体：" + (active ? active.label : "演示模式");
 }
@@ -677,6 +772,13 @@ async function loadCourses() {
   const sel = $("courseSelect");
   const prev = currentCourseId;
   sel.innerHTML = "";
+  if (!Array.isArray(list)) {
+    const o = document.createElement("option");
+    o.value = ""; o.textContent = "课程加载失败，请点右侧刷新";
+    sel.appendChild(o);
+    currentCourseId = null;
+    return;
+  }
   list.forEach((c) => {
     const o = document.createElement("option");
     o.value = c.id; o.textContent = c.name;
@@ -693,13 +795,18 @@ function bindEvents() {
 
   $("courseSelect").onchange = () => {
     currentCourseId = Number($("courseSelect").value);
+    // 对话历史按课程隔离：不清空会让 A 课程的对话留在 B 课程页面下，
+    // 用户会误以为智能体把上一门课的资料也带过来了。
+    $("chatBox").innerHTML = "";
+    courseLoadSeq++;   // 让切课程前发出的请求在返回时被丢弃
     loadMaterials(); loadWrongQuestions();
   };
   $("refreshCourses").onclick = loadCourses;
   $("newCourseBtn").onclick = async () => {
-    const name = prompt("课程名称：");
+    const name = (prompt("课程名称：") || "").trim();
     if (!name) return;
-    await api("/api/courses", { method: "POST", body: JSON.stringify({ name }) });
+    const r = await api("/api/courses", { method: "POST", body: JSON.stringify({ name }) });
+    if (!showApiError(r)) return;
     await loadCourses(); await loadOverview();
   };
 
@@ -707,10 +814,11 @@ function bindEvents() {
     const name = $("quickTask").value.trim();
     if (!name) return alert("请先填写任务名");
     const due = $("quickTaskDue").value;
-    await api("/api/review-tasks", {
+    const r = await api("/api/review-tasks", {
       method: "POST",
       body: JSON.stringify({ course_id: currentCourseId, task_name: name, due_time: due || undefined, fire_now: !due }),
     });
+    if (!showApiError(r)) return;
     $("quickTask").value = ""; $("quickTaskDue").value = "";
     loadQuickTasks(); loadOverview();
   };
@@ -749,30 +857,36 @@ function bindEvents() {
 
   $("addMaterial").onclick = async () => {
     if (!currentCourseId) return alert("请先选择课程");
-    await api(`/api/courses/${currentCourseId}/materials`, {
+    const content = $("matContent").value.trim();
+    if (!content) return alert("请先填写资料内容");
+    const r = await api(`/api/courses/${currentCourseId}/materials`, {
       method: "POST",
-      body: JSON.stringify({ title: $("matTitle").value, content: $("matContent").value }),
+      body: JSON.stringify({ title: $("matTitle").value, content }),
     });
+    if (!showApiError(r)) return;   // 失败时保留输入，避免用户白打一遍
     $("matContent").value = ""; $("matTitle").value = "";
     loadMaterials(); loadOverview();
   };
 
   $("addWq").onclick = async () => {
     if (!currentCourseId) return alert("请先选择课程");
-    await api("/api/wrong-questions", {
+    const question = $("wqQuestion").value.trim();
+    if (!question) return alert("请先填写错题题目");
+    const r = await api("/api/wrong-questions", {
       method: "POST",
       body: JSON.stringify({
-        course_id: currentCourseId, question: $("wqQuestion").value,
+        course_id: currentCourseId, question,
         user_answer: $("wqUser").value, correct_answer: $("wqCorrect").value,
       }),
     });
+    if (!showApiError(r)) return;
     $("wqQuestion").value = ""; $("wqUser").value = ""; $("wqCorrect").value = "";
     loadWrongQuestions(); loadOverview();
   };
   $("wqFilter").onchange = loadWrongQuestions;
   $("exportWq").onclick = () => {
     const qs = currentCourseId ? `?course_id=${currentCourseId}` : "";
-    window.location.href = `/api/wrong-questions/export${qs}`;
+    downloadFromUrl(`/api/wrong-questions/export${qs}`, "AI错题本.md");
   };
 
   // 番茄钟
@@ -786,14 +900,18 @@ function bindEvents() {
 
   // 硬件
   $("addHwTask").onclick = async () => {
+    const taskName = $("hwTask").value.trim();
+    if (!taskName) return alert("请先填写任务名");
     const r = await api("/api/review-tasks", {
       method: "POST",
       body: JSON.stringify({
-        course_id: currentCourseId, task_name: $("hwTask").value,
+        course_id: currentCourseId, task_name: taskName,
         due_time: $("hwDue").value || undefined, fire_now: !$("hwDue").value,
       }),
     });
-    $("hwStatus").textContent = "已创建：" + JSON.stringify(r.fired || {});
+    if (!showApiError(r)) return;
+    $("hwStatus").textContent = "已创建：" + (r.task_name || taskName) +
+      "（" + JSON.stringify(r.fired || {}) + "）";
     loadHardwareStatus();
   };
   $("hwTest").onclick = async () => {
@@ -841,9 +959,15 @@ function addMsg(role, text) {
 
 async function loadMaterials() {
   if (!currentCourseId) { $("matList").innerHTML = ""; return; }
+  const seq = courseLoadSeq;
   const list = await api(`/api/courses/${currentCourseId}/materials`);
+  if (seq !== courseLoadSeq) return;   // 已切到别的课程，丢弃过期响应
   const ul = $("matList");
   ul.innerHTML = "";
+  if (!Array.isArray(list)) {
+    ul.innerHTML = "<li><div class='meta'>资料加载失败，请点「刷新课程」重试。</div></li>";
+    return;
+  }
   if (!list.length) {
     ul.innerHTML = "<li><div class='meta'>暂无资料，可在上方粘贴文本或上传文件。</div></li>";
     return;
@@ -893,16 +1017,23 @@ function downloadMaterial(m) {
 
 async function loadWrongQuestions() {
   if (!currentCourseId) { $("wqList").innerHTML = ""; return; }
+  const seq = courseLoadSeq;
   const filter = $("wqFilter").value;
   const list = await api(`/api/wrong-questions?course_id=${currentCourseId}${filter === "unmastered" ? "&unmastered=1" : ""}`);
-  const shown = filter === "mastered" ? list.filter((w) => w.mastered) : list;
+  if (seq !== courseLoadSeq) return;   // 丢弃切课程前的过期响应
   const ul = $("wqList");
+  if (!Array.isArray(list)) {
+    ul.innerHTML = "<li><div class='meta'>错题加载失败，请点「刷新课程」重试。</div></li>";
+    return;
+  }
+  const shown = filter === "mastered" ? list.filter((w) => w.mastered) : list;
   ul.innerHTML = shown.length ? "" : "<li><div class='meta'>该筛选下暂无错题。</div></li>";
   shown.forEach((w) => {
     const li = document.createElement("li");
-    li.innerHTML = `<h4>错题 #${w.id}${w.mastered ? " ✅已掌握" : ""}</h4>
-      <div class="meta">${w.created_at}</div>
-      <div class="meta">${String(w.question).slice(0, 160)}</div>
+    // 题目由用户录入并落库，未转义会造成存储型 XSS（已在真实浏览器复现）
+    li.innerHTML = `<h4>错题 #${esc(w.id)}${w.mastered ? " ✅已掌握" : ""}</h4>
+      <div class="meta">${esc(w.created_at)}</div>
+      <div class="meta">${esc(String(w.question == null ? "" : w.question).slice(0, 160))}</div>
       <div class="actions">
         <button data-act="analyze" data-id="${w.id}">分析错因+出变式题</button>
         <button data-act="master" data-id="${w.id}">标记掌握</button>
@@ -929,6 +1060,10 @@ async function loadProviders() {
   const d = await api("/api/agent/providers");
   const ul = $("providerList");
   ul.innerHTML = "";
+  if (!d || d.error || !Array.isArray(d.providers)) {
+    ul.innerHTML = "<li><div class='meta'>模型接入状态加载失败，设置页暂不可用。</div></li>";
+    return;
+  }
   d.providers.forEach((p) => {
     const li = document.createElement("li");
     const masked = (p.masked && p.masked.api_key) ? " ｜ Key " + p.masked.api_key : "";
