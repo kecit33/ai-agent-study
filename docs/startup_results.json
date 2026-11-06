@@ -1,9 +1,9 @@
 {
   "app": "AI校园学习陪伴助手",
-  "expected_version": "1.4.0",
-  "remote_version": "1.4.0",
-  "base_url": "http://127.0.0.1:5055",
-  "time": "2026-11-06T01:26:52",
+  "expected_version": "1.5.0",
+  "remote_version": "1.5.0",
+  "base_url": "http://127.0.0.1:5056",
+  "time": "2026-11-06T09:41:18",
   "passed": 26,
   "total": 26,
   "checks": [
@@ -15,7 +15,7 @@
     {
       "name": "S2 后端版本与磁盘版本一致",
       "ok": true,
-      "detail": "远端 1.4.0 / 期望 1.4.0"
+      "detail": "远端 1.5.0 / 期望 1.5.0"
     },
     {
       "name": "S3 智能体提供商列表正常",
@@ -35,12 +35,12 @@
     {
       "name": "S6 静态资源 /static/css/style.css",
       "ok": true,
-      "detail": "HTTP 200 / 15550 字节"
+      "detail": "HTTP 200 / 15894 字节"
     },
     {
       "name": "S6 静态资源 /static/js/app.js",
       "ok": true,
-      "detail": "HTTP 200 / 38987 字节"
+      "detail": "HTTP 200 / 47665 字节"
     },
     {
       "name": "S7 GET /api/providers",
@@ -60,7 +60,7 @@
     {
       "name": "S7 GET /api/overview",
       "ok": true,
-      "detail": "HTTP 200 / 1099 字节"
+      "detail": "HTTP 200 / 1159 字节"
     },
     {
       "name": "S7 GET /api/hardware/status",
@@ -70,22 +70,22 @@
     {
       "name": "S7 GET /api/focus/sessions",
       "ok": true,
-      "detail": "HTTP 200 / 1014 字节"
+      "detail": "HTTP 200 / 1579 字节"
     },
     {
       "name": "S7 GET /api/courses",
       "ok": true,
-      "detail": "HTTP 200 / 1930 字节"
+      "detail": "HTTP 200 / 2426 字节"
     },
     {
       "name": "S7 GET /api/courses/1/materials",
       "ok": true,
-      "detail": "HTTP 200 / 2304 字节"
+      "detail": "HTTP 200 / 3062 字节"
     },
     {
       "name": "S7 GET /api/wrong-questions",
       "ok": true,
-      "detail": "HTTP 200 / 10453 字节"
+      "detail": "HTTP 200 / 13122 字节"
     },
     {
       "name": "S7 GET /api/study/mindmap.svg?subject=math",
