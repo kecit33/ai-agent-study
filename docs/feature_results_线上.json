@@ -46,7 +46,7 @@
     {
       "name": "学习概览",
       "ok": true,
-      "detail": "课程24 掌握率91.7"
+      "detail": "课程26 掌握率92.3"
     },
     {
       "name": "专注状态开启",
@@ -71,7 +71,7 @@
     {
       "name": "专注记录列表",
       "ok": true,
-      "detail": "8"
+      "detail": "9"
     },
     {
       "name": "Markdown 上传",
@@ -96,7 +96,7 @@
     {
       "name": "上传资料已进入课程记忆",
       "ok": true,
-      "detail": "17"
+      "detail": "19"
     }
   ]
 }
