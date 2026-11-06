@@ -1,9 +1,9 @@
 {
   "app": "AI校园学习陪伴助手",
-  "expected_version": "1.4.1",
-  "remote_version": "1.4.1",
+  "expected_version": "1.5.0",
+  "remote_version": "1.5.0",
   "base_url": "https://ai-campus-companion.app.workbuddy.host",
-  "time": "2026-11-06T09:03:14",
+  "time": "2026-11-06T09:51:43",
   "passed": 26,
   "total": 26,
   "checks": [
@@ -15,7 +15,7 @@
     {
       "name": "S2 后端版本与磁盘版本一致",
       "ok": true,
-      "detail": "远端 1.4.1 / 期望 1.4.1"
+      "detail": "远端 1.5.0 / 期望 1.5.0"
     },
     {
       "name": "S3 智能体提供商列表正常",
@@ -35,12 +35,12 @@
     {
       "name": "S6 静态资源 /static/css/style.css",
       "ok": true,
-      "detail": "HTTP 200 / 15674 字节"
+      "detail": "HTTP 200 / 15894 字节"
     },
     {
       "name": "S6 静态资源 /static/js/app.js",
       "ok": true,
-      "detail": "HTTP 200 / 40603 字节"
+      "detail": "HTTP 200 / 47665 字节"
     },
     {
       "name": "S7 GET /api/providers",
