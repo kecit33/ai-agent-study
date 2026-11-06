@@ -93,6 +93,8 @@ ai-campus-companion/
 │  ├─ 软件需求规格说明书.md   # 【单一内容源】可直接导入语雀 / 腾讯文档协作
 │  ├─ 软件需求规格说明书.docx # 由 build_docx.py 从 .md 生成，内嵌 4 张 SVG
 │  ├─ build_docx.py           # Markdown → docx 生成器（GB/T 9385 结构）
+│  ├─ svg_fallback/           # 4 张 2x 高清 PNG：在线平台图片 + 旧版 Word 兜底
+│  ├─ logo.svg / mindmap.svg / classdiagram.svg / architecture.svg  # 矢量图源
 │  ├─ AI校园学习陪伴助手_答辩.pptx
 │  └─ blog/               # 博客园技术复盘文章与配图
 ├─ requirements.txt       # 依赖说明（零依赖运行，requests/dotenv 为可选）

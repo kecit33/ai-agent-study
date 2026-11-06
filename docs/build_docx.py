@@ -73,6 +73,7 @@ def runs_xml(text, color=None, italic=False, force_code=False):
 body = []
 RELATIONS = []      # (rid, target, type)
 MEDIA = []          # (name, bytes)
+warnings = []
 _docpr_id = [10]
 
 
@@ -156,44 +157,70 @@ def table(headers, rows, row_idx=[0]):
         + trh + ''.join(trs) + '</w:tbl><w:p/>')
 
 
-def image(name, emu_w=5486400):
-    svg_path = os.path.join(HERE, name)
-    with open(svg_path, "rb") as f:
-        svg_bytes = f.read()
-    head = svg_bytes[:600].decode("utf-8", "ignore")
-    mw = re.search(r'\bwidth="(\d+(?:\.\d+)?)"', head)
-    mh = re.search(r'\bheight="(\d+(?:\.\d+)?)"', head)
-    if not (mw and mh):
-        vb = re.search(r'viewBox="0\s+0\s+([\d.]+)\s+([\d.]+)"', head)
-        w_px, h_px = (float(vb.group(1)), float(vb.group(2))) if vb else (960.0, 600.0)
+def image(ref, emu_w=5486400):
+    """嵌入图片。
+
+    Markdown 里引用 PNG（各在线文档平台通用）；若同名 SVG 存在，docx 自动升级为
+    「SVG 矢量主图 + PNG 兜底」，Word 2016+ 显示矢量，WPS / 旧版 Word 显示 PNG。
+    """
+    ref_path = os.path.join(HERE, ref)
+    stem = os.path.splitext(os.path.basename(ref))[0]
+    svg_name = stem + ".svg"
+    svg_path = os.path.join(HERE, svg_name)
+    has_svg = os.path.exists(svg_path)
+    with open(ref_path, "rb") as f:
+        png_bytes = f.read()
+
+    # 尺寸：优先读 SVG 的 width/height，其次读 PNG 头部的 IHDR
+    head = b""
+    if has_svg:
+        with open(svg_path, "rb") as f:
+            svg_bytes = f.read()
+        head = svg_bytes[:600].decode("utf-8", "ignore")
+        mw = re.search(r'\bwidth="(\d+(?:\.\d+)?)"', head)
+        mh = re.search(r'\bheight="(\d+(?:\.\d+)?)"', head)
+        if mw and mh:
+            w_px, h_px = float(mw.group(1)), float(mh.group(1))
+        else:
+            vb = re.search(r'viewBox="0\s+0\s+([\d.]+)\s+([\d.]+)"', head)
+            w_px, h_px = (float(vb.group(1)), float(vb.group(2))) if vb else (960.0, 600.0)
     else:
-        w_px, h_px = float(mw.group(1)), float(mh.group(1))
-    emu_h = int(emu_w * h_px / w_px)
-    rid_svg = "rId_" + name.replace(".", "_") + "_svg"
-    rid_png = "rId_" + name.replace(".", "_") + "_png"
+        svg_bytes = None
+        w_px = int.from_bytes(png_bytes[16:20], "big")
+        h_px = int.from_bytes(png_bytes[20:24], "big")
+    emu_h = int(emu_w * h_px / w_px) if w_px else int(emu_w * 0.6)
+
+    rid_main = "rId_" + stem + "_main"
     did = _docpr_id[0]
     _docpr_id[0] += 1
+    if has_svg:
+        rid_png = "rId_" + stem + "_png"
+        blip = (f'<a:blip r:embed="{rid_main}">'
+                f'<a:extLst><a:ext uri="{{96DAC541-7B7A-43D3-8B79-8D1A8339B2E1}}">'
+                f'<asvg:svgBlip r:embed="{rid_png}"/></a:ext></a:extLst></a:blip>')
+    else:
+        blip = f'<a:blip r:embed="{rid_main}"/>'
     drawing = f'''<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"
       xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
       xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"
       xmlns:asvg="http://schemas.microsoft.com/office/drawing/2016/svg">
       <wp:extent cx="{emu_w}" cy="{emu_h}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>
-      <wp:docPr id="{did}" name="{esc(name)}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr>
+      <wp:docPr id="{did}" name="{esc(stem)}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr>
       <a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
-        <pic:pic><pic:nvPicPr><pic:cNvPr id="{did}" name="{esc(name)}"/><pic:cNvPicPr/></pic:nvPicPr>
-        <pic:blipFill><a:blip r:embed="{rid_svg}">
-          <a:extLst><a:ext uri="{{96DAC541-7B7A-43D3-8B79-8D1A8339B2E1}}">
-            <asvg:svgBlip r:embed="{rid_png}"/></a:ext></a:extLst></a:blip>
-          <a:stretch><a:fillRect/></a:stretch></pic:blipFill>
+        <pic:pic><pic:nvPicPr><pic:cNvPr id="{did}" name="{esc(stem)}"/><pic:cNvPicPr/></pic:nvPicPr>
+        <pic:blipFill>{blip}<a:stretch><a:fillRect/></a:stretch></pic:blipFill>
         <pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="{emu_w}" cy="{emu_h}"/></a:xfrm>
           <a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>
       </a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>'''
     body.append(drawing)
-    RELATIONS.append((rid_svg, f"media/{name}", "image/svg+xml"))
-    RELATIONS.append((rid_png, f"media/{name}.png", "image/png"))
-    MEDIA.append((name, svg_bytes))
-    MEDIA.append((name + ".png", PNG1x1))
+    RELATIONS.append((rid_main, f"media/{svg_name if has_svg else os.path.basename(ref)}",
+                      "image/svg+xml" if has_svg else "image/png"))
+    MEDIA.append((svg_name if has_svg else os.path.basename(ref),
+                  svg_bytes if has_svg else png_bytes))
+    if has_svg:
+        RELATIONS.append((rid_png, f"media/{stem}.png", "image/png"))
+        MEDIA.append((stem + ".png", png_bytes))
 
 
 def page_break():
@@ -220,7 +247,6 @@ i = 1
 cover_done = False
 in_fence = False
 fence_buf = []
-warnings = []
 
 
 def flush_fence():
