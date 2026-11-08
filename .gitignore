@@ -4,6 +4,12 @@ __pycache__/
 data/
 venv/
 .venv/
-# slidep 早期失败残留（非交付物）
+# slidep / PPT 构建临时产物（非交付物）
+.slidep/
 docs/.slidep/
-docs/pptx/
+docs/pptx/defense/
+docs/pptx/team_v15/.slidep/
+docs/pptx/team_v15/.cache/
+docs/pptx/team_v15/_logs/
+# 中间产物：正式交付件为 docs/AI校园学习陪伴助手_团队展示与需求分析.pptx
+docs/pptx/team_v15/team_v15.pptx
