@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""生成 18 页 .slide 源文件。
+"""生成 22 页 .slide 源文件（团队展示 / 选题报告 / 成果展示 / 需求分析）。
 
 内容取自用户本次提供的真实团队资料与 docs/软件需求规格说明书.md（V1.5.0 验收基线）。
 配图全部为项目真实资产（docs/svg_fallback、docs/blog/assets），无 AI 生图、无编造数据。
@@ -56,7 +56,7 @@ def CONTENT(title, chapter, num, body):
     main = B(body, "width: '100%', height: 497, flexDirection: 'column'")
     foot = B(
         T("AI 校园学习陪伴助手  ·  课程作业答辩", 14, LIGHT, False, 1.3)
-        + T("%02d / 18" % num, 14, LIGHT, False, 1.3),
+        + T("%02d / 22" % num, 14, LIGHT, False, 1.3),
         "width: '100%', height: 30, flexDirection: 'row', alignItems: 'center', "
         "justifyContent: 'space-between'")
     return ("<Slide padding={60} style={{ background: '#FFFFFF', fontFamily: 'Microsoft YaHei', "
@@ -95,7 +95,8 @@ PAGES = []
 
 # ---------------- P01 封面 ----------------
 chips = ""
-for n, label in [("01", "团队展示"), ("02", "选题报告"), ("03", "需求分析")]:
+for n, label in [("01", "团队展示"), ("02", "选题报告"),
+                 ("03", "成果展示"), ("04", "需求分析")]:
     chips += B(T(n, 38, "#CADCFC", True, 1.0) + T(label, 22, WHITE, False, 1.3),
                "width: 310, height: 96, flexDirection: 'row', alignItems: 'center', gap: 22, "
                "padding: 20, background: '#2E5FBB'")
@@ -104,7 +105,7 @@ PAGES.append(
     "flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>"
     + B(T("智能体开发课程作业  ·  V1.5.0 验收基线", 18, "#CADCFC", False, 1.4)
         + T("AI 校园学习<br />陪伴助手", 64, WHITE, True, 1.18, 30)
-        + T("团队展示  ·  选题报告  ·  需求分析", 26, PALE, False, 1.4, 26)
+        + T("团队展示  ·  选题报告  ·  成果展示  ·  需求分析", 25, PALE, False, 1.4, 26)
         + T("无言以对队   ｜   陈明凯 · 邓文炜   ｜   2026-11", 16, "#CADCFC", False, 1.4, 62),
         "width: 720, flexDirection: 'column', justifyContent: 'center'")
     + B(chips, "width: 310, flexDirection: 'column', gap: 16")
@@ -115,7 +116,8 @@ rows = ""
 for idx, (n, name, pg, en) in enumerate([
         ("01", "团队展示", "P03 – P07", "Team"),
         ("02", "选题报告", "P08 – P11", "Topic"),
-        ("03", "需求分析", "P12 – P17", "Requirements")]):
+        ("03", "成果展示", "P12 – P15", "Achievements"),
+        ("04", "需求分析", "P16 – P21", "Requirements")]):
     rows += B(
         B(T(n, 34, WHITE, True, 1.0, align="center"),
           "width: 66, height: 66, background: '#1E4FA8', flexDirection: 'row', "
@@ -124,8 +126,8 @@ for idx, (n, name, pg, en) in enumerate([
             "flexDirection: 'column', marginLeft: 28")
         + B(T(pg, 18, GRAY, False, 1.3),
             "marginLeft: 'auto', flexDirection: 'row', alignItems: 'center'"),
-        "width: 1160, height: 108, flexDirection: 'row', alignItems: 'center'")
-    if idx < 2:
+        "width: 1160, height: 88, flexDirection: 'row', alignItems: 'center'")
+    if idx < 3:
         rows += RULE()
 PAGES.append(
     "<Slide padding={60} style={{ background: '#FFFFFF', fontFamily: 'Microsoft YaHei', "
@@ -307,10 +309,91 @@ body11 = (
         "width: 1160, marginTop: 12"))
 PAGES.append(CONTENT("技术选型与系统架构", "02 · Topic", 11, body11))
 
-# ---------------- P12 章节 03 ----------------
-PAGES.append(SECTION("03", "需求分析", "国标依据  ·  前后端详述  ·  可判定验收"))
+# ---------------- P12 章节 03 成果展示 ----------------
+PAGES.append(SECTION("03", "成果展示", "已上线系统  ·  真实界面  ·  回归实测"))
 
-# ---------------- P13 依据、迭代记录、项目标志 ----------------
+# ---------------- P13 已上线成果总览 ----------------
+ach_url = B(
+    T("已发布 · 可直接访问（V1.5.0 验收基线）", 17, "#CADCFC", False, 1.3)
+    + T("ai-campus-companion.app.workbuddy.host", 27, WHITE, True, 1.3, 8)
+    + T("?sharecode=CEUN7FBTFJ   ·   浏览器 / 手机直接打开，无需安装、无需密钥", 16, PALE, False, 1.3, 8),
+    "width: 1160, height: 132, background: '#1E4FA8', padding: 20, flexDirection: 'column'")
+ach_metrics = [
+    ("40", "条 REST 路由"), ("37", "项功能 F01–F37"), ("39", "条验收 A01–A39"),
+    ("8", "张 SQLite 表"), ("6", "个可插拔 Provider"), ("10", "个前端模块"),
+]
+ach_grid = ""
+for v, lab in ach_metrics:
+    ach_grid += B(T(v, 40, BLUE, True, 1.0) + T(lab, 17, GRAY, False, 1.3, 4),
+                  "width: 372, height: 106, background: '#F7F9FC', "
+                  "border: '1px solid #D6DCE5', padding: 14, flexDirection: 'column'")
+body_ach1 = (
+    B(ach_url, "width: 1160, flexDirection: 'column'")
+    + B(B(ach_grid, "width: 1160, flexDirection: 'row', flexWrap: 'wrap', gap: 12"),
+        "width: 1160, marginTop: 16")
+    + B(BAR("版本 1.5.0  ·  app.js 47665 字节与本地一致  ·  active_provider = demo", 48),
+        "width: 1160, marginTop: 16"))
+PAGES.append(CONTENT("已上线成果总览", "03 · Achievements", 13, body_ach1))
+
+# ---------------- P14 真实界面展示 ----------------
+ach_shots = [
+    ("ui_home.png", "学习概览 · 薄弱知识点"),
+    ("ui_chat.png", "引导式辅导问答"),
+    ("ui_summarize.png", "课件总结 · 安全 Markdown"),
+    ("ui_study_pack.png", "学习资源包 · 六类产出"),
+    ("ui_wrong.png", "AI 错题本闭环"),
+    ("ui_model_settings.png", "模型接入 · 6 个 Provider"),
+]
+ach_cells = ""
+for src, cap in ach_shots:
+    ach_cells += B(
+        B(IMG(src, 368, 178), "width: 368, flexDirection: 'column'")
+        + T(cap, 15, GRAY, False, 1.3, 6),
+        "width: 372, height: 216, background: '#F7F9FC', "
+        "border: '1px solid #D6DCE5', padding: 2, flexDirection: 'column'")
+body_ach2 = (
+    B(T("以下 6 张均为项目真实运行界面截图，非示意图、非 AI 生成图", 20, INK, False, 1.4),
+      "width: 1160, height: 34, flexDirection: 'column'")
+    + B(B(ach_cells, "width: 1160, flexDirection: 'row', flexWrap: 'wrap', gap: 12"),
+        "width: 1160, marginTop: 12"))
+PAGES.append(CONTENT("真实界面展示", "03 · Achievements", 14, body_ach2))
+
+# ---------------- P15 实测证据与交付物 ----------------
+ach_dlv = [
+    ("需求规格说明书", "GB/T 9385 口径；.md 单一源 + .docx 验收主件"),
+    ("答辩演示文稿", "本 PPT 22 页，四部分结构与真实图资产"),
+    ("博客园复盘长文", "13 节 + 13 张图，已同步 V1.5.0 口径"),
+    ("四套回归与证据", "startup / demo / feature / study + 本地与线上 JSON"),
+    ("自我检查报告", "12 节，三轮自查与 11 项修复记录"),
+    ("README 与图资产", "40 条路由、架构图 / 思维导图 / 类图"),
+]
+ach_rows = ""
+for i, (k, v) in enumerate(ach_dlv):
+    ach_rows += B(
+        T(k, 19, BLUE, True, 1.3, width=200) + T(v, 17, GRAY, False, 1.35, width=470),
+        "width: 700, height: 52, flexDirection: 'row', alignItems: 'center', gap: 10"
+        + (", borderBottom: '1px solid #E5E7EB'" if i < 5 else ""))
+ach_right = B(
+    T("四套回归全绿", 26, WHITE, True, 1.3)
+    + T("本地  26/26 · 26/26+30/30 · 19/19 · 36/36", 17, WHITE, False, 1.5, 14)
+    + T("线上  26/26 · 26/26+30/30 · 19/19 · 25/25", 17, WHITE, False, 1.5, 6)
+    + T("线上 25/25 非漏测：11 项需本机模拟厂商端点", 16, "#CADCFC", False, 1.4, 14)
+    + T("成果边界：无真实厂商 Key、ESP32 未实机、团队合照待补", 15, "#CADCFC", False, 1.4, 16),
+    "width: 420, height: 312, background: '#1E4FA8', padding: 20, flexDirection: 'column'")
+body_ach3 = (
+    B(T("交付物与可复核证据", 22, BLUE, True, 1.4),
+      "width: 1160, height: 40, flexDirection: 'column'")
+    + B(B(ach_rows, "width: 700, height: 312, flexDirection: 'column'") + ach_right,
+        "width: 1160, height: 312, flexDirection: 'row', "
+        "justifyContent: 'space-between', gap: 20, marginTop: 8")
+    + B(BAR("全部数字可由 docs/*_results.json 与需求文档 10.5 节复核；答辩现场可打开线上链接逐项走查。", 46),
+        "width: 1160, marginTop: 14"))
+PAGES.append(CONTENT("实测证据与交付物", "03 · Achievements", 15, body_ach3))
+
+# ---------------- P16 章节 04 需求分析 ----------------
+PAGES.append(SECTION("04", "需求分析", "国标依据  ·  前后端详述  ·  可判定验收"))
+
+# ---------------- P17 依据、迭代记录、项目标志 ----------------
 basis = CARD(
     T("编写依据", 24, BLUE, True, 1.3)
     + T("GB/T 9385-2008《计算机软件需求说明编制指南》", 18, INK, False, 1.45, 14)
@@ -349,9 +432,9 @@ body13 = (
             "width: 840, flexDirection: 'column'"),
         "width: 1160, height: 110, flexDirection: 'row', alignItems: 'center', "
         "background: '#F7F9FC', padding: 14, marginTop: 16"))
-PAGES.append(CONTENT("依据、迭代记录与项目标志", "03 · Requirements", 13, body13))
+PAGES.append(CONTENT("依据、迭代记录与项目标志", "04 · Requirements", 17, body13))
 
-# ---------------- P14 思维导图与类图 ----------------
+# ---------------- P18 思维导图与类图 ----------------
 body14 = (
     B(B(IMG("mindmap.png", 550, 380)
         + T("图 3  功能思维导图：六大分支覆盖第 4 章全部功能需求", 15, GRAY, False, 1.3, 10),
@@ -362,9 +445,9 @@ body14 = (
       "width: 1160, height: 440, flexDirection: 'row', justifyContent: 'space-between', gap: 20")
     + B(BAR("两张图均由仓库 docs/*.svg 矢量源渲染，与需求文档图 3、图 4 一一对应。", 46),
         "width: 1160, marginTop: 10"))
-PAGES.append(CONTENT("思维导图与类图", "03 · Requirements", 14, body14))
+PAGES.append(CONTENT("思维导图与类图", "04 · Requirements", 18, body14))
 
-# ---------------- P15 功能描述与前后端详述 ----------------
+# ---------------- P19 功能描述与前后端详述 ----------------
 kpis = ""
 for val, label in [("37", "项功能 F01–F37"), ("40", "条 REST 路由"), ("8", "张 SQLite 表")]:
     kpis += B(T(val, 68, BLUE, True, 1.0) + T(label, 19, GRAY, False, 1.3, 4),
@@ -385,9 +468,9 @@ body15 = (
         + B(IMG("ui_chat.png", 400, 281), "width: 410, flexDirection: 'column'"),
         "width: 1160, height: 290, flexDirection: 'row', justifyContent: 'space-between', gap: 20, marginTop: 12")
     + B(BAR("每项功能都能在代码、接口表与测试报告中逐条追溯。", 46), "width: 1160, marginTop: 10"))
-PAGES.append(CONTENT("功能描述与前后端详述", "03 · Requirements", 15, body15))
+PAGES.append(CONTENT("功能描述与前后端详述", "04 · Requirements", 19, body15))
 
-# ---------------- P16 验收标准与实测结果 ----------------
+# ---------------- P20 验收标准与实测结果 ----------------
 criteria = (T("验收标准 A01 – A39", 24, BLUE, True, 1.3)
             + T("每条含可判定条件与复现方式；四条通过判据同时满足方可判定 V1.5.0 通过。",
                 19, INK, False, 1.5, 10)
@@ -420,9 +503,9 @@ body16 = (
     + B(rtable, "width: 1160, height: 200, flexDirection: 'column', marginTop: 14")
     + B(BAR("线上 25/25 不是漏测：11 项需本机临时模拟厂商端点，已在本地 36/36 中完整验证。", 46),
         "width: 1160, marginTop: 8"))
-PAGES.append(CONTENT("验收标准与实测结果", "03 · Requirements", 16, body16))
+PAGES.append(CONTENT("验收标准与实测结果", "04 · Requirements", 20, body16))
 
-# ---------------- P17 范围边界与不予承诺 ----------------
+# ---------------- P21 范围边界与不予承诺 ----------------
 bounds = [
     "真实厂商 API Key 缺失，仅用本机模拟端点验证",
     "DemoProvider 为规则化应答，不是大模型推理",
@@ -460,9 +543,9 @@ body17 = (
         "gap: 12, marginTop: 12")
     + B(BAR("诚实报告局限，比藏着更专业；这一页本身就是「不画大饼」的证明。", 46),
         "width: 1160, marginTop: 10"))
-PAGES.append(CONTENT("范围边界与不予承诺", "03 · Requirements", 17, body17))
+PAGES.append(CONTENT("范围边界与不予承诺", "04 · Requirements", 21, body17))
 
-# ---------------- P18 封底 ----------------
+# ---------------- P22 封底 ----------------
 PAGES.append(
     "<Slide padding={60} style={{ background: '#1E4FA8', fontFamily: 'Microsoft YaHei', "
     "flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>"
@@ -471,7 +554,7 @@ PAGES.append(
     + T("ai-campus-companion.app.workbuddy.host", 17, "#CADCFC", False, 1.4, 14)
     + "</Slide>")
 
-assert len(PAGES) == 18, len(PAGES)
+assert len(PAGES) == 22, len(PAGES)
 for i, s in enumerate(PAGES, 1):
     assert s.lstrip().startswith("<Slide"), i
     assert s.rstrip().endswith("</Slide>"), i

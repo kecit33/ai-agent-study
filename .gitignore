@@ -12,4 +12,4 @@ docs/pptx/team_v15/.slidep/
 docs/pptx/team_v15/.cache/
 docs/pptx/team_v15/_logs/
 # 中间产物：正式交付件为 docs/AI校园学习陪伴助手_团队展示与需求分析.pptx
-docs/pptx/team_v15/team_v15.pptx
+docs/pptx/team_v15/*.pptx
