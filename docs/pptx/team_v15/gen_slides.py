@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-"""生成 22 页 .slide 源文件（团队展示 / 选题报告 / 成果展示 / 需求分析）。
+"""生成 28 页 .slide 源文件（团队展示 / 选题报告 / 成果展示 / 需求分析）。
 
 内容取自用户本次提供的真实团队资料与 docs/软件需求规格说明书.md（V1.5.0 验收基线）。
 配图全部为项目真实资产（docs/svg_fallback、docs/blog/assets），无 AI 生图、无编造数据。
+成果展示章节含 7 个单图页：每页一张真实运行截图 + 对应需求 F 编号与文字说明。
 """
 import os
 
@@ -56,7 +57,7 @@ def CONTENT(title, chapter, num, body):
     main = B(body, "width: '100%', height: 497, flexDirection: 'column'")
     foot = B(
         T("AI 校园学习陪伴助手  ·  课程作业答辩", 14, LIGHT, False, 1.3)
-        + T("%02d / 22" % num, 14, LIGHT, False, 1.3),
+        + T("%02d / 28" % num, 14, LIGHT, False, 1.3),
         "width: '100%', height: 30, flexDirection: 'row', alignItems: 'center', "
         "justifyContent: 'space-between'")
     return ("<Slide padding={60} style={{ background: '#FFFFFF', fontFamily: 'Microsoft YaHei', "
@@ -113,16 +114,16 @@ PAGES.append(
 
 # ---------------- P02 目录 ----------------
 rows = ""
-for idx, (n, name, pg, en) in enumerate([
-        ("01", "团队展示", "P03 – P07", "Team"),
-        ("02", "选题报告", "P08 – P11", "Topic"),
-        ("03", "成果展示", "P12 – P15", "Achievements"),
-        ("04", "需求分析", "P16 – P21", "Requirements")]):
+for idx, (n, name, pg, en, kw) in enumerate([
+        ("01", "团队展示", "P03 – P07", "Team", "队名 · 分工 · 队员风采 · 愿景"),
+        ("02", "选题报告", "P08 – P11", "Topic", "备考痛点 · 能力全景 · 零依赖架构"),
+        ("03", "成果展示", "P12 – P21", "Achievements", "已上线系统 · 7 页真实界面 · 回归实测"),
+        ("04", "需求分析", "P22 – P27", "Requirements", "国标依据 · 前后端详述 · 可判定验收")]):
     rows += B(
         B(T(n, 34, WHITE, True, 1.0, align="center"),
           "width: 66, height: 66, background: '#1E4FA8', flexDirection: 'row', "
           "alignItems: 'center', justifyContent: 'center'")
-        + B(T(name + "   " + en, 32, INK, True, 1.2) + T(pg, 16, LIGHT, False, 1.3, 6),
+        + B(T(name + "   " + en, 32, INK, True, 1.2) + T(kw, 16, LIGHT, False, 1.3, 6),
             "flexDirection: 'column', marginLeft: 28")
         + B(T(pg, 18, GRAY, False, 1.3),
             "marginLeft: 'auto', flexDirection: 'row', alignItems: 'center'"),
@@ -164,7 +165,12 @@ PAGES.append(CONTENT("队名与团队构成", "01 · Team", 4, body04))
 
 
 # ---------------- P05 / P06 队员风采 ----------------
-def MEMBER(num, name, sid, role, traits, skills, hobbies, duty, img, img_h, chapter, page):
+def MEMBER(num, name, sid, role, traits, skills, hobbies, duty, chapter, page):
+    badge = B(
+        T(name[0], 96, WHITE, True, 1.0, align="center")
+        + T("无言以对队  ·  队员 " + num, 15, "#CADCFC", False, 1.3, 12, align="center"),
+        "width: 300, height: 238, background: '#1E4FA8', borderRadius: 6, "
+        "flexDirection: 'column', alignItems: 'center', justifyContent: 'center'")
     left = (
         B(NUM(num) + T(name, 36, INK, True, 1.2, 14),
           "width: 300, height: 90, flexDirection: 'row', alignItems: 'center', gap: 14")
@@ -172,7 +178,7 @@ def MEMBER(num, name, sid, role, traits, skills, hobbies, duty, img, img_h, chap
         + B(T(role, 19, BLUE, True, 1.3),
             "width: 300, height: 40, background: '#E8EFF8', flexDirection: 'row', "
             "alignItems: 'center', padding: 12, marginTop: 14")
-        + B(IMG(img, 280, img_h), "width: 300, marginTop: 18, flexDirection: 'column'"))
+        + B(badge, "width: 300, marginTop: 18, flexDirection: 'column'"))
     fields = [
         ("成员性格", traits),
         ("擅长的技术", skills),
@@ -196,7 +202,7 @@ PAGES.append(MEMBER(
     "Python 后端开发、标准库 HTTP 服务、SQLite 数据库、接口设计、自动化测试脚本编写。",
     "阅读技术博客、调试开源项目、整理项目文档。",
     "系统整体架构设计、server.py 后端、agents 智能体抽象层、四套回归测试脚本、三轮自查漏洞修复、项目文档撰写。",
-    "ui_model_settings.png", 230, "01 · Team", 5))
+    "01 · Team", 5))
 
 PAGES.append(MEMBER(
     "02", "邓文炜", "3124004505", "前端开发",
@@ -204,7 +210,7 @@ PAGES.append(MEMBER(
     "原生 HTML/CSS/JS、Markdown 渲染、页面状态管理、前端故障排查。",
     "UI 交互设计、截图做原型、研究 Web 安全前端风险。",
     "全部前端页面、10 个导航模块实现、安全 Markdown 渲染器、忙碌态交互、资料查看 / 下载功能、XSS 前端验证、页面截图素材输出。",
-    "ui_summarize.png", 197, "01 · Team", 6))
+    "01 · Team", 6))
 
 # ---------------- P07 合照 + 愿景 ----------------
 frame = B(
@@ -219,7 +225,7 @@ vision = (
     "未来期望优化长文档记忆与多用户能力，让它成为轻量化、易部署的课堂学习工具，"
     "帮助同学理清薄弱知识点，形成完整复习闭环。")
 body07 = B(
-    B(frame + T("图：团队首次合照占位，拿到照片后替换本页相框", 14, LIGHT, False, 1.3, 10),
+    B(frame,
       "width: 640, flexDirection: 'column'")
     + B(T("团队项目愿景", 28, BLUE, True, 1.3)
         + T("未来期望 · 非 V1.5.0 已实现能力", 14, LIGHT, False, 1.3, 2)
@@ -252,7 +258,7 @@ body09 = (
         "alignItems: 'center', padding: 18"), "width: 1160")
     + B(B(pain_rows, "width: 700, flexDirection: 'column'")
         + B(IMG("ui_home.png", 400, 281)
-            + T("图：V1.5.0 首页概览（真实页面截图）", 14, LIGHT, False, 1.3, 8),
+            + T("V1.5.0 首页概览  ·  真实运行截图", 14, LIGHT, False, 1.3, 8),
             "width: 420, flexDirection: 'column'"),
         "width: 1160, height: 340, flexDirection: 'row', justifyContent: 'space-between', marginTop: 20")
     + B(BAR("三条痛点共同指向一件事：学习上下文必须按课程被系统记住，而不是靠用户反复输入。", 48),
@@ -278,8 +284,12 @@ body10 = (
         20, INK, False, 1.4), "width: 1160, height: 40, flexDirection: 'column'")
     + B(B(grid, "width: 1160, height: 208, flexDirection: 'row', flexWrap: 'wrap', gap: 12"),
         "width: 1160, marginTop: 14")
-    + B(B(IMG("ui_study_pack.png", 300, 211), "width: 310, flexDirection: 'column'")
-        + B(IMG("ui_wrong.png", 300, 211), "width: 310, flexDirection: 'column'")
+    + B(B(IMG("ui_study_pack.png", 300, 190)
+          + T("学习资源包生成 · 能力 06 · 真实界面", 13, LIGHT, False, 1.3, 6),
+          "width: 310, flexDirection: 'column'")
+        + B(IMG("ui_wrong.png", 300, 190)
+          + T("AI 错题本闭环 · 能力 05 · 真实界面", 13, LIGHT, False, 1.3, 6),
+          "width: 310, flexDirection: 'column'")
         + B(T("八项能力对应真实页面与接口", 24, BLUE, True, 1.3)
             + T("课件总结、习题辅导、复习计划、课程记忆、错题闭环、资源包、番茄钟均由 REST 接口驱动；"
                 "ESP32 联动接口与固件齐备但未实机联调，按需求文档第 11 章不列入验收。",
@@ -335,33 +345,84 @@ body_ach1 = (
         "width: 1160, marginTop: 16"))
 PAGES.append(CONTENT("已上线成果总览", "03 · Achievements", 13, body_ach1))
 
-# ---------------- P14 真实界面展示 ----------------
-ach_shots = [
-    ("ui_home.png", "学习概览 · 薄弱知识点"),
-    ("ui_chat.png", "引导式辅导问答"),
-    ("ui_summarize.png", "课件总结 · 安全 Markdown"),
-    ("ui_study_pack.png", "学习资源包 · 六类产出"),
-    ("ui_wrong.png", "AI 错题本闭环"),
-    ("ui_model_settings.png", "模型接入 · 6 个 Provider"),
-]
-ach_cells = ""
-for src, cap in ach_shots:
-    ach_cells += B(
-        B(IMG(src, 368, 178), "width: 368, flexDirection: 'column'")
-        + T(cap, 15, GRAY, False, 1.3, 6),
-        "width: 372, height: 216, background: '#F7F9FC', "
-        "border: '1px solid #D6DCE5', padding: 2, flexDirection: 'column'")
-body_ach2 = (
-    B(T("以下 6 张均为项目真实运行界面截图，非示意图、非 AI 生成图", 20, INK, False, 1.4),
-      "width: 1160, height: 34, flexDirection: 'column'")
-    + B(B(ach_cells, "width: 1160, flexDirection: 'row', flexWrap: 'wrap', gap: 12"),
-        "width: 1160, marginTop: 12"))
-PAGES.append(CONTENT("真实界面展示", "03 · Achievements", 14, body_ach2))
+# ---------------- P14 – P20 真实界面展示（每页一图 + 文字说明） ----------------
+def SHOWCASE(item, page, idx, total):
+    left = B(
+        B(IMG(item["img"], 640, 440),
+          "width: 640, height: 440, background: '#F7F9FC', border: '1px solid #D6DCE5', "
+          "borderRadius: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center'")
+        + T("真实运行界面截图  ·  非示意图、非 AI 生成图", 13, LIGHT, False, 1.3, 10),
+        "width: 660, flexDirection: 'column'")
+    pts = ""
+    for k, v in item["points"]:
+        pts += B(T("▪  " + k, 18, BLUE, True, 1.3) + T(v, 15, GRAY, False, 1.45, 4),
+                 "width: 460, flexDirection: 'column', marginTop: 12")
+    right = B(
+        T(item["title"], 26, INK, True, 1.25)
+        + B(T(item["fa"], 15, BLUE, True, 1.3),
+            "width: 440, height: 34, background: '#E8EFF8', flexDirection: 'row', "
+            "alignItems: 'center', padding: 10, marginTop: 12")
+        + T(item["desc"], 17, INK, False, 1.55, 14)
+        + pts
+        + B(T("真实界面  %d / %d" % (idx, total), 13, WHITE, True, 1.3),
+            "width: 190, height: 32, background: '#1E4FA8', borderRadius: 4, "
+            "flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 16"),
+        "width: 480, flexDirection: 'column'")
+    body = B(left + right, "width: 1160, height: 497, flexDirection: 'row', gap: 20")
+    return CONTENT("成果展示 · " + item["title"], "03 · Achievements", page, body)
 
-# ---------------- P15 实测证据与交付物 ----------------
+
+showcase = [
+    dict(img="ui_home.png", title="学习概览与专注统计",
+         fa="对应需求 F26 学习概览与番茄钟 · 验收 A29",
+         desc="打开即用的课程工作台：问答、总结、错题、复习、专注等统计按课程一屏聚合，待复习任务置顶聚焦。",
+         points=[("课程维度统计", "六项统计聚合呈现，薄弱知识点与待复习任务优先展示。"),
+                 ("待复习聚焦", "到期复习任务卡片置顶，完成后即时更新状态。"),
+                 ("键盘可达", "统计卡片支持 Tab / Enter / Space 与焦点样式（F29）。")]),
+    dict(img="ui_chat.png", title="课程内智能问答",
+         fa="对应需求 F01 问答 · F06 记忆绑定 · 验收 A05–A06",
+         desc="每次提问自动携带当前课程资料上下文；切换课程即切换记忆，不再从零交代背景。",
+         points=[("课程记忆隔离", "资料全文拼入 system prompt；单份 4000 字、总量 12000 字预算（F33）。"),
+                 ("安全 Markdown", "回答按 escape-first 富文本渲染，防存储型 XSS（F27 / F31）。"),
+                 ("防重复提交", "请求中按钮禁用并提示，结束后恢复（F28）。")]),
+    dict(img="ui_summarize.png", title="课件总结",
+         fa="对应需求 F02 课件总结 · F08 文件解析 · 验收 A07 / A12",
+         desc="粘贴或上传课件文本，一键输出知识点与考点提纲，结果可下载 .md 归档复习。",
+         points=[("多格式上传", "txt / md / markdown / docx 上传即入课程记忆，docx 实体全还原（F36）。"),
+                 ("结构化输出", "知识点与考点提纲分层呈现，直接用于复习。"),
+                 ("演示可复现", "演示模式即可完整跑通，答辩现场可直接演示。")]),
+    dict(img="ui_plan.png", title="复习计划",
+         fa="对应需求 F04 复习计划 · F12 到点提醒 · 验收 A09 / A15",
+         desc="按科目与剩余天数生成逐日安排：基础回顾 → 重点突破 → 真题演练 → 查漏补缺 → 冲刺。",
+         points=[("逐日计划", "每日 2–3 小时粒度，配合错题本安排复盘。"),
+                 ("到点提醒", "后台守护线程每 30 秒扫描到期复习任务（F12）。"),
+                 ("演示可跑通", "演示模式即可生成；配置真实密钥后结合课程资料个性化。")]),
+    dict(img="ui_study_pack.png", title="学习资源包",
+         fa="对应需求 F18 一键全套与导出 · 验收 A21",
+         desc="一次生成六类产出：定向自测题、复习总结、专题文章、资料清单、思维导图与错题关联。",
+         points=[("一键全套", "五件套一次生成，结果可回写课程记忆。"),
+                 ("导出健壮", "blob 下载失败不替换整页；资料链接协议白名单（F35 / F36）。"),
+                 ("学科适配", "内置学科返回结构化章节；自定义科目给出提示（F19）。")]),
+    dict(img="ui_wrong.png", title="AI 错题本",
+         fa="对应需求 F09 – F11 错题闭环 · 验收 A13 – A14",
+         desc="录入 → 错因分析 → 同类变式题 → 掌握标记 → 导出，形成完整错题闭环。",
+         points=[("录入与筛选", "题干 / 我的答案 / 正确答案三段录入，按掌握状态筛选。"),
+                 ("错因与变式", "分析错因并生成同类变式题，针对薄弱点强化（F10）。"),
+                 ("导出归档", "一键导出 Markdown 错题本（F11）。")]),
+    dict(img="ui_model_settings.png", title="模型接入与运行时配置",
+         fa="对应需求 F20 – F23 智能体接入 · 验收 A23 – A26",
+         desc="6 个可插拔 Provider：OpenAI / 文心一言 / Kimi / Claude / 自定义 / 演示模式。",
+         points=[("运行时配置", "Web 或 REST 写入密钥与模型地址，即时生效无需重启（F21）。"),
+                 ("连通性自检", "配置校验与真实探针；自建系统可直接透传调用（F22）。"),
+                 ("自动回退", "未配置或调用异常时回退演示模式，响应带 fallback 标记（F23）。")]),
+]
+for si, item in enumerate(showcase):
+    PAGES.append(SHOWCASE(item, 14 + si, si + 1, len(showcase)))
+
+# ---------------- P21 实测证据与交付物 ----------------
 ach_dlv = [
     ("需求规格说明书", "GB/T 9385 口径；.md 单一源 + .docx 验收主件"),
-    ("答辩演示文稿", "本 PPT 22 页，四部分结构与真实图资产"),
+    ("答辩演示文稿", "本 PPT 28 页，四部分结构与真实图资产"),
     ("博客园复盘长文", "13 节 + 13 张图，已同步 V1.5.0 口径"),
     ("四套回归与证据", "startup / demo / feature / study + 本地与线上 JSON"),
     ("自我检查报告", "12 节，三轮自查与 11 项修复记录"),
@@ -388,12 +449,12 @@ body_ach3 = (
         "justifyContent: 'space-between', gap: 20, marginTop: 8")
     + B(BAR("全部数字可由 docs/*_results.json 与需求文档 10.5 节复核；答辩现场可打开线上链接逐项走查。", 46),
         "width: 1160, marginTop: 14"))
-PAGES.append(CONTENT("实测证据与交付物", "03 · Achievements", 15, body_ach3))
+PAGES.append(CONTENT("实测证据与交付物", "03 · Achievements", 21, body_ach3))
 
-# ---------------- P16 章节 04 需求分析 ----------------
+# ---------------- P22 章节 04 需求分析 ----------------
 PAGES.append(SECTION("04", "需求分析", "国标依据  ·  前后端详述  ·  可判定验收"))
 
-# ---------------- P17 依据、迭代记录、项目标志 ----------------
+# ---------------- P23 依据、迭代记录、项目标志 ----------------
 basis = CARD(
     T("编写依据", 24, BLUE, True, 1.3)
     + T("GB/T 9385-2008《计算机软件需求说明编制指南》", 18, INK, False, 1.45, 14)
@@ -432,9 +493,9 @@ body13 = (
             "width: 840, flexDirection: 'column'"),
         "width: 1160, height: 110, flexDirection: 'row', alignItems: 'center', "
         "background: '#F7F9FC', padding: 14, marginTop: 16"))
-PAGES.append(CONTENT("依据、迭代记录与项目标志", "04 · Requirements", 17, body13))
+PAGES.append(CONTENT("依据、迭代记录与项目标志", "04 · Requirements", 23, body13))
 
-# ---------------- P18 思维导图与类图 ----------------
+# ---------------- P24 思维导图与类图 ----------------
 body14 = (
     B(B(IMG("mindmap.png", 550, 380)
         + T("图 3  功能思维导图：六大分支覆盖第 4 章全部功能需求", 15, GRAY, False, 1.3, 10),
@@ -445,9 +506,9 @@ body14 = (
       "width: 1160, height: 440, flexDirection: 'row', justifyContent: 'space-between', gap: 20")
     + B(BAR("两张图均由仓库 docs/*.svg 矢量源渲染，与需求文档图 3、图 4 一一对应。", 46),
         "width: 1160, marginTop: 10"))
-PAGES.append(CONTENT("思维导图与类图", "04 · Requirements", 18, body14))
+PAGES.append(CONTENT("思维导图与类图", "04 · Requirements", 24, body14))
 
-# ---------------- P19 功能描述与前后端详述 ----------------
+# ---------------- P25 功能描述与前后端详述 ----------------
 kpis = ""
 for val, label in [("37", "项功能 F01–F37"), ("40", "条 REST 路由"), ("8", "张 SQLite 表")]:
     kpis += B(T(val, 68, BLUE, True, 1.0) + T(label, 19, GRAY, False, 1.3, 4),
@@ -465,12 +526,14 @@ body15 = (
       "width: 1160")
     + B(B(B(fe, "width: 350, flexDirection: 'column'") + B(be, "width: 350, flexDirection: 'column'"),
           "width: 720, height: 290, flexDirection: 'row', justifyContent: 'space-between', gap: 16")
-        + B(IMG("ui_chat.png", 400, 281), "width: 410, flexDirection: 'column'"),
+        + B(IMG("ui_chat.png", 400, 256)
+            + T("课程内智能问答 · 真实界面", 13, LIGHT, False, 1.3, 6),
+          "width: 410, flexDirection: 'column'"),
         "width: 1160, height: 290, flexDirection: 'row', justifyContent: 'space-between', gap: 20, marginTop: 12")
     + B(BAR("每项功能都能在代码、接口表与测试报告中逐条追溯。", 46), "width: 1160, marginTop: 10"))
-PAGES.append(CONTENT("功能描述与前后端详述", "04 · Requirements", 19, body15))
+PAGES.append(CONTENT("功能描述与前后端详述", "04 · Requirements", 25, body15))
 
-# ---------------- P20 验收标准与实测结果 ----------------
+# ---------------- P26 验收标准与实测结果 ----------------
 criteria = (T("验收标准 A01 – A39", 24, BLUE, True, 1.3)
             + T("每条含可判定条件与复现方式；四条通过判据同时满足方可判定 V1.5.0 通过。",
                 19, INK, False, 1.5, 10)
@@ -503,9 +566,9 @@ body16 = (
     + B(rtable, "width: 1160, height: 200, flexDirection: 'column', marginTop: 14")
     + B(BAR("线上 25/25 不是漏测：11 项需本机临时模拟厂商端点，已在本地 36/36 中完整验证。", 46),
         "width: 1160, marginTop: 8"))
-PAGES.append(CONTENT("验收标准与实测结果", "04 · Requirements", 20, body16))
+PAGES.append(CONTENT("验收标准与实测结果", "04 · Requirements", 26, body16))
 
-# ---------------- P21 范围边界与不予承诺 ----------------
+# ---------------- P27 范围边界与不予承诺 ----------------
 bounds = [
     "真实厂商 API Key 缺失，仅用本机模拟端点验证",
     "DemoProvider 为规则化应答，不是大模型推理",
@@ -543,9 +606,9 @@ body17 = (
         "gap: 12, marginTop: 12")
     + B(BAR("诚实报告局限，比藏着更专业；这一页本身就是「不画大饼」的证明。", 46),
         "width: 1160, marginTop: 10"))
-PAGES.append(CONTENT("范围边界与不予承诺", "04 · Requirements", 21, body17))
+PAGES.append(CONTENT("范围边界与不予承诺", "04 · Requirements", 27, body17))
 
-# ---------------- P22 封底 ----------------
+# ---------------- P28 封底 ----------------
 PAGES.append(
     "<Slide padding={60} style={{ background: '#1E4FA8', fontFamily: 'Microsoft YaHei', "
     "flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>"
@@ -554,7 +617,7 @@ PAGES.append(
     + T("ai-campus-companion.app.workbuddy.host", 17, "#CADCFC", False, 1.4, 14)
     + "</Slide>")
 
-assert len(PAGES) == 22, len(PAGES)
+assert len(PAGES) == 28, len(PAGES)
 for i, s in enumerate(PAGES, 1):
     assert s.lstrip().startswith("<Slide"), i
     assert s.rstrip().endswith("</Slide>"), i
