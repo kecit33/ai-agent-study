@@ -3,7 +3,7 @@
 
 V1.5.0 答辩演示 · 整体优化版（2026-11-08）
 - 原独立「技术选型与系统架构」页删除，架构结论压缩进「选题依据」页；
-- 第一部分由 5 页精简为 3 页（队名/分工/队员风采合并，保留合照与愿景原文）；
+- 第一部分由 5 页精简为 3 页（队名/分工/队员风采合并，保留团队标识与愿景原文）；
 - 第二部分扩充选题背景、选题依据、选题价值，能力全景按复习闭环重排；
 - 第三部分压缩单图页文字冗余，7 页真实界面拆为 4+3 两组，中间插入成果亮点页，章末收束为成果结论。
 
@@ -127,7 +127,7 @@ PAGES.append(
 # ---------------- P02 目录（页码区间随新结构同步） ----------------
 rows = ""
 for idx, (n, name, pg, en, kw) in enumerate([
-        ("01", "团队展示", "P03 – P05", "Team", "队名 · 分工与队员风采 · 合照与愿景"),
+        ("01", "团队展示", "P03 – P05", "Team", "队名 · 分工与队员风采 · 团队标识与愿景"),
         ("02", "选题报告", "P06 – P10", "Topic", "选题背景 · 选题依据 · 选题价值 · 能力全景"),
         ("03", "成果展示", "P11 – P21", "Achievements", "已上线系统 · 7 页真实界面 · 亮点与结论"),
         ("04", "需求分析", "P22 – P27", "Requirements", "国标依据 · 前后端详述 · 可判定验收")]):
@@ -197,20 +197,25 @@ body04 = (
         "width: 1160, marginTop: 6"))
 PAGES.append(CONTENT("队名 · 分工 · 队员风采", "01 · Team", 4, body04))
 
-# ---------------- P05 合照 + 愿景（愿景原文逐字保留） ----------------
-frame = B(
-    T("团队首次合照", 26, GRAY, True, 1.3)
-    + T("此处放团队首次合照", 20, BLUE, False, 1.4, 18)
-    + T("（待补：团队首次线下合照）", 16, LIGHT, False, 1.4, 8),
-    "width: 620, height: 400, border: '2px dashed #D6DCE5', borderRadius: 8, "
-    "flexDirection: 'column', alignItems: 'center', justifyContent: 'center'")
+# ---------------- P05 团队标识 + 愿景（愿景原文逐字保留） ----------------
+team_card = B(
+    T("团队标识", 15, LIGHT, False, 1.3)
+    + T("无言以对", 44, BLUE, True, 1.15, 8)
+    + B(IMG("logo.png", 280, 96), "width: 320, marginTop: 14, flexDirection: 'column'")
+    + T("AI 校园学习陪伴助手  ·  V1.5.0", 19, INK, True, 1.4, 16)
+    + B(RULE(520), "width: 520, marginTop: 14")
+    + T("陈明凯  ·  后端与质量保障", 17, GRAY, False, 1.4, 12)
+    + T("邓文炜  ·  前端与交互体验", 17, GRAY, False, 1.4, 4)
+    + T("智能体开发课程作业  ｜  2026-11", 15, LIGHT, False, 1.4, 14),
+    "width: 620, height: 400, background: '#F7F9FC', border: '1px solid #D6DCE5', "
+    "borderRadius: 8, padding: 22, flexDirection: 'column', justifyContent: 'center'")
 vision = (
     "我们希望 AI 校园学习陪伴助手，能真正服务在校学生的课程复习场景。"
     "不做泛化闲聊，而是贴合课堂课件、作业错题，提供引导式学习辅助。"
     "未来期望优化长文档记忆与多用户能力，让它成为轻量化、易部署的课堂学习工具，"
     "帮助同学理清薄弱知识点，形成完整复习闭环。")
 body05 = B(
-    B(frame, "width: 640, flexDirection: 'column'")
+    B(team_card, "width: 640, flexDirection: 'column'")
     + B(T("团队项目愿景", 28, BLUE, True, 1.3)
         + T("未来期望 · 非 V1.5.0 已实现能力", 14, LIGHT, False, 1.3, 2)
         + T(vision, 20, INK, False, 1.6, 20)
@@ -219,7 +224,7 @@ body05 = B(
             "alignItems: 'center', padding: 14, marginTop: 24"),
         "width: 480, flexDirection: 'column'"),
     "width: 1160, height: 497, flexDirection: 'row', gap: 24")
-PAGES.append(CONTENT("首次合照与项目愿景", "01 · Team", 5, body05))
+PAGES.append(CONTENT("团队标识与项目愿景", "01 · Team", 5, body05))
 
 # ================= 02 选题报告（扩充：3 内容页 -> 4 内容页；原架构独立页删除） =================
 PAGES.append(SECTION("02", "选题报告", "从备考痛点到依据，再到价值与能力"))
@@ -264,7 +269,7 @@ PAGES.append(CONTENT("选题背景 · 课程复习中的三个断点", "02 · To
 basis_rows = [
     ("需求依据", "课程作业要求交付可运行系统与可验收文档；需求文档按 GB/T 9385-2008 口径编写。"),
     ("技术依据", "Python 标准库 ThreadingHTTPServer 单一 server.py + SQLite 8 张表；原生前端无构建，6 个 Provider 可插拔。"),
-    ("验证依据", "A01–A39 每条给出可判定条件；startup / demo / feature / study 四套回归与 JSON 证据可复核。"),
+    ("验证依据", "A01 – A39 每条给出可判定条件；startup / demo / feature / study 四套回归与 JSON 证据可复核。"),
 ]
 b_rows = ""
 for i, (k, v) in enumerate(basis_rows):
@@ -272,7 +277,7 @@ for i, (k, v) in enumerate(basis_rows):
                 "width: 470, flexDirection: 'column'" + (", marginTop: 16" if i else ""))
 body08 = (
     B(B(IMG("architecture.png", 620, 316)
-        + T("图 1  V1.5.0 系统架构：单一零依赖后端 / 8 张表 / 30 秒调度", 14, LIGHT, False, 1.3, 8),
+        + T("图 1  V1.5.0 系统架构：单一零依赖后端 · 8 张表 · 30 秒调度", 14, LIGHT, False, 1.3, 8),
         "width: 640, flexDirection: 'column'")
       + B(b_rows, "width: 480, flexDirection: 'column', padding: 8"),
       "width: 1160, height: 372, flexDirection: 'row', justifyContent: 'space-between', gap: 20")
@@ -308,10 +313,10 @@ PAGES.append(CONTENT("选题价值 · 谁会用到它", "02 · Topic", 9, body09
 
 # ---------------- P10 项目规划与能力全景（按复习闭环重排，去掉与成果重复的双截图） ----------------
 stages = [
-    ("01 资料输入", [("课件总结", "F02 / F08"), ("课程记忆", "F06 / F33")]),
+    ("01 资料输入", [("课件总结", "F02 · F08"), ("课程记忆", "F06 · F33")]),
     ("02 理解与练习", [("习题引导辅导", "F05"), ("课程内智能问答", "F01")]),
-    ("03 计划与执行", [("自动生成复习计划", "F04 / F12"), ("番茄专注计时", "F26")]),
-    ("04 复盘与产出", [("AI 错题本闭环", "F09 – F11"), ("学习资源包", "F18 / F19")]),
+    ("03 计划与执行", [("自动生成复习计划", "F04 · F12"), ("番茄钟", "F26")]),
+    ("04 复盘与产出", [("AI 错题本闭环", "F09 – F11"), ("学习资源包", "F18 · F19")]),
 ]
 stage_rows = ""
 for i, (stage, caps2) in enumerate(stages):
@@ -346,7 +351,7 @@ ach_url = B(
     "width: 1160, height: 138, background: '#1E4FA8', padding: 20, flexDirection: 'column'")
 ach_metrics = [
     ("V1.5.0", "当前上线与验收版本"), ("7", "页可演示的真实界面"),
-    ("A01–A39", "条可判定验收"), ("4", "套回归全部通过"),
+    ("A01 – A39", "条可判定验收"), ("4", "套回归全部通过"),
 ]
 ach_grid = ""
 for v, lab in ach_metrics:
@@ -404,15 +409,15 @@ showcase = [
          hl="亮点：切换课程即切换记忆，不再从零交代",
          desc="每次提问自动携带当前课程资料上下文；回答按 escape-first 富文本渲染。",
          points=[("上下文可见", "资料全文拼入 system prompt；单份 4000 字、总量 12000 字预算（F33）。"),
-                 ("交互可靠", "安全 Markdown 防注入（F27 / F31），请求中按钮禁用防重复提交（F28）。")]),
+                 ("交互可靠", "安全 Markdown 防注入（F27 · F31），请求中按钮禁用防重复提交（F28）。")]),
     dict(img="ui_summarize.png", title="课件总结",
-         fa="F02 课件总结 · F08 文件解析 · 验收 A07 / A12",
+         fa="F02 课件总结 · F08 文件解析 · 验收 A07 · A12",
          hl="亮点：上传即入课程记忆，结果可下载归档",
          desc="粘贴或上传课件文本，一键输出知识点与考点提纲，结果可下载 .md 归档。",
          points=[("多格式上传", "txt / md / docx 上传即入课程记忆，docx 实体全还原（F36）。"),
                  ("演示可复现", "结构化输出分层呈现，演示模式即可完整跑通。")]),
     dict(img="ui_plan.png", title="复习计划",
-         fa="F04 复习计划 · F12 到点提醒 · 验收 A09 / A15",
+         fa="F04 复习计划 · F12 到点提醒 · 验收 A09 · A15",
          hl="亮点：逐日安排由后台调度自动提醒",
          desc="按科目与剩余天数生成逐日安排：基础回顾 → 重点突破 → 真题演练 → 冲刺。",
          points=[("逐日计划", "每日 2–3 小时粒度，配合错题本安排复盘。"),
@@ -422,7 +427,7 @@ showcase = [
          hl="亮点：一次生成六类产出，可回写课程记忆",
          desc="一次生成自测题、复习总结、专题文章、资料清单、思维导图与错题关联。",
          points=[("一键全套", "六类产出一次生成，结果可回写课程记忆。"),
-                 ("导出健壮", "blob 下载失败不替换整页；资料链接协议白名单（F35 / F36）。")]),
+                 ("导出健壮", "blob 下载失败不替换整页；资料链接协议白名单（F35 · F36）。")]),
     dict(img="ui_wrong.png", title="AI 错题本",
          fa="F09 – F11 错题闭环 · 验收 A13 – A14",
          hl="亮点：录入到导出，形成完整闭环",
@@ -445,10 +450,10 @@ for si, item in enumerate(showcase[:4]):
 
 # ---------------- P17 成果亮点（新增；节奏断点，把 7 连页拆成 4 + 3） ----------------
 highlights = [
-    ("课程记忆按课程隔离", "F06 / F33",
+    ("课程记忆按课程隔离", "F06 · F33",
      "资料全文进入 prompt，切换课程即切换上下文；单份 4000 字、总量 12000 字预算，避免长资料挤占窗口。",
      "证据：study_check.py 本地 36/36"),
-    ("安全 Markdown 渲染", "F27 / F31",
+    ("安全 Markdown 渲染", "F27 · F31",
      "前端 escape-first 先转义再解析富文本，资料与回答中的标签不会被执行；三轮自查中完成 XSS 复测。",
      "证据：自我检查报告 12 节"),
     ("可插拔智能体与自动回退", "F20 – F23",
@@ -497,7 +502,7 @@ concl = B(
     T("三条结论", 26, WHITE, True, 1.3)
     + T("① 已上线：浏览器直接访问，无需安装与密钥。", 17, WHITE, False, 1.5, 14)
     + T("② 可复核：四套回归结果与 A01 – A39 逐条对应。", 17, WHITE, False, 1.5, 8)
-    + T("③ 有边界：无真实厂商 Key、ESP32 未实机、团队合照待补。", 17, WHITE, False, 1.5, 8)
+    + T("③ 有边界：无真实厂商 Key、ESP32 未实机、单机单用户原型。", 17, WHITE, False, 1.5, 8)
     + T("边界项一律排除在验收范围外，详见第 04 章。", 15, "#CADCFC", False, 1.4, 16),
     "width: 420, height: 300, background: '#1E4FA8', padding: 20, flexDirection: 'column'")
 body21 = (
@@ -564,7 +569,7 @@ body24 = (
         + T("图 2  功能思维导图：六大分支覆盖第 4 章全部功能需求", 15, GRAY, False, 1.3, 10),
         "width: 560, flexDirection: 'column'")
       + B(IMG("classdiagram.png", 550, 400)
-          + T("图 3  类图：Provider 抽象 / 8 服务模块 / 8 张表 / 10 前端模块", 15, GRAY, False, 1.3, 10),
+          + T("图 3  类图：Provider 抽象 · 8 服务模块 · 8 张表 · 10 前端模块", 15, GRAY, False, 1.3, 10),
           "width: 560, flexDirection: 'column'"),
       "width: 1160, height: 440, flexDirection: 'row', justifyContent: 'space-between', gap: 20")
     + B(BAR("两张图均由仓库 docs/*.svg 矢量源渲染，与需求文档图 3、图 4 一一对应；系统架构图见 P08。", 46),
@@ -573,7 +578,7 @@ PAGES.append(CONTENT("思维导图与类图", "04 · Requirements", 24, body24))
 
 # ---------------- P25 功能描述与前后端详述 ----------------
 kpis = ""
-for val, label in [("37", "项功能 F01–F37"), ("40", "条 REST 路由"), ("8", "张 SQLite 表")]:
+for val, label in [("37", "项功能 F01 – F37"), ("40", "条 REST 路由"), ("8", "张 SQLite 表")]:
     kpis += B(T(val, 68, BLUE, True, 1.0) + T(label, 19, GRAY, False, 1.3, 4),
               "width: 370, height: 110, flexDirection: 'column', alignItems: 'center'")
 fe = (T("前端 · 10 个模块", 23, BLUE, True, 1.3)
@@ -590,7 +595,7 @@ body25 = (
     + B(B(B(fe, "width: 350, flexDirection: 'column'") + B(be, "width: 350, flexDirection: 'column'"),
           "width: 720, height: 290, flexDirection: 'row', justifyContent: 'space-between', gap: 16")
         + B(IMG("ui_chat.png", 400, 256)
-            + T("课程内智能问答 · 真实界面", 13, LIGHT, False, 1.3, 6),
+            + T("图 4  课程内智能问答 · 真实界面", 13, LIGHT, False, 1.3, 6),
           "width: 410, flexDirection: 'column'"),
         "width: 1160, height: 290, flexDirection: 'row', justifyContent: 'space-between', gap: 20, marginTop: 12")
     + B(BAR("每项功能都能在代码、接口表与测试报告中逐条追溯；此处为规格口径，成果口径见 P12。", 46),
