@@ -1,0 +1,731 @@
+{
+ "mode": "update",
+ "operations": [
+  {
+   "op": "create",
+   "item": {
+    "key": "llm5khv5w13000000",
+    "hotAttr": {
+     "!ffVersion": 1,
+     "animation": {
+      "aniCount": "1",
+      "aniDelay": "0s",
+      "aniDuration": "1s",
+      "aniName": "none"
+     },
+     "border": {
+      "bdrColor": 4294967295,
+      "bdrIsVisible": true,
+      "bdrStyle": "solid",
+      "bdrWidth": 1
+     },
+     "borderRadius": {
+      "radiusBL": 3,
+      "radiusBR": 3,
+      "radiusTL": 3,
+      "radiusTR": 3
+     },
+     "borderRadiusIsVisible": true,
+     "borderVisibility": {
+      "bdrIsVisibleB": true,
+      "bdrIsVisibleL": true,
+      "bdrIsVisibleR": true,
+      "bdrIsVisibleT": true
+     },
+     "fill": {
+      "fill": "solid",
+      "fillIsVisible": false,
+      "solidColor": 4279717792
+     },
+     "fixPosTo": "none",
+     "h": 21,
+     "interactions": [
+      {
+       "key": "hz_p00_031",
+       "interactionType": 1,
+       "interactionTrigger": "tap",
+       "order": 0,
+       "!validVersion": 2,
+       "triggerDisable": false,
+       "actionDisable": false,
+       "targetRBPageKey": "llmVbc4XXaXn2ZirA",
+       "targetResCanvasKey": "llmQmdajZ8XnhgYWU",
+       "transition": "none",
+       "transitionDelay": "0s",
+       "transitionDuration": "0s",
+       "transitionEasing": "linear",
+       "resetTargetCanvasScrollOffset": true,
+       "resetTargetSubWidgetsState": true
+      }
+     ],
+     "isLock": false,
+     "isLockAspect": false,
+     "isVisible": true,
+     "name": "热区-P00→P09-硬件联动",
+     "opacity": 1,
+     "r": 0,
+     "richTextMetric": {
+      "boundingBoxHeight": 0,
+      "boundingBoxLeft": 0,
+      "boundingBoxTop": 0,
+      "boundingBoxWidth": 0
+     },
+     "richTextV1": {
+      "!lhVersion": 3,
+      "!wbiVersion": 3,
+      "bold": true,
+      "fontDirection": "horizontal-tb",
+      "fontFamily": "Microsoft YaHei",
+      "fontSize": 11,
+      "fontWeight": "regular",
+      "horizontalAlign": "center",
+      "isClipText": true,
+      "italic": false,
+      "letterSpacing": 0,
+      "lineHeight": 13,
+      "padding": 0,
+      "paddingTuple": {
+       "pB": 1,
+       "pL": 2,
+       "pR": 2,
+       "pT": 1
+      },
+      "paraSpacing": 0,
+      "sizeType": 0,
+      "strikethrough": false,
+      "textColor": "rgb(255, 255, 255)",
+      "underline": false,
+      "verticalAlign": "center"
+     },
+     "shadow": {
+      "blurRadius": 6,
+      "offsetX": 0,
+      "offsetY": 2,
+      "shadowColor": 102,
+      "shadowIsVisible": false,
+      "spreadRadius": 0,
+      "type": "box_shadow"
+     },
+     "stickyOffset": null,
+     "styleType": "fill_light",
+     "textV1": {
+      "blocks": {},
+      "entityMap": {}
+     },
+     "type": "wRect",
+     "w": 50,
+     "x": 693,
+     "y": 400,
+     "zIndex": 20
+    },
+    "sub": [],
+    "sup": "llmyXBHMoc5L40zBA"
+   }
+  },
+  {
+   "op": "create",
+   "item": {
+    "key": "llm5khv5y4m000000",
+    "hotAttr": {
+     "!ffVersion": 1,
+     "animation": {
+      "aniCount": "1",
+      "aniDelay": "0s",
+      "aniDuration": "1s",
+      "aniName": "none"
+     },
+     "border": {
+      "bdrColor": 4294967295,
+      "bdrIsVisible": true,
+      "bdrStyle": "solid",
+      "bdrWidth": 1
+     },
+     "borderRadius": {
+      "radiusBL": 3,
+      "radiusBR": 3,
+      "radiusTL": 3,
+      "radiusTR": 3
+     },
+     "borderRadiusIsVisible": true,
+     "borderVisibility": {
+      "bdrIsVisibleB": true,
+      "bdrIsVisibleL": true,
+      "bdrIsVisibleR": true,
+      "bdrIsVisibleT": true
+     },
+     "fill": {
+      "fill": "solid",
+      "fillIsVisible": false,
+      "solidColor": 4279717792
+     },
+     "fixPosTo": "none",
+     "h": 21,
+     "interactions": [
+      {
+       "key": "hz_p00_032",
+       "interactionType": 1,
+       "interactionTrigger": "tap",
+       "order": 0,
+       "!validVersion": 2,
+       "triggerDisable": false,
+       "actionDisable": false,
+       "targetRBPageKey": "llmVbc4XXafdVJbYl",
+       "targetResCanvasKey": "llmEqV6qmM4OJFlbG",
+       "transition": "none",
+       "transitionDelay": "0s",
+       "transitionDuration": "0s",
+       "transitionEasing": "linear",
+       "resetTargetCanvasScrollOffset": true,
+       "resetTargetSubWidgetsState": true
+      }
+     ],
+     "isLock": false,
+     "isLockAspect": false,
+     "isVisible": true,
+     "name": "热区-P00→P10-设置",
+     "opacity": 1,
+     "r": 0,
+     "richTextMetric": {
+      "boundingBoxHeight": 0,
+      "boundingBoxLeft": 0,
+      "boundingBoxTop": 0,
+      "boundingBoxWidth": 0
+     },
+     "richTextV1": {
+      "!lhVersion": 3,
+      "!wbiVersion": 3,
+      "bold": true,
+      "fontDirection": "horizontal-tb",
+      "fontFamily": "Microsoft YaHei",
+      "fontSize": 11,
+      "fontWeight": "regular",
+      "horizontalAlign": "center",
+      "isClipText": true,
+      "italic": false,
+      "letterSpacing": 0,
+      "lineHeight": 13,
+      "padding": 0,
+      "paddingTuple": {
+       "pB": 1,
+       "pL": 2,
+       "pR": 2,
+       "pT": 1
+      },
+      "paraSpacing": 0,
+      "sizeType": 0,
+      "strikethrough": false,
+      "textColor": "rgb(255, 255, 255)",
+      "underline": false,
+      "verticalAlign": "center"
+     },
+     "shadow": {
+      "blurRadius": 6,
+      "offsetX": 0,
+      "offsetY": 2,
+      "shadowColor": 102,
+      "shadowIsVisible": false,
+      "spreadRadius": 0,
+      "type": "box_shadow"
+     },
+     "stickyOffset": null,
+     "styleType": "fill_light",
+     "textV1": {
+      "blocks": {},
+      "entityMap": {}
+     },
+     "type": "wRect",
+     "w": 28,
+     "x": 759,
+     "y": 400,
+     "zIndex": 20
+    },
+    "sub": [],
+    "sup": "llmyXBHMoc5L40zBA"
+   }
+  },
+  {
+   "op": "create",
+   "item": {
+    "key": "llm5khv608V000000",
+    "hotAttr": {
+     "!ffVersion": 1,
+     "animation": {
+      "aniCount": "1",
+      "aniDelay": "0s",
+      "aniDuration": "1s",
+      "aniName": "none"
+     },
+     "border": {
+      "bdrColor": 4294967295,
+      "bdrIsVisible": true,
+      "bdrStyle": "solid",
+      "bdrWidth": 1
+     },
+     "borderRadius": {
+      "radiusBL": 3,
+      "radiusBR": 3,
+      "radiusTL": 3,
+      "radiusTR": 3
+     },
+     "borderRadiusIsVisible": true,
+     "borderVisibility": {
+      "bdrIsVisibleB": true,
+      "bdrIsVisibleL": true,
+      "bdrIsVisibleR": true,
+      "bdrIsVisibleT": true
+     },
+     "fill": {
+      "fill": "solid",
+      "fillIsVisible": false,
+      "solidColor": 4279717792
+     },
+     "fixPosTo": "none",
+     "h": 21,
+     "interactions": [
+      {
+       "key": "hz_p00_033",
+       "interactionType": 1,
+       "interactionTrigger": "tap",
+       "order": 0,
+       "!validVersion": 2,
+       "triggerDisable": false,
+       "actionDisable": false,
+       "targetRBPageKey": "llmVbc4XXaFhIEUBp",
+       "targetResCanvasKey": "llmf1v2cFAedxukuo",
+       "transition": "none",
+       "transitionDelay": "0s",
+       "transitionDuration": "0s",
+       "transitionEasing": "linear",
+       "resetTargetCanvasScrollOffset": true,
+       "resetTargetSubWidgetsState": true
+      }
+     ],
+     "isLock": false,
+     "isLockAspect": false,
+     "isVisible": true,
+     "name": "热区-P00→M01-课程与资料管理",
+     "opacity": 1,
+     "r": 0,
+     "richTextMetric": {
+      "boundingBoxHeight": 0,
+      "boundingBoxLeft": 0,
+      "boundingBoxTop": 0,
+      "boundingBoxWidth": 0
+     },
+     "richTextV1": {
+      "!lhVersion": 3,
+      "!wbiVersion": 3,
+      "bold": true,
+      "fontDirection": "horizontal-tb",
+      "fontFamily": "Microsoft YaHei",
+      "fontSize": 11,
+      "fontWeight": "regular",
+      "horizontalAlign": "center",
+      "isClipText": true,
+      "italic": false,
+      "letterSpacing": 0,
+      "lineHeight": 13,
+      "padding": 0,
+      "paddingTuple": {
+       "pB": 1,
+       "pL": 2,
+       "pR": 2,
+       "pT": 1
+      },
+      "paraSpacing": 0,
+      "sizeType": 0,
+      "strikethrough": false,
+      "textColor": "rgb(255, 255, 255)",
+      "underline": false,
+      "verticalAlign": "center"
+     },
+     "shadow": {
+      "blurRadius": 6,
+      "offsetX": 0,
+      "offsetY": 2,
+      "shadowColor": 102,
+      "shadowIsVisible": false,
+      "spreadRadius": 0,
+      "type": "box_shadow"
+     },
+     "stickyOffset": null,
+     "styleType": "fill_light",
+     "textV1": {
+      "blocks": {},
+      "entityMap": {}
+     },
+     "type": "wRect",
+     "w": 83,
+     "x": 845,
+     "y": 400,
+     "zIndex": 20
+    },
+    "sub": [],
+    "sup": "llmyXBHMoc5L40zBA"
+   }
+  },
+  {
+   "op": "create",
+   "item": {
+    "key": "llm5khv62CE000000",
+    "hotAttr": {
+     "!ffVersion": 1,
+     "animation": {
+      "aniCount": "1",
+      "aniDelay": "0s",
+      "aniDuration": "1s",
+      "aniName": "none"
+     },
+     "border": {
+      "bdrColor": 4294967295,
+      "bdrIsVisible": true,
+      "bdrStyle": "solid",
+      "bdrWidth": 1
+     },
+     "borderRadius": {
+      "radiusBL": 3,
+      "radiusBR": 3,
+      "radiusTL": 3,
+      "radiusTR": 3
+     },
+     "borderRadiusIsVisible": true,
+     "borderVisibility": {
+      "bdrIsVisibleB": true,
+      "bdrIsVisibleL": true,
+      "bdrIsVisibleR": true,
+      "bdrIsVisibleT": true
+     },
+     "fill": {
+      "fill": "solid",
+      "fillIsVisible": false,
+      "solidColor": 4279717792
+     },
+     "fixPosTo": "none",
+     "h": 21,
+     "interactions": [
+      {
+       "key": "hz_p00_034",
+       "interactionType": 1,
+       "interactionTrigger": "tap",
+       "order": 0,
+       "!validVersion": 2,
+       "triggerDisable": false,
+       "actionDisable": false,
+       "targetRBPageKey": "llmVbc4XXavLKVMxk",
+       "targetResCanvasKey": "llmTucal7UkVcwjph",
+       "transition": "none",
+       "transitionDelay": "0s",
+       "transitionDuration": "0s",
+       "transitionEasing": "linear",
+       "resetTargetCanvasScrollOffset": true,
+       "resetTargetSubWidgetsState": true
+      }
+     ],
+     "isLock": false,
+     "isLockAspect": false,
+     "isVisible": true,
+     "name": "热区-P00→M02-智能体运行配置",
+     "opacity": 1,
+     "r": 0,
+     "richTextMetric": {
+      "boundingBoxHeight": 0,
+      "boundingBoxLeft": 0,
+      "boundingBoxTop": 0,
+      "boundingBoxWidth": 0
+     },
+     "richTextV1": {
+      "!lhVersion": 3,
+      "!wbiVersion": 3,
+      "bold": true,
+      "fontDirection": "horizontal-tb",
+      "fontFamily": "Microsoft YaHei",
+      "fontSize": 11,
+      "fontWeight": "regular",
+      "horizontalAlign": "center",
+      "isClipText": true,
+      "italic": false,
+      "letterSpacing": 0,
+      "lineHeight": 13,
+      "padding": 0,
+      "paddingTuple": {
+       "pB": 1,
+       "pL": 2,
+       "pR": 2,
+       "pT": 1
+      },
+      "paraSpacing": 0,
+      "sizeType": 0,
+      "strikethrough": false,
+      "textColor": "rgb(255, 255, 255)",
+      "underline": false,
+      "verticalAlign": "center"
+     },
+     "shadow": {
+      "blurRadius": 6,
+      "offsetX": 0,
+      "offsetY": 2,
+      "shadowColor": 102,
+      "shadowIsVisible": false,
+      "spreadRadius": 0,
+      "type": "box_shadow"
+     },
+     "stickyOffset": null,
+     "styleType": "fill_light",
+     "textV1": {
+      "blocks": {},
+      "entityMap": {}
+     },
+     "type": "wRect",
+     "w": 83,
+     "x": 959,
+     "y": 400,
+     "zIndex": 20
+    },
+    "sub": [],
+    "sup": "llmyXBHMoc5L40zBA"
+   }
+  },
+  {
+   "op": "create",
+   "item": {
+    "key": "llm5khv64Fx000000",
+    "hotAttr": {
+     "!ffVersion": 1,
+     "animation": {
+      "aniCount": "1",
+      "aniDelay": "0s",
+      "aniDuration": "1s",
+      "aniName": "none"
+     },
+     "border": {
+      "bdrColor": 4294967295,
+      "bdrIsVisible": true,
+      "bdrStyle": "solid",
+      "bdrWidth": 1
+     },
+     "borderRadius": {
+      "radiusBL": 3,
+      "radiusBR": 3,
+      "radiusTL": 3,
+      "radiusTR": 3
+     },
+     "borderRadiusIsVisible": true,
+     "borderVisibility": {
+      "bdrIsVisibleB": true,
+      "bdrIsVisibleL": true,
+      "bdrIsVisibleR": true,
+      "bdrIsVisibleT": true
+     },
+     "fill": {
+      "fill": "solid",
+      "fillIsVisible": false,
+      "solidColor": 4279717792
+     },
+     "fixPosTo": "none",
+     "h": 21,
+     "interactions": [
+      {
+       "key": "hz_p00_035",
+       "interactionType": 1,
+       "interactionTrigger": "tap",
+       "order": 0,
+       "!validVersion": 2,
+       "triggerDisable": false,
+       "actionDisable": false,
+       "targetRBPageKey": "llmVbc4XXayngtNF7",
+       "targetResCanvasKey": "llmJhtlJ3fGV4ym2J",
+       "transition": "none",
+       "transitionDelay": "0s",
+       "transitionDuration": "0s",
+       "transitionEasing": "linear",
+       "resetTargetCanvasScrollOffset": true,
+       "resetTargetSubWidgetsState": true
+      }
+     ],
+     "isLock": false,
+     "isLockAspect": false,
+     "isVisible": true,
+     "name": "热区-P00→M03-运行状态与硬件看板",
+     "opacity": 1,
+     "r": 0,
+     "richTextMetric": {
+      "boundingBoxHeight": 0,
+      "boundingBoxLeft": 0,
+      "boundingBoxTop": 0,
+      "boundingBoxWidth": 0
+     },
+     "richTextV1": {
+      "!lhVersion": 3,
+      "!wbiVersion": 3,
+      "bold": true,
+      "fontDirection": "horizontal-tb",
+      "fontFamily": "Microsoft YaHei",
+      "fontSize": 11,
+      "fontWeight": "regular",
+      "horizontalAlign": "center",
+      "isClipText": true,
+      "italic": false,
+      "letterSpacing": 0,
+      "lineHeight": 13,
+      "padding": 0,
+      "paddingTuple": {
+       "pB": 1,
+       "pL": 2,
+       "pR": 2,
+       "pT": 1
+      },
+      "paraSpacing": 0,
+      "sizeType": 0,
+      "strikethrough": false,
+      "textColor": "rgb(255, 255, 255)",
+      "underline": false,
+      "verticalAlign": "center"
+     },
+     "shadow": {
+      "blurRadius": 6,
+      "offsetX": 0,
+      "offsetY": 2,
+      "shadowColor": 102,
+      "shadowIsVisible": false,
+      "spreadRadius": 0,
+      "type": "box_shadow"
+     },
+     "stickyOffset": null,
+     "styleType": "fill_light",
+     "textV1": {
+      "blocks": {},
+      "entityMap": {}
+     },
+     "type": "wRect",
+     "w": 105,
+     "x": 1084,
+     "y": 400,
+     "zIndex": 20
+    },
+    "sub": [],
+    "sup": "llmyXBHMoc5L40zBA"
+   }
+  },
+  {
+   "op": "create",
+   "item": {
+    "key": "llm5khv66Jg000000",
+    "hotAttr": {
+     "!ffVersion": 1,
+     "animation": {
+      "aniCount": "1",
+      "aniDelay": "0s",
+      "aniDuration": "1s",
+      "aniName": "none"
+     },
+     "border": {
+      "bdrColor": 4294967295,
+      "bdrIsVisible": true,
+      "bdrStyle": "solid",
+      "bdrWidth": 1
+     },
+     "borderRadius": {
+      "radiusBL": 3,
+      "radiusBR": 3,
+      "radiusTL": 3,
+      "radiusTR": 3
+     },
+     "borderRadiusIsVisible": true,
+     "borderVisibility": {
+      "bdrIsVisibleB": true,
+      "bdrIsVisibleL": true,
+      "bdrIsVisibleR": true,
+      "bdrIsVisibleT": true
+     },
+     "fill": {
+      "fill": "solid",
+      "fillIsVisible": false,
+      "solidColor": 4279717792
+     },
+     "fixPosTo": "none",
+     "h": 21,
+     "interactions": [
+      {
+       "key": "hz_p00_036",
+       "interactionType": 1,
+       "interactionTrigger": "tap",
+       "order": 0,
+       "!validVersion": 2,
+       "triggerDisable": false,
+       "actionDisable": false,
+       "targetRBPageKey": "llmVbc4XXaRSqRveo",
+       "targetResCanvasKey": "llmiYe3iC3dXD22CO",
+       "transition": "none",
+       "transitionDelay": "0s",
+       "transitionDuration": "0s",
+       "transitionEasing": "linear",
+       "resetTargetCanvasScrollOffset": true,
+       "resetTargetSubWidgetsState": true
+      }
+     ],
+     "isLock": false,
+     "isLockAspect": false,
+     "isVisible": true,
+     "name": "热区-P00→M04-复习任务与专注管理",
+     "opacity": 1,
+     "r": 0,
+     "richTextMetric": {
+      "boundingBoxHeight": 0,
+      "boundingBoxLeft": 0,
+      "boundingBoxTop": 0,
+      "boundingBoxWidth": 0
+     },
+     "richTextV1": {
+      "!lhVersion": 3,
+      "!wbiVersion": 3,
+      "bold": true,
+      "fontDirection": "horizontal-tb",
+      "fontFamily": "Microsoft YaHei",
+      "fontSize": 11,
+      "fontWeight": "regular",
+      "horizontalAlign": "center",
+      "isClipText": true,
+      "italic": false,
+      "letterSpacing": 0,
+      "lineHeight": 13,
+      "padding": 0,
+      "paddingTuple": {
+       "pB": 1,
+       "pL": 2,
+       "pR": 2,
+       "pT": 1
+      },
+      "paraSpacing": 0,
+      "sizeType": 0,
+      "strikethrough": false,
+      "textColor": "rgb(255, 255, 255)",
+      "underline": false,
+      "verticalAlign": "center"
+     },
+     "shadow": {
+      "blurRadius": 6,
+      "offsetX": 0,
+      "offsetY": 2,
+      "shadowColor": 102,
+      "shadowIsVisible": false,
+      "spreadRadius": 0,
+      "type": "box_shadow"
+     },
+     "stickyOffset": null,
+     "styleType": "fill_light",
+     "textV1": {
+      "blocks": {},
+      "entityMap": {}
+     },
+     "type": "wRect",
+     "w": 105,
+     "x": 1220,
+     "y": 400,
+     "zIndex": 20
+    },
+    "sub": [],
+    "sup": "llmyXBHMoc5L40zBA"
+   }
+  }
+ ]
+}
