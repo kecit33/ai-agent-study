@@ -82,10 +82,13 @@ def HEAD():
 
 
 def save(name, w, h, body, caption):
-    svg = HEAD().format(W=w, H=h) + body + T(24, h - 14, caption, 12, "start", "normal", GRAY) + "</svg>"
+    # 图内说明文字下方留白，避免页脚与说明行重叠。
+    total_h = h + 36
+    svg = (HEAD().format(W=w, H=total_h) + body
+           + T(24, total_h - 14, caption, 12, "start", "normal", GRAY) + "</svg>")
     with open(os.path.join(OUT, name), "w", encoding="utf-8") as f:
         f.write(svg)
-    print("生成", name, w, "x", h)
+    print("生成", name, w, "x", total_h)
 
 
 def actor(x, y, label):
@@ -135,9 +138,9 @@ def usecase():
     b += actor(90, 250, "在校学生")
     b += actor(90, 470, "教师 / 助教")
     b += actor(920, 470, "开发者 / 维护者")
-    b += T(90, 310, "主要用户", 11, "middle", "normal", GRAY)
-    b += T(90, 530, "验收者", 11, "middle", "normal", GRAY)
-    b += T(920, 530, "维护者", 11, "middle", "normal", GRAY)
+    b += T(90, 326, "主要用户", 11, "middle", "normal", GRAY)
+    b += T(90, 550, "验收者", 11, "middle", "normal", GRAY)
+    b += T(920, 550, "维护者", 11, "middle", "normal", GRAY)
 
     # 参与者关联（代表性连线，其余由正文的参与者—用例矩阵完整给出）
     for y in (205, 351, 424):
@@ -146,13 +149,13 @@ def usecase():
     b += L(898, 482, 773, 424, False, color=LINE, sw=1.1)
     b += L(898, 482, 517, 497, False, color=LINE, sw=1.1, dash="4 3")
 
-    # include / extend
-    b += L(365, 235, 365, 175, True, dash="5 4", label="«include» 课程记忆", lx=440, ly=205, lsize=11)
+    # include / extend：标注移到说明行，避免压在用例椭圆上。
+    b += L(365, 235, 365, 175, True, dash="5 4")
     b += L(645, 132, 645, 102, False, dash="5 4")
-    b += POLY([(645, 102), (500, 102), (500, 205), (493, 205)], True, dash="5 4",
-              label="«extend» 真实模型替换演示模式", lx=560, ly=96, )
-    b += T(24, 616, "说明：学生为系统边界内除「逐项验收」外全部用例的参与者；虚线为依赖/扩展关系；编号 F/A 与 SRS 第 4、10 章一致。",
+    b += POLY([(645, 102), (500, 102), (500, 205), (493, 205)], True, dash="5 4")
+    b += T(24, 608, "说明：学生参与除「逐项验收」外的全部用例；虚线中「课程内智能问答」include「课程与资料管理」，「模型接入与运行时配置」extend「课程内智能问答」。",
            12, "start", "normal", GRAY)
+    b += T(24, 630, "编号 F / A 与 SRS 第 4、10 章一致。", 12, "start", "normal", GRAY)
     save("用例图.svg", W, H, b, "无言以对 · 第二次团队作业 · 原型设计+概要设计")
 
 
@@ -304,13 +307,14 @@ def collaboration():
         x2, y2 = c(d)
         b += L(x1, y1, x2, y2, False, color=BORDER, sw=1.6)
 
+    # 标注放在对象之间的空白处，避免覆盖对象名称。
     notes = [
-        (275, 108, "1: POST /api/study/pack"),
-        (610, 108, "2: pack(course, chapter, count)"),
+        (327, 70, "1: POST /api/study/pack"),
+        (670, 70, "2: pack(course, chapter, count)"),
         (845, 205, "3: 读取章节题目"),
         (845, 375, "4: 可选追加模型原创"),
-        (610, 470, "5: 生成思维导图"),
-        (275, 470, "6: save_to_course 回写"),
+        (545, 535, "5: 生成思维导图"),
+        (170, 535, "6: save_to_course 回写"),
         (155, 375, "7: 返回五件套 JSON"),
         (275, 245, "8: 渲染 / 导出 Markdown"),
     ]
@@ -389,7 +393,7 @@ def backend():
         b += T(x + 85, y + h / 2 + 5, title, 13, "middle", "bold", DEEP)
         lines = desc.split(" · ")
         for k, seg in enumerate(lines):
-            b += T(x + 186, y + 26 + k * 19, seg, 11.5, "start", "normal", INK)
+            b += T(x + 186, y + 24 + k * 17, seg, 11.5, "start", "normal", INK)
     for y in (142, 234, 346, 458):
         b += L(500, y, 500, y + 20, True, color=BLUE, sw=1.8)
     b += T(24, 578, "侧路：后台守护线程每 30 秒 check_due_tasks()；/api/status 暴露版本指纹；静态资源由 Handler 单独分支返回。",
