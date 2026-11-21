@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>V1.5.0 AI 校园学习陪伴助手 · 可交互走查版</title>
+<style>
+*{box-sizing:border-box}
+body{font:13px/1.6 'Microsoft YaHei',Arial,sans-serif;margin:0;background:#F3F6FB;color:#1B2430}
+button{font-family:inherit;cursor:pointer}
+.top{background:#173E7E;color:#fff;padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top b{font-size:17px}
+.top select,.top button{background:#fff;color:#173E7E;border:0;border-radius:3px;padding:5px 9px;font-size:12px}
+.badge{background:#fff;color:#173E7E;border-radius:3px;padding:3px 8px;font-size:11px;font-weight:bold}
+.sp{flex:1}
+.wrap{display:flex;min-height:calc(100vh - 52px)}
+.side{width:246px;background:#fff;border-right:1px solid #D6DFEC;padding:12px;flex:none}
+.grp{font-size:11px;color:#71809A;margin:12px 0 6px;border-top:1px dashed #D6DFEC;padding-top:8px;letter-spacing:.5px}
+.nav{display:block;width:100%;text-align:left;border:0;background:transparent;color:#35465F;padding:6px 9px;border-radius:4px;font-size:12px;margin:2px 0}
+.nav:hover{background:#EDF3FC}
+.nav.on{background:#1750A8;color:#fff}
+.stepbtn{display:block;width:100%;text-align:left;border:1px solid #D6DFEC;background:#FBFCFF;color:#27436E;border-radius:4px;padding:6px 8px;font-size:11px;margin:4px 0}
+.stepbtn.on{border-color:#1750A8;background:#EFF5FF;font-weight:bold}
+.stepbtn.done{border-color:#1D7A43;background:#F1FAF4}
+.stepbtn span{display:block;color:#71809A;font-weight:normal}
+main{flex:1;padding:16px 20px;min-width:0}
+.card{background:#fff;border:1px solid #D6DFEC;border-radius:6px;padding:14px;margin-bottom:12px}
+h2{font-size:17px;color:#173E7E;margin:0 0 4px}h3{font-size:14px;color:#173E7E;margin:12px 0 6px}
+p{color:#4C5B75;margin:5px 0}
+.mut{color:#71809A;font-size:12px}
+.btn{border:0;border-radius:4px;background:#1750A8;color:#fff;padding:7px 13px;font-size:12px;margin:0 6px 6px 0}
+.btn:hover{background:#123E82}
+.btn:disabled{background:#9CADC4;cursor:not-allowed}
+.btn.ghost{background:#E7EFFA;color:#1750A8}
+.btn.warn{background:#D18B00}
+.btn.ok{background:#1D7A43}
+input,textarea,select{border:1px solid #C6D2E3;border-radius:4px;padding:7px 9px;font-size:12px;font-family:inherit;background:#fff;color:#1B2430}
+input:focus,textarea:focus,select:focus{outline:2px solid #BBD6FF;border-color:#1750A8}
+textarea{width:100%;min-height:74px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+.stats{display:flex;flex-wrap:wrap;gap:9px}
+.stat{border:1px solid #D6DFEC;border-left:3px solid #1750A8;border-radius:4px;padding:8px 11px;min-width:118px;background:#FBFCFF}
+.stat b{display:block;color:#173E7E;font-size:17px}
+.stat span{font-size:11px;color:#71809A}
+.list{border:1px solid #E0E6F0;border-radius:4px;background:#FBFCFF;padding:8px 10px;margin:6px 0;font-size:12px}
+.list .r{display:flex;gap:8px;align-items:center;justify-content:space-between;border-bottom:1px dashed #E0E6F0;padding:5px 0}
+.list .r:last-child{border-bottom:0}
+.tag{display:inline-block;background:#E7EFFA;color:#1750A8;border-radius:3px;padding:2px 7px;font-size:11px;margin-right:5px}
+.tag.g{background:#E5F5EC;color:#1D7A43}.tag.y{background:#FFF1D9;color:#8A5A00}
+.banner{background:#FFF1D9;border:1px solid #F0D6A2;color:#7C5200;border-radius:4px;padding:8px 11px;font-size:12px;margin:8px 0}
+.info{background:#EFF5FF;border:1px solid #C9DDFB;color:#27436E;border-radius:4px;padding:8px 11px;font-size:12px;margin:8px 0}
+.err{background:#FDECEC;border:1px solid #F3C4C4;color:#9B2C2C;border-radius:4px;padding:8px 11px;font-size:12px;margin:8px 0}
+.msg{border-left:3px solid #1750A8;background:#F8FAFD;border-radius:4px;padding:7px 10px;margin:6px 0;font-size:12px}
+.msg.me{border-left-color:#1D7A43}
+.msg.wait{border-left-color:#D18B00;color:#8A5A00}
+.bar{height:9px;border:1px solid #D6DFEC;border-radius:5px;background:#fff;overflow:hidden}
+.bar i{display:block;height:100%;background:#1750A8}
+#toast{position:fixed;right:18px;bottom:18px;z-index:9;display:flex;flex-direction:column;gap:7px}
+.tst{background:#173E7E;color:#fff;border-radius:4px;padding:9px 13px;font-size:12px;box-shadow:0 3px 12px #173E7E44;max-width:330px}
+.tst.ok{background:#1D7A43}.tst.warn{background:#D18B00}.tst.err{background:#A73030}
+.scenes{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.scene{border:1px solid #D6DFEC;border-top:3px solid #1750A8;border-radius:4px;padding:7px 9px;min-width:138px;flex:1;font-size:11px;background:#FBFCFF}
+.scene b{display:block;color:#173E7E}
+.scene.y{border-top-color:#D18B00;background:#FFFCF5}
+.scene.g{border-top-color:#1D7A43;background:#F8FCF9}
+code{background:#EEF3FB;color:#27436E;border-radius:3px;padding:1px 4px}
+</style></head><body>
+<div class="top">
+  <b>AI 校园学习陪伴助手</b><span class="badge">V1.5.0</span>
+  <span>课程：</span><select id="course"></select>
+  <span class="badge" id="ctxbadge">上下文：—</span>
+  <span class="badge" id="provider">Provider：demo</span>
+  <span class="sp"></span>
+  <button id="runflow">▶ 一键走查核心流程</button>
+  <button id="reset">重置演示</button>
+</div>
+<div class="wrap">
+<aside class="side">
+  <div class="grp">核心使用场景（逐步走查）</div><div id="flownav"></div>
+  <div class="grp">前台应用 · 10 页</div><div id="frontnav"></div>
+  <div class="grp">后台管理 · 5 页</div><div id="adminnav"></div>
+  <div class="grp">说明</div>
+  <p class="mut" style="margin:0">本页为浏览器本地交互演示，所有数据与回答均为原型模拟，不调用后端、不写入真实数据库。</p>
+</aside>
+<main id="main"></main>
+</div>
+<div id="toast"></div>
+<script>
+var COURSES=['数据结构','高等数学','大学英语'];
+var FRONT=[['dashboard','学习概览'],['chat','智能问答'],['study','学习资源包'],['summarize','课件总结'],['tutor','习题辅导'],['plan','复习计划'],['memory','课程记忆'],['wrong','错题本'],['hardware','硬件联动'],['settings','设置']];
+var ADMIN=[['m01','课程与资料管理'],['m02','智能体运行配置'],['m03','运行状态与硬件看板'],['m04','复习任务与专注管理'],['m05','错题与归档管理']];
+var FLOW=[['进入应用','dashboard','从学习概览确认课程与复习状态'],['绑定课程资料','memory','把课件/笔记存入指定课程'],['切课验证隔离','memory','切换课程，确认资料不跟随'],['发起课程内提问','chat','数据结构的资料拼入上下文'],['观察反馈与回退','chat','忙碌态、回答卡、fallback 标记'],['形成复习闭环','wrong','错题分析 → 掌握 → 加入任务']];
+var LABEL={};FRONT.concat(ADMIN).forEach(function(x){LABEL[x[0]]=x[1]});
+function blank(){
+  var m={},c={};COURSES.forEach(function(x){m[x]=[];c[x]=[]});
+  m['数据结构']=[{t:'第 3 章 树与二叉树',s:'先序遍历：根-左-右；中序：左-根-右；后序：左-右-根。',open:false}];
+  return {course:'数据结构',tab:'dashboard',provider:'demo',materials:m,chat:c,
+    tasks:[{n:'复习数据结构第 3 章',done:false}],wrong:[{q:'中序遍历二叉树的结果是什么？',mine:'根左右',right:'左根右',mastered:false}],
+    focus:'空闲',busy:false,step:-1,done:[],theme:'跟随系统',lastAnswer:'',filter:'全部'};
+}
+var S=blank();
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function toast(msg,type){var d=document.createElement('div');d.className='tst '+(type||'');d.textContent=msg;$('toast').appendChild(d);setTimeout(function(){d.remove()},3200)}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function budget(){var n=0;S.materials[S.course].forEach(function(x){n+=x.s.length});return n}
+function ctx(){var n=S.materials[S.course].length;var b=budget();$('ctxbadge').textContent='上下文：'+S.course+' · '+n+' 份 / '+b+' 字';$('provider').textContent='Provider：'+S.provider}
+function renderNav(){
+  $('course').innerHTML=COURSES.map(function(c){return '<option'+(c===S.course?' selected':'')+'>'+esc(c)+'</option>'}).join('');
+  function build(arr,box){$(box).innerHTML=arr.map(function(x){return '<button class="nav'+(S.tab===x[0]?' on':'')+'" onclick="go(\''+x[0]+'\')">'+esc(x[1])+'</button>'}).join('')}
+  build(FRONT,'frontnav');build(ADMIN,'adminnav');
+  $('flownav').innerHTML=FLOW.map(function(x,i){var cls=i===S.step?' on':(S.done.indexOf(i)>=0?' done':'');return '<button class="stepbtn'+cls+'" onclick="flow('+i+')">'+(i+1)+'. '+esc(x[0])+'<span>'+esc(x[2])+'</span></button>'}).join('');
+}
+function go(tab){S.tab=tab;render()}
+function setCourse(c){S.course=c;S.chat[c]=S.chat[c]||[];ctx();render();toast('已切换到「'+c+'」，课程记忆与对话已隔离','ok')}
+function head(title,sub,extra){return '<div class="card"><h2>'+esc(title)+'</h2><p class="mut">'+esc(sub)+'</p>'+(extra||'')+'</div>'}
+function render(){
+  renderNav();ctx();
+  var f={dashboard:vDashboard,chat:vChat,study:vStudy,summarize:vSummarize,tutor:vTutor,plan:vPlan,memory:vMemory,wrong:vWrong,hardware:vHardware,settings:vSettings,m01:vM01,m02:vM02,m03:vM03,m04:vM04,m05:vM05};
+  $('main').innerHTML=(f[S.tab]||vDashboard)();
+}
+function scenes(arr){return '<div class="scenes">'+arr.map(function(x,i){return (i?'<span class="flowarr">→</span>':'')+'<div class="scene '+(x[2]||'')+'"><b>'+esc(x[0])+'</b><span>'+esc(x[1])+'</span></div>'}).join('')+'</div>'}
+function vDashboard(){var t=S.tasks.filter(function(x){return !x.done}).length;var m=S.materials[S.course].length;
+  return head('学习概览','一屏聚合当前课程的复习状态；统计与任务随课程切换刷新。')+
+  '<div class="card"><h3>六项统计</h3><div class="stats"><div class="stat"><b>'+COURSES.length+'</b><span>课程数</span></div><div class="stat"><b>'+m+'</b><span>本科程资料</span></div><div class="stat"><b>'+S.wrong.length+'</b><span>错题</span></div><div class="stat"><b>'+t+'</b><span>待复习任务</span></div><div class="stat"><b>'+(S.wrong.length?Math.round(S.wrong.filter(function(x){return x.mastered}).length/S.wrong.length*100)+'%':'暂无')+'</b><span>错题掌握率</span></div><div class="stat"><b>'+(S.focus==='专注中'?'25:00':'50 分')+'</b><span>今日专注</span></div></div></div>'+
+  '<div class="card"><h3>待复习任务</h3><div class="row"><input id="taskname" style="width:270px" placeholder="任务名，如：复习数据结构第 3 章"><button class="btn" onclick="addTask()">添加</button><button class="btn ghost" onclick="go(\'plan\')">生成计划</button></div>'+
+  '<div class="list">'+(S.tasks.length?S.tasks.map(function(x,i){return '<div class="r"><span>'+esc(x.n)+' <span class="tag '+(x.done?'g':'y')+'">'+(x.done?'已完成':'待复习')+'</span></span><button class="btn ghost" onclick="doneTask('+i+')">完成</button></div>'}).join(''):'暂无复习任务')+'</div></div>'+
+  '<div class="card"><h3>番茄钟</h3><p>状态：<span class="tag '+(S.focus==='专注中'?'g':'y')+'">'+S.focus+'</span></p><button class="btn" onclick="startFocus()">开始专注 25:00</button><button class="btn ghost" onclick="go(\'hardware\')">查看硬件看板</button>'+
+  scenes([['默认态','统计与任务有值'],['键盘焦点态','统计卡片可 Tab / Enter 激活'],['空态','无错题显示「暂无」而非 0.0%','y'],['异常降级态','单接口失败逐模块提示','y']])+'</div>';
+}
+function addTask(){var v=$('taskname').value.trim()||'未命名复习任务';S.tasks.push({n:v,done:false});toast('已添加任务：'+v,'ok');render()}
+function doneTask(i){S.tasks[i].done=true;toast('任务已标记完成','ok');render()}
+function startFocus(){S.focus='专注中';toast('番茄钟已启动：25:00','ok');render()}
+function vChat(){
+  var log=S.chat[S.course]||[];var m=S.materials[S.course].length;
+  return head('智能问答 · 课程内陪伴','杀手功能 F06 / F33 的界面入口：切换课程即切换课程记忆。')+
+  (S.provider==='demo'?'<div class="banner">演示模式：未配置密钥，回答由内置规则生成（fallback），不是真实大模型推理。<button class="btn ghost" onclick="go(\'settings\')">去配置</button></div>':'')+
+  '<div class="card"><h3>对话区 · '+esc(S.course)+'</h3><div class="info">当前上下文：本科程 '+m+' 份资料，单份上限 4000 字、总量 12000 字；全文拼接，不是检索增强。</div>'+
+  (log.length?log.map(function(x){return '<div class="msg '+(x.me?'me':'')+'"><b>'+(x.me?'学生':'助手')+'：</b>'+x.t+(x.fb?' <span class="tag y">fallback</span>':'')+'</div>'}).join(''):'<p class="mut">对话区为空，输入一个课程问题开始。</p>')+
+  '<div class="row"><textarea id="q" style="flex:1" placeholder="输入课程问题，或点语音按钮…">请概括第 3 章树的遍历</textarea></div>'+
+  '<div class="row"><button class="btn" id="send" onclick="send()"'+(S.busy?' disabled':'')+'>'+(S.busy?'思考中…':'发送')+'</button><button class="btn ghost" onclick="mic(\'q\')">🎤 语音</button><button class="btn ghost" onclick="go(\'memory\')">查看依据资料</button><button class="btn warn" onclick="switchDemo()">切课验证隔离</button></div>'+
+  scenes([['默认态','输入框可用、对话区为空'],['忙碌态','发送按钮禁用并显示「思考中…」','y'],['结果态','安全渲染回答卡 + fallback 标记','g'],['切课程态','对话清空、上下文按课程重建']])+'</div>';
+}
+async function send(){
+  if(S.busy)return;var q=$('q').value.trim();if(!q){toast('请输入问题','warn');return}
+  S.busy=true;render();await sleep(850);
+  var m=S.materials[S.course];var ans;
+  if(m.length){var src=m[0].t;ans='依据「'+esc(src)+'」：'+esc(m[0].s)+'（本科程共 '+m.length+' 份资料已进入上下文）'}
+  else{ans='当前课程「'+esc(S.course)+'」暂无课程记忆资料，无法给出基于资料的回答；可先到课程记忆上传资料。'}
+  S.chat[S.course].push({me:true,t:esc(q)});S.chat[S.course].push({me:false,t:ans,fb:S.provider==='demo'});
+  S.lastAnswer=ans;S.busy=false;render();toast('回答已生成（演示模式规则化应答）','ok');
+}
+function switchDemo(){var next=COURSES[(COURSES.indexOf(S.course)+1)%COURSES.length];setCourse(next);toast('旧课程回答未跨课程出现，隔离验证通过','ok')}
+function mic(id){toast('语音输入态：识别结果回填输入框（原型模拟）');var el=$(id);if(el&&!el.value)el.value='请概括本章重点';render()}
+function vStudy(){
+  return head('学习资源包','按教材 / 章节 / 题量 / 难度生成五件套，可回写课程记忆并导出。')+
+  '<div class="card"><div class="row"><input id="sub" style="width:210px" value="高等数学上册" placeholder="学科，如：数学 / 高等数学上册"><input id="chap" style="width:150px" placeholder="章节"><input id="num" style="width:90px" value="10" placeholder="题量"><input id="lv" style="width:90px" value="中等" placeholder="难度"></div>'+
+  '<div class="row"><button class="btn" onclick="genPack()">一键全套</button><button class="btn ghost" onclick="genOne(\'题目\')">自测题</button><button class="btn ghost" onclick="genOne(\'总结\')">总结</button><button class="btn ghost" onclick="genOne(\'专题文章\')">文章</button><button class="btn ghost" onclick="genOne(\'资料清单\')">资料</button><button class="btn ghost" onclick="genOne(\'思维导图\')">思维导图</button><button class="btn ghost" onclick="download(\'资源包.md\',\'# 学习资源包\\n五件套演示内容\')">导出 Markdown</button></div>'+
+  '<div id="pack"></div>'+scenes([['默认态','参数可编辑、五区待生成'],['忙碌态','5 个按钮同时禁用','y'],['结果态','五区分别填充','g'],['部分失败态','双请求独立判错','y']])+'</div>';
+}
+async function genPack(){toast('一键全套开始，5 个生成按钮禁用');await sleep(700);$('pack').innerHTML=['题目','总结','专题文章','资料清单','思维导图'].map(function(k){return '<div class="list"><b>'+k+'</b>　已生成（含标准答案 / 分步解析 / 考点）<button class="btn ghost" onclick="go(\'memory\')">存入课程记忆</button></div>'}).join('');toast('五件套已生成','ok')}
+function genOne(k){toast(k+'生成中（按钮禁用）');setTimeout(function(){var d=$('pack');d.innerHTML=d.innerHTML+'<div class="list"><b>'+k+'</b>　已生成</div>';toast(k+'已生成','ok')},600)}
+function vSummarize(){return head('课件总结','粘贴课件或笔记，输出关键知识点与复习考点提纲。')+'<div class="card"><textarea id="sum" placeholder="在此粘贴课件或笔记文字…"></textarea><div class="row"><button class="btn" onclick="mkResult(\'sumresult\',\'关键知识点 / 复习考点提纲\')">生成总结</button><button class="btn ghost" onclick="mic(\'sum\')">🎤 语音</button></div><div id="sumresult"></div>'+scenes([['默认态','文本框为空可输入'],['忙碌态','按钮禁用并显示生成中','y'],['结果态','安全 Markdown 排版','g'],['空值拦截态','空内容不发起请求','y']])+'</div>'}
+function vTutor(){return head('习题辅导','引导式辅导：给分步思路与提示，不直接给最终答案。')+'<div class="card"><textarea id="tut" placeholder="在此粘贴题目…"></textarea><div class="row"><button class="btn" onclick="mkResult(\'tutresult\',\'分步思路 ① … ② …｜提示：先画出树的形状，再判断遍历次序\')">辅导一下</button><button class="btn ghost" onclick="mic(\'tut\')">🎤 语音</button><button class="btn ghost" onclick="go(\'wrong\')">记入错题本</button></div><div id="tutresult"></div>'+scenes([['默认态','题目输入区可用'],['忙碌态','按钮禁用','y'],['结果态','分步思路 + 提示','g']])+'</div>'}
+function mkResult(id,text){var el=$(id);if(!el)return;el.innerHTML='<div class="info">生成中…</div>';setTimeout(function(){el.innerHTML='<div class="list">'+esc(text)+'</div>'},650)}
+function vPlan(){return head('复习计划','按科目与天数生成逐日复习安排，并可加入复习任务。')+'<div class="card"><div class="row"><input id="ps" style="width:210px" value="数据结构" placeholder="考试科目"><input id="pd" style="width:90px" value="7" placeholder="天数"><button class="btn" onclick="genPlan()">生成计划</button></div><div id="planr"></div>'+scenes([['默认态','科目与天数待填'],['忙碌态','按钮禁用','y'],['结果态','逐日安排可 30 秒扫描','g']])+'</div>'}
+function genPlan(){var n=parseInt($('pd').value)||7;var s=$('ps').value||'数据结构';var h='';for(var i=1;i<=n;i++)h+='<div class="list"><b>第 '+i+' 天</b>　'+esc(s)+'：复习要点与自测<button class="btn ghost" onclick="planTask(\''+esc(s)+' 第'+i+'天\')">加入任务</button></div>';$('planr').innerHTML=h;toast('已生成 '+n+' 天计划','ok')}
+function planTask(n){S.tasks.push({n:n,done:false});toast('已加入复习任务：'+n,'ok');render()}
+function vMemory(){var list=S.materials[S.course]||[];var b=budget();
+  return head('课程记忆 · '+S.course,'杀手功能 F06 / F33 的数据入口：资料按课程隔离，全文拼入问答上下文。')+
+  '<div class="card"><div class="row"><input id="mt" style="width:230px" placeholder="资料标题（可选）"><button class="btn ghost" onclick="fakeFile()">选择文件 .txt/.md/.docx</button><button class="btn" onclick="saveMat()">保存资料</button></div>'+
+  '<textarea id="mc" placeholder="粘贴本课程课件、笔记、重点…"></textarea>'+
+  '<div class="row"><button class="btn ghost" onclick="mic(\'mc\')">🎤 语音</button><span class="mut">单份 ≤ 4000 字；总量 ≤ 12000 字</span></div>'+
+  '<p class="mut">上下文预算：'+b+' / 12000 字</p><div class="bar"><i style="width:'+Math.min(100,b/120)+'%"></i></div>'+
+  '<h3>已上传资料（'+list.length+'）</h3><div class="list">'+(list.length?list.map(function(x,i){return '<div class="r"><span><b>'+esc(x.t)+'</b> '+(x.open?'<span class="tag g">全文展开</span>':'')+'</span><span><button class="btn ghost" onclick="toggleMat('+i+')">'+(x.open?'收起':'查看全文')+'</button><button class="btn ghost" onclick="download(\''+esc(x.t)+'.md\',\''+esc(x.s)+'\')">下载 .md</button><button class="btn" onclick="useMat('+i+')">用于问答</button></span></div>'+(x.open?'<div class="msg">'+esc(x.s)+'</div>':'')}).join(''):'暂无资料')+'</div>'+
+  scenes([['默认态','显示真实资料'],['上传中态','按钮禁用与进度提示','y'],['展开态','全文安全渲染 / 收起','g'],['校验失败态','类型或大小不合规逐项提示','y'],['隔离态','切课程后资料不跟随']])+'</div>';
+}
+function fakeFile(){toast('文件选择：已模拟读取 .md 文件（≤2 MB / ≤2 万字校验通过）');var m=$('mc');if(m&&!m.value)m.value='文件正文：本章重点与例题解析。'}
+function saveMat(){var t=$('mt').value.trim()||'未命名资料';var s=$('mc').value.trim();if(!s){toast('正文必填，请粘贴内容','warn');return}S.materials[S.course].push({t:t,s:s,open:false});toast('已保存到「'+S.course+'」的课程记忆，问答上下文已更新','ok');render()}
+function toggleMat(i){S.materials[S.course][i].open=!S.materials[S.course][i].open;render()}
+function useMat(i){toast('已带「'+S.materials[S.course][i].t+'」进入问答上下文');go('chat')}
+function download(name,text){var b=new Blob([text],{type:'text/markdown;charset=utf-8'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href);toast('已触发下载：'+name,'ok')}
+function vWrong(){var list=S.wrong;
+  return head('错题本','录入 → 错因分析 + 变式题 → 标记掌握 → 筛选 → 导出，形成复习闭环。')+
+  '<div class="card"><div class="row"><input id="wq" style="width:300px" placeholder="错题题目"><input id="wu" style="width:160px" placeholder="我的答案（可选）"><input id="wc" style="width:160px" placeholder="正确答案（可选）"><button class="btn" onclick="addWrong()">录入</button><button class="btn ghost" onclick="mic(\'wq\')">🎤 语音</button></div>'+
+  '<div class="row"><span class="mut">筛选：</span><select id="wf" onchange="S.filter=this.value;render()">'+['全部','未掌握','已掌握'].map(function(f){return '<option'+(S.filter===f?' selected':'')+'>'+f+'</option>'}).join('')+'</select><button class="btn ghost" onclick="download(\'错题归档.md\',\'# 错题归档\')">导出 Markdown</button></div>'+
+  '<div class="list">'+(list.length?list.filter(function(x){return S.filter==='全部'||(S.filter==='已掌握')===x.mastered}).map(function(x,i){return '<div class="r"><span>'+esc(x.q)+' <span class="tag '+(x.mastered?'g':'y')+'">'+(x.mastered?'已掌握':'未掌握')+'</span></span><span><button class="btn ghost" onclick="toast(\'错因分析 + 变式题已展开\')">错因/变式</button><button class="btn ok" onclick="master('+i+')">标记掌握</button></span></div>'}).join(''):'暂无错题')+'</div>'+
+  scenes([['默认态','错题列表有值'],['忙碌态','分析与导出按钮禁用','y'],['结果态','变式题展开','g'],['空态','筛选无结果不显示 0.0%','y']])+'</div>';
+}
+function addWrong(){var q=$('wq').value.trim();if(!q){toast('题干必填','warn');return}S.wrong.push({q:q,mine:$('wu').value,right:$('wc').value,mastered:false});toast('错题已录入','ok');render()}
+function master(i){S.wrong[i].mastered=true;toast('已标记掌握，掌握率已刷新','ok');render()}
+function vHardware(){return head('硬件联动（可选，不列入验收）','ESP32 接口清单与状态看板；未实机联调，不宣称物理效果已验证。')+
+  '<div class="card"><div class="row"><input id="hw" style="width:260px" placeholder="复习任务名，如：复习第3章"><button class="btn" onclick="planTask(\'硬件提醒任务\')">创建任务</button><button class="btn warn" onclick="hwTest()">测试提醒</button><button class="btn ghost" onclick="toast(\'专注灯下发状态已返回\')">专注灯</button></div>'+
+  '<div class="list">6 点硬件交互清单：到点提醒｜手动提醒｜番茄钟提醒｜专注灯｜状态看板｜通用下发</div><div id="hwres"></div>'+
+  '<div class="banner">未配置 ESP32_ENDPOINT：sent=false（未实机联调），主体功能不受影响。</div>'+
+  scenes([['默认态','清单表与看板可见'],['未配置态','sent=false 与原因','y'],['边界声明态','不冒充实物验证','y']])+'</div>'}
+function hwTest(){$('hwres').innerHTML='<div class="err">测试提醒：sent=false，原因：ESP32_ENDPOINT 未配置。功能流程继续。</div>';toast('已返回 sent=false 与原因','warn')}
+function vSettings(){return head('设置','主题三档 + 六类 Provider 运行时配置；无密钥自动回退演示模式。')+
+  '<div class="card"><div class="row"><span class="mut">主题：</span><select id="th" onchange="S.theme=this.value;toast(\'主题已切换并本地持久化\')"><option>跟随系统</option><option>浅色</option><option>深色</option></select><span class="tag">6 套预设色</span></div>'+
+  '<div class="row"><span class="mut">Provider：</span><select id="pv" onchange="S.provider=this.value;ctx();render()"><option>demo</option><option>OpenAI</option><option>文心一言</option><option>Kimi</option><option>Claude</option><option>自定义</option></select></div>'+
+  '<div class="row"><input style="width:230px" type="password" placeholder="agentKey：必填，如 sk-…"><input style="width:180px" placeholder="agentModel（可留空）"><input style="width:200px" placeholder="agentBaseUrl（可选）"></div>'+
+  '<div class="row"><button class="btn" onclick="toast(\'配置已保存：运行时即时生效，状态只回掩码\',\'ok\')">保存</button><button class="btn ghost" onclick="toast(\'连通性自检：探针结果已返回\')">连通性自检</button><button class="btn warn" onclick="clearCfg()">清除配置</button></div>'+
+  '<div class="list">Provider 状态卡：OpenAI｜文心一言｜Kimi｜Claude｜自定义｜演示模式 '+(S.provider==='demo'?'<span class="tag g">当前激活</span>':'')+'</div>'+
+  scenes([['默认态','演示模式激活'],['配置生效态','运行时写入即时生效','g'],['自检态','探针校验并提示结果'],['回退态','清除或异常后回退 demo','y'],['掩码态','只回密钥掩码']])+'</div>'}
+function clearCfg(){S.provider='demo';ctx();render();toast('配置已清除，自动回退演示模式','warn')}
+function vM01(){return head('后台管理 · 课程与资料管理','只重组真实管理操作：新建课程、资料入库、查看全文与下载；不虚构权限。')+
+  '<div class="card"><div class="row"><input id="nc" style="width:200px" placeholder="新课程名"><button class="btn" onclick="addCourse()">新建课程</button></div>'+
+  '<div class="list">课程：'+COURSES.map(function(c){return '<span class="tag '+(c===S.course?'g':'')+'">'+esc(c)+'</span>'}).join('')+'</div>'+
+  '<p>当前课程资料 '+S.materials[S.course].length+' 份；'+(S.materials[S.course].length?esc(S.materials[S.course][0].t):'暂无')+'</p>'+
+  '<div class="row"><button class="btn" onclick="go(\'memory\')">资料入库 / 查看全文</button><button class="btn ghost" onclick="toast(\'已拦截：课程不存在，400\',\'warn\')">模拟孤儿数据写入</button></div>'+
+  scenes([['默认态','课程与资料列表有值'],['校验失败态','空课程名 / 不存在课程返回 400','y'],['隔离态','资料按课程落库，不串课','g']])+'</div>'}
+function addCourse(){var n=$('nc').value.trim();if(!n){toast('课程名不可为空（400）','warn');return}if(COURSES.indexOf(n)>=0){toast('课程名重复（400）','warn');return}COURSES.push(n);S.materials[n]=[];S.chat[n]=[];toast('课程已创建：'+n,'ok');render()}
+function vM02(){return head('后台管理 · 智能体运行配置','6 类 Provider 凭据与激活项；密钥只回掩码，自检不切换失败项。')+
+  '<div class="card"><div class="list">当前激活：'+esc(S.provider)+'　｜　状态：'+(S.provider==='demo'?'规则化演示应答（fallback）':'按配置调用')+'</div>'+
+  '<div class="row"><button class="btn" onclick="go(\'settings\')">打开配置表单</button><button class="btn ghost" onclick="toast(\'自检探针已返回可用/不可用\')">连通性自检</button></div>'+
+  '<div class="banner">配置优先级：运行时 SQLite ＞ .env ＞ demo；本项目无真实厂商密钥。</div>'+
+  scenes([['默认态','demo 激活'],['配置生效态','写入即生效','g'],['自检态','探针返回结果'],['回退态','清除后回退 demo','y'],['掩码态','密钥只回掩码']])+'</div>'}
+function vM03(){return head('后台管理 · 运行状态与硬件看板','版本指纹来自 version.py；动态接口 no-store，避免页面新、接口旧。')+
+  '<div class="card"><div class="stats"><div class="stat"><b>1.5.0</b><span>version</span></div><div class="stat"><b>'+esc(S.provider)+'</b><span>active_provider</span></div><div class="stat"><b>'+S.tasks.filter(function(x){return !x.done}).length+'</b><span>待复习</span></div><div class="stat"><b>'+S.wrong.filter(function(x){return !x.mastered}).length+'</b><span>待掌握</span></div><div class="stat"><b>25 分</b><span>专注</span></div></div>'+
+  '<div class="row"><button class="btn warn" onclick="go(\'hardware\')">测试硬件提醒</button><button class="btn ghost" onclick="go(\'dashboard\')">查看学习概览</button></div>'+
+  scenes([['默认态','看板与清单可见'],['未配置态','sent=false 与原因','y'],['边界声明态','未实机联调','y']])+'</div>'}
+function vM04(){return head('后台管理 · 复习任务与专注管理','待复习任务、到点提醒、逐日计划与专注记录。')+
+  '<div class="card"><div class="row"><input id="mtask" style="width:250px" placeholder="任务名"><button class="btn" onclick="addTask2()">添加</button><button class="btn ghost" onclick="go(\'plan\')">生成计划</button></div>'+
+  '<div class="list">'+(S.tasks.length?S.tasks.map(function(x,i){return '<div class="r"><span>'+esc(x.n)+' <span class="tag '+(x.done?'g':'y')+'">'+(x.done?'已完成':'待复习')+'</span></span><button class="btn ghost" onclick="doneTask('+i+')">标记完成</button></div>'}).join(''):'暂无任务')+'</div><p class="mut">后台守护线程每 30 秒扫描到期任务；空任务名回落默认名。</p>'+
+  scenes([['默认态','任务与计划有值'],['空态','无任务显示「暂无」','y'],['提醒态','到期任务触发提醒'],['降级态','单接口失败逐模块提示','y']])+'</div>'}
+function addTask2(){var v=$('mtask').value.trim()||'未命名复习任务';S.tasks.push({n:v,done:false});toast('任务已添加','ok');render()}
+function vM05(){return head('后台管理 · 错题与归档管理','错题筛选、掌握状态与 Markdown 归档导出。')+
+  '<div class="card"><div class="row"><button class="btn ghost" onclick="go(\'wrong\')">录入 / 分析错题</button><button class="btn" onclick="download(\'错题归档.md\',\'# 错题归档\\n演示内容\')">导出归档</button></div>'+
+  '<div class="list">未掌握 '+S.wrong.filter(function(x){return !x.mastered}).length+' 条；已掌握 '+S.wrong.filter(function(x){return x.mastered}).length+' 条</div>'+
+  scenes([['默认态','错题列表有值'],['空态','筛选无结果显示空态','y'],['归档态','blob 下载，失败只提示','g']])+'</div>'}
+async function flow(i){
+  S.step=i;if(S.done.indexOf(i)<0)S.done.push(i);
+  if(i===0){go('dashboard');toast('第 1 步：进入应用，确认课程与复习状态')}
+  if(i===1){go('memory');toast('第 2 步：在课程记忆保存一份资料（已预填并保存）');setTimeout(function(){var t=$('mt'),c=$('mc');if(t&&c){t.value='走查示例：树的遍历';c.value='先序：根-左-右；中序：左-根-右；后序：左-右-根。';saveMat()}},80)}
+  if(i===2){setCourse('高等数学');toast('第 3 步：已切课，高等数学下无该资料，隔离验证通过','ok')}
+  if(i===3){setCourse('数据结构');go('chat');toast('第 4 步：回到数据结构，资料已重新拼入上下文','ok')}
+  if(i===4){go('chat');toast('第 5 步：点击「发送」观察忙碌态 → 回答卡 → fallback 标记')}
+  if(i===5){go('wrong');toast('第 6 步：标记掌握 → 生成计划 → 加入复习任务，闭环完成','ok')}
+  render();
+}
+async function runflow(){
+  S=blank();render();for(var i=0;i<FLOW.length;i++){
+    await flow(i);await sleep(i===3?1200:800);
+    if(i===3&&$('q')){await send();await sleep(900)}
+  }
+  toast('核心流程走查完成：进入 → 绑定 → 隔离 → 提问 → 反馈 → 闭环','ok');
+}
+function resetAll(){S=blank();render();toast('演示状态已重置')}
+document.addEventListener('DOMContentLoaded',function(){$('runflow').onclick=runflow;$('reset').onclick=resetAll;$('course').onchange=function(){setCourse(this.value)};render()});
+</script></body></html>

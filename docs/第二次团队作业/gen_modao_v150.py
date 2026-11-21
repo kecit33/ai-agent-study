@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-"""V1.5.0 墨刀原型页面单一源（前台应用 + 后台管理 + 界面线框 + 页面互链）。
+"""V1.5.0 墨刀原型「数据单一源」：页面、字段、组件、需求编号。
 
-改原型只改本文件的 PAGES / MPAGES 数据，然后：
+改原型页面内容只改本文件的 PAGES / MPAGES 数据，然后：
     python gen_modao_v150.py
-产出 modao_v150/*.html、modao_v150/html_list.json（供墨刀 import_to_proto）、
-以及 原型需求核对表.md（供第二次作业按需求项核对）。
+实际渲染由 gen_modao_interactive.py 完成（信息架构 + 状态分镜 + 交互动作 +
+可交互走查版），产出 modao_v150/*.html、modao_v150/html_list.json
+（供墨刀 import_to_proto）以及 原型需求核对表.md。
 事实源：docs/软件需求规格说明书.md、static/index.html、server.py、version.py。
 
 设计约束：
@@ -590,4 +591,6 @@ def build():
 
 
 if __name__ == "__main__":
-    build()
+    # 渲染委托给交互版生成器：本文件只维护页面 / 字段 / 需求数据。
+    from gen_modao_interactive import build as build_interactive
+    build_interactive()
