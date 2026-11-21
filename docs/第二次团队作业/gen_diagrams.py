@@ -403,43 +403,72 @@ def backend():
 
 # ---------------------------------------------------------------- 硬件连接图
 def hardware():
-    W, H = 1000, 420
-    b = T(24, 34, "图 7  硬件原型连接图（ESP32 联动 · 接口与固件已齐备，未实机联调）", 18, "start", "bold", DEEP)
-    b += R(40, 100, 210, 96, PALE, BLUE, 8)
-    b += T(145, 132, "前端「硬件联动」页", 13, "middle", "bold", DEEP)
-    b += T(145, 154, "6 点清单表 + 状态看板", 11, "middle", "normal", GRAY)
-    b += T(145, 174, "F37（可选）", 11, "middle", "normal", BLUE)
+    W, H = 1000, 520
+    b = T(24, 34, "图 7  硬件原型连接图（ESP32 联动 · 接口与引脚连接 · 未实机联调）", 18, "start", "bold", DEEP)
 
-    b += R(300, 100, 250, 96, WHITE, BORDER, 8)
-    b += T(425, 128, "server.py", 14, "middle", "bold", DEEP)
-    b += T(425, 150, "/api/hardware/test", 11, "middle", "normal", INK)
-    b += T(425, 168, "/api/hardware/status", 11, "middle", "normal", INK)
-    b += T(425, 186, "/api/focus/state", 11, "middle", "normal", INK)
+    b += R(40, 70, 190, 86, PALE, BLUE, 8)
+    b += T(135, 98, "前端「硬件联动」页", 13, "middle", "bold", DEEP)
+    b += T(135, 122, "6 点清单 + 状态看板", 11, "middle", "normal", GRAY)
+    b += T(135, 142, "F37（可选）", 11, "middle", "normal", BLUE)
 
-    b += R(610, 100, 160, 96, "#FFFBF2", "#D9A441", 8)
-    b += T(690, 130, "Wi-Fi / HTTP", 13, "middle", "bold", WARN)
-    b += T(690, 152, "ESP32_ENDPOINT", 11, "middle", "normal", GRAY)
-    b += T(690, 172, "Webhook 双向", 11, "middle", "normal", GRAY)
+    b += R(270, 70, 210, 86, WHITE, BORDER, 8)
+    b += T(375, 96, "server.py", 14, "middle", "bold", DEEP)
+    b += T(375, 118, "/api/hardware/test", 11, "middle", "normal", INK)
+    b += T(375, 136, "/api/hardware/status", 11, "middle", "normal", INK)
+    b += T(375, 150, "/api/focus/state", 11, "middle", "normal", INK)
 
-    b += R(820, 100, 150, 96, WHITE, BLUE, 8)
-    b += T(895, 130, "ESP32 固件", 13, "middle", "bold", DEEP)
-    b += T(895, 152, "esp32_firmware.ino", 10.5, "middle", "normal", GRAY)
-    b += T(895, 172, "监听 /remind /focus", 10.5, "middle", "normal", GRAY)
+    b += R(520, 70, 170, 86, "#FFFBF2", "#D9A441", 8)
+    b += T(605, 98, "Wi-Fi / HTTP", 13, "middle", "bold", WARN)
+    b += T(605, 122, "Webhook 双向", 11, "middle", "normal", GRAY)
+    b += T(605, 142, "ESP32_ENDPOINT", 11, "middle", "normal", GRAY)
 
-    b += L(250, 148, 300, 148, True, label="REST", lx=275, ly=138, lsize=11)
-    b += L(550, 148, 610, 148, True, label="下行", lx=580, ly=138, lsize=11)
-    b += L(770, 148, 820, 148, True, label="下行", lx=795, ly=138, lsize=11)
-    b += POLY([(895, 196), (895, 250), (690, 250), (690, 196)], True,
-              label="上行：状态看板轮询", lx=790, ly=242)
+    b += R(730, 70, 230, 86, WHITE, BLUE, 8)
+    b += T(845, 98, "ESP32 固件", 13, "middle", "bold", DEEP)
+    b += T(845, 122, "esp32_firmware.ino", 11, "middle", "normal", GRAY)
+    b += T(845, 142, "WebServer :80", 11, "middle", "normal", GRAY)
+    b += T(845, 152, "/remind  /focus", 11, "middle", "normal", INK)
 
-    b += R(820, 275, 150, 60, "#FFF7E6", "#D9A441", 8)
-    b += T(895, 300, "LED / 蜂鸣器", 12, "middle", "bold", WARN)
-    b += T(895, 320, "声光表现未实机验证", 10.5, "middle", "normal", GRAY)
-    b += L(895, 196, 895, 275, False, color="#D9A441")
+    b += L(230, 113, 270, 113, True, label="REST", lx=250, ly=103, lsize=11)
+    b += L(480, 113, 520, 113, True, label="下行", lx=500, ly=103, lsize=11)
+    b += L(690, 113, 730, 113, True, label="下行", lx=710, ly=103, lsize=11)
+    b += POLY([(845, 156), (845, 196), (605, 196), (605, 156)], True,
+              label="上行：GET /api/hardware/status · 60s", lx=725, ly=188)
 
-    b += T(24, 365, "6 个交互点：任务到点提醒 · 手动测试提醒 · 番茄钟提醒 · 专注状态灯 · 学习状态看板 · 通用消息下发预留。",
+    b += T(24, 232, "引脚级连接（实线＝代码已定义；虚线＝待确认）", 13, "start", "bold", DEEP)
+    b += R(40, 250, 230, 170, "#FFFBF2", "#D9A441", 8)
+    b += T(155, 278, "ESP32 Dev Module", 14, "middle", "bold", WARN)
+    b += T(155, 306, "GPIO / I2C / 5V / GND", 11, "middle", "normal", INK)
+    b += T(155, 332, "HTTP POST / GET 下发", 11, "middle", "normal", INK)
+    b += T(155, 358, "板载 LED 可用 GPIO 2", 11, "middle", "normal", INK)
+    b += T(155, 390, "GPIO 输出 3.3V 逻辑", 11, "middle", "normal", GRAY)
+
+    b += R(330, 252, 300, 52, WHITE, BLUE, 8)
+    b += T(346, 274, "LED（板载可替代）", 12, "start", "bold", DEEP)
+    b += T(346, 294, "GPIO 2 → 限流电阻 → GND", 11, "start", "normal", INK)
+    b += L(270, 278, 330, 278, True, label="GPIO 2", lx=300, ly=268, lsize=11)
+
+    b += R(330, 314, 300, 52, WHITE, BLUE, 8)
+    b += T(346, 336, "有源蜂鸣器", 12, "start", "bold", DEEP)
+    b += T(346, 356, "GPIO 4 → +；− → GND", 11, "start", "normal", INK)
+    b += L(270, 340, 330, 340, True, label="GPIO 4", lx=300, ly=330, lsize=11)
+
+    b += R(330, 376, 300, 52, WHITE, "#D9A441", 8, dash="4 3")
+    b += T(346, 398, "OLED（可选 · 固件未实现）", 12, "start", "bold", WARN)
+    b += T(346, 418, "I2C SDA / SCL 待确认", 11, "start", "normal", GRAY)
+    b += L(270, 402, 330, 402, True, dash="4 3", label="I2C?", lx=300, ly=392, lsize=11)
+
+    b += R(680, 250, 280, 170, "#FFFBF2", "#D9A441", 8)
+    b += T(820, 278, "供电与注意事项", 13, "middle", "bold", WARN)
+    b += T(820, 306, "USB 5V 供电（方式待确认）", 11, "middle", "normal", INK)
+    b += T(820, 332, "OLED 的 I2C 引脚：待确认", 11, "middle", "normal", INK)
+    b += T(820, 358, "蜂鸣器须为有源型（代码无 PWM）", 11, "middle", "normal", INK)
+    b += T(820, 384, "SSID / PASS / SERVER_BASE 实机填写", 11, "middle", "normal", GRAY)
+    b += T(820, 410, "两端同网段、端口互通", 11, "middle", "normal", GRAY)
+
+    b += T(24, 462, "GND：LED / 蜂鸣器 / OLED 与 ESP32 共地（待确认）", 11, "start", "normal", WARN)
+    b += T(24, 484, "6 个交互点：任务到点提醒 · 手动测试提醒 · 番茄钟提醒 · 专注状态灯 · 学习状态看板 · 通用消息下发预留。",
            12, "start", "normal", INK)
-    b += T(24, 388, "物理照片：【重点 · R04】未提供（见《交付合规检查表与缺口清单》R04）；当前仅提供接口、固件与连接图，LED / 蜂鸣器与 Wi-Fi 连通性未做实机联调。",
+    b += T(24, 506, "边界：接口与固件齐备，ESP32 未实机联调；本图为连接图，不冒充实物照片（R04）。",
            12, "start", "normal", WARN)
     save("硬件连接图.svg", W, H, b, "无言以对 · 第二次团队作业 · 原型设计+概要设计")
 
